@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Templates Library - ArchFlow AI Platform</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/app.js"></script>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- SIDEBAR -->
+        <aside class="app-sidebar">
+            <div class="sidebar-logo">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;">
+                    <rect width="32" height="32" rx="8" fill="#4f46e5" />
+                    <path d="M7 22V10L16 5L25 10V22L16 27L7 22Z" stroke="white" stroke-width="2" stroke-linejoin="round" />
+                </svg>
+                <span>ArchFlow <span style="font-weight:400;color:var(--accent-indigo);">AI</span></span>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="dashboard.html" id="menu-dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" /></svg>
+                    Dashboard
+                </a>
+                <a href="new-project.html" id="menu-new-project">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    New Project
+                </a>
+                <a href="my-projects.html" id="menu-my-projects">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z" /></svg>
+                    My Projects
+                </a>
+                <a href="templates.html" class="active" id="menu-templates">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
+                    Templates Library
+                </a>
+                <a href="editor-2d.html" id="menu-editor-2d">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    2D Editor Workspace
+                </a>
+                <a href="viewer-3d.html" id="menu-viewer-3d">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    3D Viewer Workspace
+                </a>
+                <a href="style-variations.html" id="menu-variations">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    Style Variations
+                </a>
+                <a href="export.html" id="menu-export">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Export Center
+                </a>
+                <a href="team.html" id="menu-team">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                    Clients & Team
+                </a>
+                <a href="settings.html" id="menu-settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    Settings
+                </a>
+                <a href="docs.html" id="menu-docs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                    Help & Support
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-billing-widget">
+                    <h5>Render Credits</h5>
+                    <div class="sidebar-progress-bar">
+                        <div class="sidebar-progress-fill" style="width: 92%;"></div>
+                    </div>
+                    <div class="sidebar-billing-details">
+                        <span>92 / 100 Left</span>
+                        <span style="font-weight:600;color:var(--success);">Pro</span>
+                    </div>
+                </div>
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar" id="sidebar-avatar-initials">RC</div>
+                    <div class="sidebar-user-info">
+                        <span class="sidebar-user-name" id="sidebar-user-display-name">Ramesh Chandra</span>
+                        <span class="sidebar-user-role" id="sidebar-company-display-name">Apex Builders Co.</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN MAIN -->
+        <main class="app-main">
+            
+            <!-- TOPBAR -->
+            <header class="app-topbar">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <h3 style="font-size:18px;margin:0;">Layout Templates</h3>
+                </div>
+            </header>
+
+            <!-- APP CONTENT -->
+            <div class="app-content">
+                <div class="app-page-header">
+                    <div class="app-page-title">
+                        <h2>Baseline Plot Layouts Library</h2>
+                        <p>Initialize project specs instantly using standardized plot dimensions.</p>
+                    </div>
+                </div>
+
+                <!-- CATEGORIES SELECTION GRID -->
+                <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));gap:24px;">
+                    
+                    <!-- Template 1 -->
+                    <div class="card card-hover" style="display:flex;flex-direction:column;justify-content:space-between;min-height:280px;">
+                        <div>
+                            <span class="badge badge-indigo" style="margin-bottom:12px;">20' × 30' (600 sqft)</span>
+                            <h3 style="font-size:18px;margin-bottom:8px;">Compact 2BHK Plot</h3>
+                            <p style="color:var(--text-secondary);font-size:13px;line-height:1.5;">Ideal for budget-conscious single story projects or small site plots in urban spaces.</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm btn-full" onclick="launchTemplate(20, 30, 'Residential', 'Budget Friendly')">Use This Template</button>
+                    </div>
+
+                    <!-- Template 2 -->
+                    <div class="card card-hover" style="display:flex;flex-direction:column;justify-content:space-between;min-height:280px;">
+                        <div>
+                            <span class="badge badge-indigo" style="margin-bottom:12px;">30' × 40' (1,200 sqft)</span>
+                            <h3 style="font-size:18px;margin-bottom:8px;">Standard Duplex Plot</h3>
+                            <p style="color:var(--text-secondary);font-size:13px;line-height:1.5;">Our most popular starting configuration. Perfect for standard 3BHK two-story housing.</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm btn-full" onclick="launchTemplate(30, 40, 'Duplex', 'Standard Modern')">Use This Template</button>
+                    </div>
+
+                    <!-- Template 3 -->
+                    <div class="card card-hover" style="display:flex;flex-direction:column;justify-content:space-between;min-height:280px;">
+                        <div>
+                            <span class="badge badge-indigo" style="margin-bottom:12px;">40' × 60' (2,400 sqft)</span>
+                            <h3 style="font-size:18px;margin-bottom:8px;">Luxury Villa Estate</h3>
+                            <p style="color:var(--text-secondary);font-size:13px;line-height:1.5;">Suited for expansive luxury villa architectures, home theaters, gardens, and double garages.</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm btn-full" onclick="launchTemplate(40, 60, 'Villa', 'Premium Luxury')">Use This Template</button>
+                    </div>
+
+                    <!-- Template 4 -->
+                    <div class="card card-hover" style="display:flex;flex-direction:column;justify-content:space-between;min-height:280px;">
+                        <div>
+                            <span class="badge badge-indigo" style="margin-bottom:12px;">30' × 50' (1,500 sqft)</span>
+                            <h3 style="font-size:18px;margin-bottom:8px;">Minimalist Townhouse</h3>
+                            <p style="color:var(--text-secondary);font-size:13px;line-height:1.5;">Great baseline for modern cubic architecture, ventilation channels, and open layouts.</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm btn-full" onclick="launchTemplate(30, 50, 'Residential', 'Minimalist White')">Use This Template</button>
+                    </div>
+
+                    <!-- Template 5 -->
+                    <div class="card card-hover" style="display:flex;flex-direction:column;justify-content:space-between;min-height:280px;">
+                        <div>
+                            <span class="badge badge-indigo" style="margin-bottom:12px;">35' × 45' (1,575 sqft)</span>
+                            <h3 style="font-size:18px;margin-bottom:8px;">Traditional Sloping Plot</h3>
+                            <p style="color:var(--text-secondary);font-size:13px;line-height:1.5;">Optimized for heritage sloping roofs, inner open courtyards, and veranda sitout features.</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm btn-full" onclick="launchTemplate(35, 45, 'Villa', 'Traditional Modern')">Use This Template</button>
+                    </div>
+
+                    <!-- Template 6 -->
+                    <div class="card card-hover" style="display:flex;flex-direction:column;justify-content:space-between;min-height:280px;">
+                        <div>
+                            <span class="badge badge-indigo" style="margin-bottom:12px;">50' × 80' (4,000 sqft)</span>
+                            <h3 style="font-size:18px;margin-bottom:8px;">Commercial Shop/Office</h3>
+                            <p style="color:var(--text-secondary);font-size:13px;line-height:1.5;">Layout structure customized for commercial shopping zones, office partition grids, and staircase access.</p>
+                        </div>
+                        <button class="btn btn-primary btn-sm btn-full" onclick="launchTemplate(50, 80, 'Commercial', 'Standard Modern')">Use This Template</button>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            ArchFlow.checkAuth();
+            
+            // Sync initials
+            const storedUser = localStorage.getItem("archflow_user_name");
+            if (storedUser) {
+                document.getElementById("sidebar-user-display-name").innerText = storedUser;
+                const initials = storedUser.split(" ").map(w => w[0]).join("").toUpperCase();
+                document.getElementById("sidebar-avatar-initials").innerText = initials;
+            }
+        });
+
+        function launchTemplate(w, l, type, style) {
+            // Redirect to wizard passing parameters in URL to prefill inputs
+            const query = `?prefill=true&width=${w}&length=${l}&type=${type}&style=${style}`;
+            
+            // Simulating dynamic filling inside wizard code block
+            // To make it directly functional, let's write a small helper that creates the project directly and goes to result page
+            const userChoice = confirm(`Do you want to initialize a new ${w}x${l} ${type} project directly using this template?`);
+            if (userChoice) {
+                const mockData = {
+                    name: `${type} Project (${w}x${l})`,
+                    client: "New Template Client",
+                    type: type,
+                    location: "Site Plot Location",
+                    width: w,
+                    length: l,
+                    facing: "East",
+                    corner: false,
+                    road: "30ft Main Road",
+                    floors: type === "Duplex" ? 2 : 1,
+                    bedrooms: type === "Duplex" ? 3 : 2,
+                    bathrooms: type === "Duplex" ? 3 : 2,
+                    pooja: true,
+                    parking: true,
+                    balcony: true,
+                    style: style,
+                    budget: "Mid Range",
+                    prompt: `Design a ${w}x${l} East-facing house matching the ${style} template.`
+                };
+                const newProj = ArchFlow.createProject(mockData);
+                window.location.href = "ai-generate-result.html?generating=true";
+            }
+        }
+    </script>
+</body>
+</html>

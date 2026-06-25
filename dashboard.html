@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - ArchFlow AI Platform</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/app.js"></script>
+    <style>
+        /* --- DASHBOARD CUSTOM COMPONENT STYLES --- */
+        .glowing-stat-card {
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: var(--border-radius-lg);
+            padding: 20px 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 110px;
+        }
+        
+        /* Hover lifts & subtle glows */
+        .glowing-stat-card.stat-projects:hover {
+            transform: translateY(-4px);
+            border-color: rgba(79, 70, 229, 0.3);
+            box-shadow: 0 12px 24px -8px rgba(79, 70, 229, 0.12);
+        }
+        .glowing-stat-card.stat-credits:hover {
+            transform: translateY(-4px);
+            border-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 0 12px 24px -8px rgba(245, 158, 11, 0.12);
+        }
+        .glowing-stat-card.stat-exports:hover {
+            transform: translateY(-4px);
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 12px 24px -8px rgba(59, 130, 246, 0.12);
+        }
+        .glowing-stat-card.stat-team:hover {
+            transform: translateY(-4px);
+            border-color: rgba(168, 85, 247, 0.3);
+            box-shadow: 0 12px 24px -8px rgba(168, 85, 247, 0.12);
+        }
+
+        /* Progress Ring Vector styling */
+        .stat-progress-container {
+            position: relative;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .progress-ring-circle-bg {
+            stroke: #f1f5f9;
+        }
+        
+        .progress-ring-circle {
+            stroke-dasharray: 125.66;
+            stroke-dashoffset: 125.66;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: 24px 24px;
+            transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .stat-icon-overlay {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .glowing-stat-card:hover .stat-icon-overlay {
+            transform: scale(1.1);
+        }
+        
+        /* Colored overlay themes */
+        .stat-projects .stat-icon-overlay { background: rgba(79, 70, 229, 0.08); color: var(--accent-indigo); }
+        .stat-credits .stat-icon-overlay { background: rgba(245, 158, 11, 0.08); color: #d97706; }
+        .stat-exports .stat-icon-overlay { background: rgba(59, 130, 246, 0.08); color: var(--accent-blue); }
+        .stat-team .stat-icon-overlay { background: rgba(168, 85, 247, 0.08); color: #7e22ce; }
+
+        .chart-card {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+        .empty-state-blueprint {
+            background-color: #0b0f19;
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius-lg);
+            padding: 48px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            background-size: 24px 24px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+        .empty-state-content {
+            position: relative;
+            z-index: 2;
+            max-width: 480px;
+            margin: 0 auto;
+            color: var(--text-white);
+        }
+        .chart-glow-path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: drawPath 3s ease-out forwards;
+        }
+        @keyframes drawPath {
+            to { stroke-dashoffset: 0; }
+        }
+
+        /* --- QUICK ACTIONS GRID --- */
+        .quick-actions-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .quick-action-card {
+            background: #ffffff;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: var(--border-radius-lg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .quick-action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 20px -8px rgba(99, 102, 241, 0.15);
+        }
+
+        .quick-action-icon-wrap {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .quick-action-card:hover .quick-action-icon-wrap {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .quick-action-card h4 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .quick-action-card p {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        /* Hover border colors for quick action cards */
+        .quick-action-card:nth-child(1):hover { border-color: rgba(79, 70, 229, 0.4); }
+        .quick-action-card:nth-child(2):hover { border-color: rgba(16, 185, 129, 0.4); }
+        .quick-action-card:nth-child(3):hover { border-color: rgba(245, 158, 11, 0.4); }
+        .quick-action-card:nth-child(4):hover { border-color: rgba(239, 68, 68, 0.4); }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- SIDEBAR -->
+        <aside class="app-sidebar">
+            <div class="sidebar-logo">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;">
+                    <rect width="32" height="32" rx="8" fill="#4f46e5" />
+                    <path d="M7 22V10L16 5L25 10V22L16 27L7 22Z" stroke="white" stroke-width="2" stroke-linejoin="round" />
+                </svg>
+                <span>ArchFlow <span style="font-weight:400;color:var(--accent-indigo);">AI</span></span>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="dashboard.html" class="active" id="menu-dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" /></svg>
+                    Dashboard
+                </a>
+                <a href="new-project.html" id="menu-new-project">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    New Project
+                </a>
+                <a href="my-projects.html" id="menu-my-projects">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z" /></svg>
+                    My Projects
+                </a>
+                <a href="templates.html" id="menu-templates">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
+                    Templates Library
+                </a>
+                <a href="editor-2d.html" id="menu-editor-2d">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    2D Editor Workspace
+                </a>
+                <a href="viewer-3d.html" id="menu-viewer-3d">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    3D Viewer Workspace
+                </a>
+                <a href="style-variations.html" id="menu-variations">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    Style Variations
+                </a>
+                <a href="export.html" id="menu-export">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Export Center
+                </a>
+                <a href="team.html" id="menu-team">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                    Clients & Team
+                </a>
+                <a href="settings.html" id="menu-settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    Settings
+                </a>
+                <a href="docs.html" id="menu-docs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                    Help & Support
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-billing-widget">
+                    <h5>Render Credits</h5>
+                    <div class="sidebar-progress-bar">
+                        <div class="sidebar-progress-fill" style="width: 100%;"></div>
+                    </div>
+                    <div class="sidebar-billing-details">
+                        <span id="sidebar-credits-text">100 / 100 Left</span>
+                        <span style="font-weight:600;color:var(--success);">Pro</span>
+                    </div>
+                </div>
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar" id="sidebar-avatar-initials">DU</div>
+                    <div class="sidebar-user-info">
+                        <span class="sidebar-user-name" id="sidebar-user-display-name">Demo User</span>
+                        <span class="sidebar-user-role" id="sidebar-company-display-name">Apex Builders</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN MAIN -->
+        <main class="app-main">
+            
+            <!-- TOPBAR -->
+            <header class="app-topbar">
+                <form class="topbar-search-form" onsubmit="event.preventDefault()">
+                    <span class="topbar-search-icon">🔍</span>
+                    <input type="search" class="topbar-search-input" placeholder="Search projects or clients...">
+                </form>
+                <div class="topbar-actions">
+                    <a href="new-project.html" class="btn btn-primary btn-sm">➕ Create Project</a>
+                    <div class="topbar-btn" onclick="alert('System notification: All rendering nodes are online and running.')">
+                        🔔
+                        <span class="topbar-btn-dot"></span>
+                    </div>
+                    <a href="index.html" class="topbar-btn" title="Logout" onclick="localStorage.removeItem('archflow_logged_in');">
+                        🚪
+                    </a>
+                </div>
+            </header>
+
+            <!-- APP CONTENT -->
+            <div class="app-content">
+                
+                <!-- DYNAMIC TIME WELCOME HERO PANEL -->
+                <div class="app-page-header" style="background: linear-gradient(100deg, rgba(79, 70, 229, 0.04) 0%, rgba(59, 130, 246, 0.04) 100%); padding: 24px; border-radius: var(--border-radius-lg); border: 1px solid rgba(79, 70, 229, 0.08); margin-bottom: 28px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    <div class="app-page-title">
+                        <h2 style="font-size: 26px; font-weight: 800; display:flex; align-items:center; gap:8px;">
+                            <span id="dashboard-dynamic-greeting">Welcome back, Architect!</span>
+                            <span style="font-size:22px;">🚀</span>
+                        </h2>
+                        <p style="font-size:13px; color:var(--text-secondary); margin-top: 4px;">
+                            Workspace database initialized. You have access to real-time 2D drafting blueprint engine and 3D swatches.
+                        </p>
+                    </div>
+                    <div style="display:flex; gap:12px; align-items:center;">
+                        <span id="dashboard-current-time-badge" class="badge" style="background:rgba(79,70,229,0.06); color:var(--accent-indigo); font-weight:600; font-size:11px; border:1px solid rgba(79,70,229,0.1);">Live Telemetry Online</span>
+                        <a href="new-project.html" class="btn btn-primary pulse-cta" style="background:var(--accent-gradient); border:none;">➕ Start Designing Plan</a>
+                    </div>
+                </div>
+
+                <!-- STATS WIDGETS -->
+                <div class="stats-grid">
+                    <!-- Project Stats -->
+                    <div class="glowing-stat-card stat-projects">
+                        <div style="display:flex; flex-direction:column; justify-content:center; gap:4px;">
+                            <h6 style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;font-weight:600;">Active Projects</h6>
+                            <p id="stat-total-projects" style="font-family:var(--font-title);font-size:28px;font-weight:800;color:var(--text-primary);line-height:1;margin-bottom:2px;">0</p>
+                            <span class="stat-trend stat-trend-up" style="font-size:11px; display:flex; align-items:center; gap:4px;">
+                                <span>▲ 100%</span> <span style="color:var(--text-muted);font-weight:400;">this month</span>
+                            </span>
+                        </div>
+                        <div class="stat-progress-container">
+                            <svg width="48" height="48" viewBox="0 0 48 48">
+                                <circle class="progress-ring-circle-bg" stroke-width="3" fill="transparent" r="20" cx="24" cy="24"/>
+                                <circle class="progress-ring-circle" id="ring-projects" stroke="var(--accent-indigo)" stroke-width="3" fill="transparent" r="20" cx="24" cy="24"/>
+                            </svg>
+                            <div class="stat-icon-overlay">📁</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Credit Stats -->
+                    <div class="glowing-stat-card stat-credits">
+                        <div style="display:flex; flex-direction:column; justify-content:center; gap:4px;">
+                            <h6 style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;font-weight:600;">AI Render Credits</h6>
+                            <p id="stat-credits" style="font-family:var(--font-title);font-size:28px;font-weight:800;color:var(--text-primary);line-height:1;margin-bottom:2px;">100</p>
+                            <span class="stat-trend" style="font-size:11px;color:#d97706;font-weight:600;">
+                                <span>⚡ Auto-renewing</span>
+                            </span>
+                        </div>
+                        <div class="stat-progress-container">
+                            <svg width="48" height="48" viewBox="0 0 48 48">
+                                <circle class="progress-ring-circle-bg" stroke-width="3" fill="transparent" r="20" cx="24" cy="24"/>
+                                <circle class="progress-ring-circle" id="ring-credits" stroke="#f59e0b" stroke-width="3" fill="transparent" r="20" cx="24" cy="24"/>
+                            </svg>
+                            <div class="stat-icon-overlay">⚡</div>
+                        </div>
+                    </div>
+
+                    <!-- Export Stats -->
+                    <div class="glowing-stat-card stat-exports">
+                        <div style="display:flex; flex-direction:column; justify-content:center; gap:4px;">
+                            <h6 style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;font-weight:600;">Presentation Exports</h6>
+                            <p id="stat-exports" style="font-family:var(--font-title);font-size:28px;font-weight:800;color:var(--text-primary);line-height:1;margin-bottom:2px;">0</p>
+                            <span class="stat-trend stat-trend-up" style="font-size:11px;color:var(--success);font-weight:600;">
+                                <span>✔ All finalized</span>
+                            </span>
+                        </div>
+                        <div class="stat-progress-container">
+                            <svg width="48" height="48" viewBox="0 0 48 48">
+                                <circle class="progress-ring-circle-bg" stroke-width="3" fill="transparent" r="20" cx="24" cy="24"/>
+                                <circle class="progress-ring-circle" id="ring-exports" stroke="#3b82f6" stroke-width="3" fill="transparent" r="20" cx="24" cy="24"/>
+                            </svg>
+                            <div class="stat-icon-overlay">📄</div>
+                        </div>
+                    </div>
+
+                    <!-- Team Seats -->
+                    <div class="glowing-stat-card stat-team">
+                        <div style="display:flex; flex-direction:column; justify-content:center; gap:4px;">
+                            <h6 style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;font-weight:600;">Team Workspace</h6>
+                            <p style="font-family:var(--font-title);font-size:28px;font-weight:800;color:var(--text-primary);line-height:1;margin-bottom:2px;">1 <span style="font-size:13px;color:var(--text-muted);font-weight:400;">/ 5</span></p>
+                            <span class="stat-trend" style="font-size:11px;color:#a855f7;font-weight:600;">
+                                <span>👤 Admin active</span>
+                            </span>
+                        </div>
+                        <div class="stat-progress-container">
+                            <svg width="48" height="48" viewBox="0 0 48 48">
+                                <circle class="progress-ring-circle-bg" stroke-width="3" fill="transparent" r="20" cx="24" cy="24"/>
+                                <circle class="progress-ring-circle" id="ring-team" stroke="#a855f7" stroke-width="3" fill="transparent" r="20" cx="24" cy="24"/>
+                            </svg>
+                            <div class="stat-icon-overlay">👥</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QUICK ACTIONS GRID -->
+                <div class="quick-actions-grid">
+                    <div class="quick-action-card" onclick="window.location.href='new-project.html'">
+                        <div class="quick-action-icon-wrap" style="background: rgba(79, 70, 229, 0.08); color: var(--accent-indigo);">🪄</div>
+                        <h4 style="margin-top:6px;">AI Design Wizard</h4>
+                        <p>Configure property dimensions and generate dynamic floor structures instantly.</p>
+                    </div>
+
+                    <div class="quick-action-card" onclick="window.location.href='editor-2d.html'">
+                        <div class="quick-action-icon-wrap" style="background: rgba(16, 185, 129, 0.08); color: var(--success);">📐</div>
+                        <h4 style="margin-top:6px;">2D Blueprint Editor</h4>
+                        <p>Draft partitions, assign rooms, and check Vastu quadrant alignments.</p>
+                    </div>
+
+                    <div class="quick-action-card" onclick="window.location.href='viewer-3d.html'">
+                        <div class="quick-action-icon-wrap" style="background: rgba(245, 158, 11, 0.08); color: var(--warning);">👁️</div>
+                        <h4 style="margin-top:6px;">3D Facade Swatches</h4>
+                        <p>Test luxury/mid cladding, ambient day/night filters, and angle renders.</p>
+                    </div>
+
+                    <div class="quick-action-card" onclick="window.location.href='export.html'">
+                        <div class="quick-action-icon-wrap" style="background: rgba(239, 68, 68, 0.08); color: var(--danger);">📄</div>
+                        <h4 style="margin-top:6px;">Client Presentations</h4>
+                        <p>Assemble elevations and floor specifications into a downloadable proposal.</p>
+                    </div>
+                </div>
+
+                <!-- MAIN GRIDS -->
+                <div class="dash-layout-grid">
+                    
+                    <!-- Left: Recent projects / empty onboarding state -->
+                    <div class="card" style="padding:0;overflow:hidden;border:1px solid var(--border-color);">
+                        <div class="section-card-header" style="padding:24px 24px 12px 24px;">
+                            <h3>Recent Projects Work</h3>
+                            <a href="my-projects.html" id="btn-view-all" style="color:var(--accent-indigo);font-size:13px;font-weight:600;display:none;">View All Projects</a>
+                        </div>
+                        
+                        <!-- DYNAMIC PROJECTS TABLE CONTAINER -->
+                        <div class="projects-table-wrapper" id="projects-table-element" style="display:none;padding: 0 12px 12px 12px;">
+                            <table class="projects-table">
+                                <thead>
+                                    <tr>
+                                        <th>Project Details</th>
+                                        <th>Plot Parameters</th>
+                                        <th>Active Style</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-recent-projects-body">
+                                    <!-- Rendered dynamically by script -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- BEAUTIFUL COMPASS BLUEPRINT EMPTY STATE (ONBOARDING) -->
+                        <div id="projects-empty-state-element" class="blueprint-canvas" style="margin:24px;">
+                            <div class="blueprint-compass">
+                                <svg class="animated-compass" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%;">
+                                    <circle cx="50" cy="50" r="45" stroke="rgba(99, 102, 241, 0.1)" stroke-width="0.75" stroke-dasharray="2 2" />
+                                    <circle cx="50" cy="50" r="35" stroke="rgba(99, 102, 241, 0.08)" stroke-width="1" />
+                                    <line x1="50" y1="5" x2="50" y2="95" stroke="rgba(99, 102, 241, 0.12)" stroke-width="0.5" stroke-dasharray="4 4" />
+                                    <line x1="5" y1="50" x2="95" y2="50" stroke="rgba(99, 102, 241, 0.12)" stroke-width="0.5" stroke-dasharray="4 4" />
+                                    <path d="M50 15 L53 47 L50 50 L47 47 Z" fill="rgba(99, 102, 241, 0.2)" />
+                                    <path d="M50 85 L53 53 L50 50 L47 53 Z" fill="rgba(255, 255, 255, 0.08)" />
+                                    <path d="M85 50 L53 53 L50 50 L53 47 Z" fill="rgba(99, 102, 241, 0.08)" />
+                                    <path d="M15 50 L47 53 L50 50 L47 47 Z" fill="rgba(255, 255, 255, 0.08)" />
+                                </svg>
+                            </div>
+
+                            <div class="blueprint-grid-accent" style="top:20px; left:20px;"></div>
+                            <div class="blueprint-grid-accent" style="bottom:20px; right:20px;"></div>
+
+                            <div class="empty-state-content">
+                                <div style="width:64px;height:64px;background:rgba(99, 102, 241, 0.12);border:1px solid rgba(99, 102, 241, 0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 20px auto;box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);">📐</div>
+                                <h3 style="font-size:20px;color:white;margin-bottom:8px;font-weight:700;font-family:var(--font-title);">No Architectural Projects Found</h3>
+                                <p style="color:#94a3b8;font-size:13px;line-height:1.6;margin-bottom:28px;max-width:380px;margin-left:auto;margin-right:auto;">
+                                    The workspace is clean and empty. Create a custom project using our configuration wizard or load a sample layout to explore.
+                                </p>
+                                <div style="display:flex;justify-content:center;gap:12px;position:relative;z-index:10;">
+                                    <a href="new-project.html" class="btn btn-primary pulse-cta" style="background:var(--accent-gradient); border:none;">➕ Start Designing Plan</a>
+                                    <button class="btn btn-secondary" onclick="loadSampleProject()" style="background-color:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.12);color:white;">💡 Load a Sample Duplex</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Quick tools / charts panel -->
+                    <div style="display:flex;flex-direction:column;gap:24px;">
+                        
+                        <!-- HIGH END RENDERING CREDIT LINE CHART & TELEMETRY HUD -->
+                        <div class="telemetry-hud">
+                            <div class="telemetry-header">
+                                <div>
+                                    <h3 style="font-size:15px;margin-bottom:2px;color:white;font-weight:700;font-family:var(--font-title);">Render Telemetry</h3>
+                                    <span style="font-size:11px;color:#64748b;">Live credit consumption tracking</span>
+                                </div>
+                                <span class="badge badge-success" style="font-size:10px;background:rgba(16, 185, 129, 0.15);color:var(--success);border:none;">ACTIVE CLUSTER</span>
+                            </div>
+                            <div style="height:100px;width:100%;margin-top:15px;position:relative;">
+                                <svg viewBox="0 0 300 80" style="width:100%;height:100%;overflow:visible;">
+                                    <defs>
+                                        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.3"></stop>
+                                            <stop offset="100%" stop-color="#4f46e5" stop-opacity="0.0"></stop>
+                                        </linearGradient>
+                                    </defs>
+                                    <line x1="0" y1="15" x2="300" y2="15" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
+                                    <line x1="0" y1="40" x2="300" y2="40" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
+                                    <line x1="0" y1="65" x2="300" y2="65" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
+                                    <path d="M 0 65 Q 40 25, 80 50 T 160 15 T 240 40 L 300 30 L 300 80 L 0 80 Z" fill="url(#chartGrad)"></path>
+                                    <path class="chart-glow-path" d="M 0 65 Q 40 25, 80 50 T 160 15 T 240 40 L 300 30" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round"></path>
+                                    <circle cx="160" cy="15" r="4" fill="#38bdf8" stroke="#0b0f19" stroke-width="1.5"></circle>
+                                    <circle cx="300" cy="30" r="4" fill="#6366f1" stroke="#0b0f19" stroke-width="1.5"></circle>
+                                </svg>
+                            </div>
+                            <div class="telemetry-ticker">
+                                <div class="telemetry-item">
+                                    <span>Active Cluster</span>
+                                    <span class="telemetry-val">AP-SOUTH-02</span>
+                                </div>
+                                <div class="telemetry-item">
+                                    <span>Average Latency</span>
+                                    <span class="telemetry-val" style="color:var(--success);">210 ms</span>
+                                </div>
+                                <div class="telemetry-item">
+                                    <span>Node Health</span>
+                                    <span class="telemetry-val" style="color:#a855f7;">99.98%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Onboarding progress stepper guide -->
+                        <div class="card">
+                            <h3 style="font-size:15px;margin-bottom:12px;">Quick Start Guide</h3>
+                            <div style="display:flex;flex-direction:column;gap:12px;font-size:12px;">
+                                <div style="display:flex;gap:10px;align-items:center;">
+                                    <span style="color:var(--success);font-weight:bold;">✔</span>
+                                    <span>Setup profile and upload business logo</span>
+                                </div>
+                                <div style="display:flex;gap:10px;align-items:center;">
+                                    <span style="color:var(--accent-indigo);font-weight:bold;">→</span>
+                                    <span><a href="new-project.html" style="color:var(--accent-indigo);font-weight:600;">Create a new 30x40 East house project</a></span>
+                                </div>
+                                <div style="display:flex;gap:10px;align-items:center;">
+                                    <span style="color:var(--text-muted);">○</span>
+                                    <span>Tweak room sizes inside 2D Canvas Editor</span>
+                                </div>
+                                <div style="display:flex;gap:10px;align-items:center;">
+                                    <span style="color:var(--text-muted);">○</span>
+                                    <span>Compare facades inside 3D Style Variations</span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- SCRIPT FOR STATE RETRIEVAL -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            ArchFlow.checkAuth();
+            
+            // Personalize names based on session
+            const storedUser = localStorage.getItem("archflow_user_name");
+            const storedCompany = localStorage.getItem("archflow_company_name");
+            if (storedUser) {
+                document.getElementById("sidebar-user-display-name").innerText = storedUser;
+                const initials = storedUser.split(" ").map(w => w[0]).join("").toUpperCase();
+                document.getElementById("sidebar-avatar-initials").innerText = initials;
+            }
+            if (storedCompany) {
+                document.getElementById("sidebar-company-display-name").innerText = storedCompany;
+            }
+
+            // Dynamic Greeting & Time calculation
+            const currentHour = new Date().getHours();
+            let greeting = "Welcome back, Architect!";
+            const userName = storedUser ? storedUser.split(" ")[0] : "Architect";
+            if (currentHour < 12) {
+                greeting = `Good Morning, ${userName}!`;
+            } else if (currentHour < 17) {
+                greeting = `Good Afternoon, ${userName}!`;
+            } else {
+                greeting = `Good Evening, ${userName}!`;
+            }
+            document.getElementById("dashboard-dynamic-greeting").innerText = greeting;
+
+            // Live Time indicator
+            const timeBadge = document.getElementById("dashboard-current-time-badge");
+            if (timeBadge) {
+                const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+                const formattedDate = new Date().toLocaleDateString('en-US', dateOptions);
+                timeBadge.innerHTML = `🟢 Live • ${formattedDate}`;
+            }
+
+            renderRecentProjects();
+        });
+
+        function renderRecentProjects() {
+            const projects = ArchFlow.getProjects();
+            
+            // Update counts dynamically
+            const projCount = projects.length;
+            const creditsLeft = 100 - (projCount * 8);
+            const exportsCount = projCount * 2;
+            
+            document.getElementById("stat-total-projects").innerText = projCount;
+            document.getElementById("stat-credits").innerText = creditsLeft;
+            document.getElementById("stat-exports").innerText = exportsCount;
+            
+            document.getElementById("sidebar-credits-text").innerText = `${creditsLeft} / 100 Left`;
+            // Update sidebar progress fill bar
+            const fillBar = document.querySelector(".sidebar-progress-fill");
+            if (fillBar) {
+                fillBar.style.width = `${creditsLeft}%`;
+            }
+
+            // Update circular progress rings
+            const projectsPercent = Math.min((projCount / 10) * 100, 100);
+            const projectsOffset = 125.66 - (projectsPercent / 100) * 125.66;
+            const ringProjects = document.getElementById("ring-projects");
+            if (ringProjects) ringProjects.style.strokeDashoffset = projectsOffset;
+
+            const creditsPercent = Math.max(0, Math.min(creditsLeft, 100));
+            const creditsOffset = 125.66 - (creditsPercent / 100) * 125.66;
+            const ringCredits = document.getElementById("ring-credits");
+            if (ringCredits) ringCredits.style.strokeDashoffset = creditsOffset;
+
+            const exportsPercent = Math.min((exportsCount / 20) * 100, 100);
+            const exportsOffset = 125.66 - (exportsPercent / 100) * 125.66;
+            const ringExports = document.getElementById("ring-exports");
+            if (ringExports) ringExports.style.strokeDashoffset = exportsOffset;
+
+            const teamPercent = 20; // 1 out of 5 seats active (20%)
+            const teamOffset = 125.66 - (teamPercent / 100) * 125.66;
+            const ringTeam = document.getElementById("ring-team");
+            if (ringTeam) ringTeam.style.strokeDashoffset = teamOffset;
+            
+            const tableElement = document.getElementById("projects-table-element");
+            const emptyElement = document.getElementById("projects-empty-state-element");
+            const btnViewAll = document.getElementById("btn-view-all");
+            
+            if (projects.length === 0) {
+                tableElement.style.display = "none";
+                emptyElement.style.display = "block";
+                btnViewAll.style.display = "none";
+                return;
+            }
+
+            tableElement.style.display = "block";
+            emptyElement.style.display = "none";
+            btnViewAll.style.display = "block";
+
+            const body = document.getElementById("dashboard-recent-projects-body");
+            body.innerHTML = "";
+            
+            // Display first 5 projects
+            const list = projects.slice().reverse().slice(0, 5);
+
+            list.forEach((p) => {
+                const tr = document.createElement("tr");
+                
+                // Status mapping
+                let statusBadge = `<span class="badge badge-indigo"><span class="project-status-dot" style="background-color:var(--accent-indigo)"></span>${p.status}</span>`;
+                if (p.status === "Completed") {
+                    statusBadge = `<span class="badge badge-success"><span class="project-status-dot" style="background-color:var(--success)"></span>Completed</span>`;
+                } else if (p.status === "Draft") {
+                    statusBadge = `<span class="badge badge-warning"><span class="project-status-dot" style="background-color:var(--warning)"></span>Draft</span>`;
+                }
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="project-name-cell">
+                            <div class="project-thumbnail" onclick="selectActiveAndRoute('${p.id}', 'ai-generate-result.html')" style="cursor:pointer;">
+                                <img src="${ArchFlow.IMAGES.plan_thumb}" alt="Floor plan vector">
+                            </div>
+                            <div>
+                                <a href="#" onclick="selectActiveAndRoute('${p.id}', 'project-details.html')" class="project-title" style="color:var(--text-primary);">${p.name}</a>
+                                <div class="project-client">Client: ${p.client}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>${p.width}ft × ${p.length}ft (${p.area} sqft)</div>
+                        <div style="font-size:11px;color:var(--text-muted);">${p.facing} Facing</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-blue">${p.selectedStyle}</span>
+                    </td>
+                    <td>${statusBadge}</td>
+                    <td class="actions-cell">
+                        <button class="btn btn-secondary btn-sm" onclick="selectActiveAndRoute('${p.id}', 'ai-generate-result.html')" title="View results">👁️</button>
+                        <button class="btn btn-secondary btn-sm" onclick="handleDuplicate('${p.id}')" title="Duplicate">📋</button>
+                        <button class="btn btn-secondary btn-sm" style="color:var(--danger);" onclick="handleDelete('${p.id}')" title="Delete">🗑️</button>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        // Onboarding action helper: Instantiates Ramesh C's sample duplex project into localStorage
+        function loadSampleProject() {
+            const sampleData = {
+                name: "Duplex Villa - Ramesh C",
+                client: "Ramesh C",
+                type: "Duplex",
+                location: "Koramangala, Bangalore",
+                width: 30,
+                length: 40,
+                facing: "East",
+                corner: false,
+                road: "30ft Main Road",
+                floors: 2,
+                bedrooms: 3,
+                bathrooms: 3,
+                pooja: true,
+                parking: true,
+                balcony: true,
+                style: "Standard Modern",
+                budget: "Mid Range",
+                prompt: "Design a 30x40 east-facing 2-floor house with 3 bedrooms, parking, pooja room and a standard modern exterior."
+            };
+            
+            ArchFlow.createProject(sampleData);
+            ArchFlow.showToast("Sample Duplex loaded into workspace!", "success");
+            
+            // Re-render
+            renderRecentProjects();
+        }
+
+        function selectActiveAndRoute(id, route) {
+            ArchFlow.setActiveProjectId(id);
+            window.location.href = route;
+        }
+
+        function handleDuplicate(id) {
+            ArchFlow.duplicateProject(id);
+            renderRecentProjects();
+        }
+
+        function handleDelete(id) {
+            if (confirm("Are you sure you want to delete this project?")) {
+                ArchFlow.deleteProject(id);
+                renderRecentProjects();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Project - ArchFlow AI Platform</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/app.js"></script>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- SIDEBAR -->
+        <aside class="app-sidebar">
+            <div class="sidebar-logo">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;">
+                    <rect width="32" height="32" rx="8" fill="#4f46e5" />
+                    <path d="M7 22V10L16 5L25 10V22L16 27L7 22Z" stroke="white" stroke-width="2" stroke-linejoin="round" />
+                </svg>
+                <span>ArchFlow <span style="font-weight:400;color:var(--accent-indigo);">AI</span></span>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="dashboard.html" id="menu-dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" /></svg>
+                    Dashboard
+                </a>
+                <a href="new-project.html" class="active" id="menu-new-project">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    New Project
+                </a>
+                <a href="my-projects.html" id="menu-my-projects">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z" /></svg>
+                    My Projects
+                </a>
+                <a href="templates.html" id="menu-templates">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
+                    Templates Library
+                </a>
+                <a href="editor-2d.html" id="menu-editor-2d">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    2D Editor Workspace
+                </a>
+                <a href="viewer-3d.html" id="menu-viewer-3d">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    3D Viewer Workspace
+                </a>
+                <a href="style-variations.html" id="menu-variations">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    Style Variations
+                </a>
+                <a href="export.html" id="menu-export">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Export Center
+                </a>
+                <a href="team.html" id="menu-team">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                    Clients & Team
+                </a>
+                <a href="settings.html" id="menu-settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    Settings
+                </a>
+                <a href="docs.html" id="menu-docs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                    Help & Support
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-billing-widget">
+                    <h5>Render Credits</h5>
+                    <div class="sidebar-progress-bar">
+                        <div class="sidebar-progress-fill" style="width: 92%;"></div>
+                    </div>
+                    <div class="sidebar-billing-details">
+                        <span>92 / 100 Left</span>
+                        <span style="font-weight:600;color:var(--success);">Pro</span>
+                    </div>
+                </div>
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar" id="sidebar-avatar-initials">RC</div>
+                    <div class="sidebar-user-info">
+                        <span class="sidebar-user-name" id="sidebar-user-display-name">Ramesh Chandra</span>
+                        <span class="sidebar-user-role" id="sidebar-company-display-name">Apex Builders Co.</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN MAIN -->
+        <main class="app-main">
+            
+            <!-- TOPBAR -->
+            <header class="app-topbar">
+                <form class="topbar-search-form" onsubmit="event.preventDefault()">
+                    <span class="topbar-search-icon">🔍</span>
+                    <input type="search" class="topbar-search-input" placeholder="Search projects or clients...">
+                </form>
+                <div class="topbar-actions">
+                    <a href="new-project.html" class="btn btn-primary btn-sm">➕ Create Project</a>
+                    <div class="topbar-btn" onclick="alert('System notification: All rendering nodes are online and running.')">
+                        🔔
+                        <span class="topbar-btn-dot"></span>
+                    </div>
+                    <a href="index.html" class="topbar-btn" title="Logout" onclick="localStorage.removeItem('archflow_logged_in');">
+                        🚪
+                    </a>
+                </div>
+            </header>
+
+            <!-- APP CONTENT -->
+            <div class="app-content">
+                <div class="app-page-header" style="max-width:800px;margin-left:auto;margin-right:auto;">
+                    <div class="app-page-title">
+                        <h2>New Design Project</h2>
+                        <p>Configure structural layouts and exterior parameters for AI generation.</p>
+                    </div>
+                </div>
+
+                <!-- STEP PROGRESS BAR -->
+                <div class="wizard-stepper">
+                    <div class="wizard-step active" id="step-tab-1">
+                        <div class="wizard-step-num">1</div>
+                        Details
+                    </div>
+                    <div class="wizard-step" id="step-tab-2">
+                        <div class="wizard-step-num">2</div>
+                        Plot Setup
+                    </div>
+                    <div class="wizard-step" id="step-tab-3">
+                        <div class="wizard-step-num">3</div>
+                        Rooms
+                    </div>
+                    <div class="wizard-step" id="step-tab-4">
+                        <div class="wizard-step-num">4</div>
+                        AI Generation
+                    </div>
+                </div>
+
+                <!-- WIZARD CARD -->
+                <div class="card wizard-form-card">
+                    <form id="projectSetupForm" onsubmit="handleFormSubmission(event)">
+                        
+                        <!-- STEP 1: Project Details -->
+                        <div class="wizard-form-step" id="form-step-1">
+                            <h3 class="wizard-section-title">A. Project & Client Information</h3>
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label class="form-label">Project Name *</label>
+                                    <input type="text" class="form-control" id="form-pname" placeholder="E.g., Koramangala Duplex" required value="Duplex Villa - Ramesh C">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Client Name *</label>
+                                    <input type="text" class="form-control" id="form-cname" placeholder="E.g., Ramesh Choudhury" required value="Ramesh C">
+                                </div>
+                            </div>
+                            <div class="form-grid-2">
+                                <div class="form-group">
+                                    <label class="form-label">Project Category *</label>
+                                    <select class="form-control" id="form-ptype" required>
+                                        <option value="Residential">Residential Villa</option>
+                                        <option value="Duplex" selected>Duplex House</option>
+                                        <option value="Apartment">Apartment Layout</option>
+                                        <option value="Commercial">Commercial Shop</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Site Location (Optional)</label>
+                                    <input type="text" class="form-control" id="form-location" placeholder="E.g., Indiranagar, Bangalore" value="Koramangala, Bangalore">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 2: Plot Specifications -->
+                        <div class="wizard-form-step" id="form-step-2" style="display:none;">
+                            <h3 class="wizard-section-title">B. Site & Orientation Parameters</h3>
+                            <div class="form-grid-3">
+                                <div class="form-group">
+                                    <label class="form-label">Plot Width (ft) *</label>
+                                    <input type="number" class="form-control" id="form-pwidth" value="30" required oninput="calculateArea()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Plot Length (ft) *</label>
+                                    <input type="number" class="form-control" id="form-plength" value="40" required oninput="calculateArea()">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Total Site Area (sqft)</label>
+                                    <input type="text" class="form-control" id="form-parea" value="1200" disabled>
+                                </div>
+                            </div>
+                            <div class="form-grid-3">
+                                <div class="form-group">
+                                    <label class="form-label">Facing Direction *</label>
+                                    <select class="form-control" id="form-facing" required>
+                                        <option value="East" selected>East Facing</option>
+                                        <option value="West">West Facing</option>
+                                        <option value="North">North Facing</option>
+                                        <option value="South">South Facing</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Corner Plot *</label>
+                                    <select class="form-control" id="form-corner" required>
+                                        <option value="false" selected>No (Standard Plot)</option>
+                                        <option value="true">Yes (Road intersection)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Access Road Width</label>
+                                    <input type="text" class="form-control" id="form-road" value="30ft Main Road" placeholder="E.g., 30ft Main Road">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 3: Building Requirements -->
+                        <div class="wizard-form-step" id="form-step-3" style="display:none;">
+                            <h3 class="wizard-section-title">C. Rooms & Structural Requirements</h3>
+                            <div class="form-grid-3">
+                                <div class="form-group">
+                                    <label class="form-label">Number of Floors *</label>
+                                    <input type="number" class="form-control" id="form-floors" value="2" min="1" max="4" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Bedrooms *</label>
+                                    <input type="number" class="form-control" id="form-bedrooms" value="3" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Bathrooms *</label>
+                                    <input type="number" class="form-control" id="form-bathrooms" value="3" min="1" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Additional Amenities</label>
+                                <div style="display:grid;grid-template-columns: repeat(4, 1fr);gap:12px;margin-top:10px;">
+                                    <label class="form-checkbox card" style="padding:10px;font-size:12px;cursor:pointer;">
+                                        <input type="checkbox" id="form-pooja" checked> Pooja Room
+                                    </label>
+                                    <label class="form-checkbox card" style="padding:10px;font-size:12px;cursor:pointer;">
+                                        <input type="checkbox" id="form-parking" checked> Car Parking
+                                    </label>
+                                    <label class="form-checkbox card" style="padding:10px;font-size:12px;cursor:pointer;">
+                                        <input type="checkbox" id="form-balcony" checked> Balcony
+                                    </label>
+                                    <label class="form-checkbox card" style="padding:10px;font-size:12px;cursor:pointer;">
+                                        <input type="checkbox" id="form-vastufocus" checked> Vastu Compliant
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- STEP 4: Style & Prompt Generation -->
+                        <div class="wizard-form-step" id="form-step-4" style="display:none;">
+                            <h3 class="wizard-section-title">D. Style Preferences & Prompt Settings</h3>
+                            <div class="form-grid-3">
+                                <div class="form-group">
+                                    <label class="form-label">Target Exterior Style *</label>
+                                    <select class="form-control" id="form-style" required onchange="generatePrompt()">
+                                        <option value="Standard Modern" selected>Standard Modern</option>
+                                        <option value="Budget Friendly">Budget Friendly</option>
+                                        <option value="Premium Luxury">Premium Luxury</option>
+                                        <option value="Minimalist White">Minimalist White</option>
+                                        <option value="Traditional Modern">Traditional Modern</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Budget Preferences *</label>
+                                    <select class="form-control" id="form-budget" required>
+                                        <option value="Low Budget">Low Budget</option>
+                                        <option value="Mid Range" selected>Mid Range ($$$)</option>
+                                        <option value="Premium">Premium Elevation</option>
+                                        <option value="Luxury">Luxury Level</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Design Focus Priorities</label>
+                                    <select class="form-control" id="form-priorities">
+                                        <option value="ventilation">Maximize Air Ventilation</option>
+                                        <option value="light">Maximize Natural Light</option>
+                                        <option value="vastu" selected>Vastu Shastra Focus</option>
+                                        <option value="parking">Bigger Parking Area</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">AI Generation Blueprint Guidance Prompt</label>
+                                <textarea class="form-control prompt-textarea" id="form-prompt" required>Design a 30x40 east-facing 2-floor duplex house with 3 bedrooms, parking, pooja room, and a standard modern exterior elevation.</textarea>
+                                <span style="font-size:11px;color:var(--text-muted);display:block;margin-top:6px;">This prompt is auto-updated based on your selections, but can be customized with special instructions.</span>
+                            </div>
+                        </div>
+
+                        <!-- WIZARD NAVIGATION FOOTER -->
+                        <div class="wizard-footer">
+                            <button type="button" class="btn btn-secondary" id="btn-back" style="display:none;" onclick="navigateStep(-1)">Back</button>
+                            <button type="button" class="btn btn-secondary" id="btn-draft" onclick="saveAsDraft()">Save as Draft</button>
+                            <button type="button" class="btn btn-primary" id="btn-next" onclick="navigateStep(1)">Next Step</button>
+                            <button type="submit" class="btn btn-primary" id="btn-generate" style="display:none;background:var(--accent-gradient);">✨ Generate AI Layouts</button>
+                        </div>
+
+                    </form>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- WIZARD WIRING SCRIPT -->
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            ArchFlow.checkAuth();
+            
+            // Sync initials
+            const storedUser = localStorage.getItem("archflow_user_name");
+            if (storedUser) {
+                document.getElementById("sidebar-user-display-name").innerText = storedUser;
+                const initials = storedUser.split(" ").map(w => w[0]).join("").toUpperCase();
+                document.getElementById("sidebar-avatar-initials").innerText = initials;
+            }
+            
+            calculateArea();
+            generatePrompt();
+        });
+
+        function calculateArea() {
+            const w = parseInt(document.getElementById("form-pwidth").value) || 0;
+            const l = parseInt(document.getElementById("form-plength").value) || 0;
+            document.getElementById("form-parea").value = w * l;
+        }
+
+        function generatePrompt() {
+            const w = document.getElementById("form-pwidth").value;
+            const l = document.getElementById("form-plength").value;
+            const f = document.getElementById("form-facing").value;
+            const floors = document.getElementById("form-floors").value;
+            const beds = document.getElementById("form-bedrooms").value;
+            const style = document.getElementById("form-style").value;
+            
+            const promptBox = document.getElementById("form-prompt");
+            if (promptBox) {
+                promptBox.value = `Design a ${w}x${l} ${f.toLowerCase()}-facing ${floors}-floor house with ${beds} bedrooms, parking, and a ${style.toLowerCase()} exterior elevation layout.`;
+            }
+        }
+
+        function navigateStep(direction) {
+            // Validate step before proceeding
+            if (direction === 1) {
+                if (currentStep === 1) {
+                    if (!document.getElementById("form-pname").value || !document.getElementById("form-cname").value) {
+                        alert("Please fill in the project and client names.");
+                        return;
+                    }
+                }
+                if (currentStep === 2) {
+                    if (!document.getElementById("form-pwidth").value || !document.getElementById("form-plength").value) {
+                        alert("Please input plot width and length.");
+                        return;
+                    }
+                }
+            }
+
+            // Hide active step
+            document.getElementById(`form-step-${currentStep}`).style.display = "none";
+            document.getElementById(`step-tab-${currentStep}`).classList.remove("active");
+            if (direction === 1) {
+                document.getElementById(`step-tab-${currentStep}`).classList.add("completed");
+            }
+
+            currentStep += direction;
+
+            // Show new step
+            document.getElementById(`form-step-${currentStep}`).style.display = "block";
+            document.getElementById(`step-tab-${currentStep}`).classList.add("active");
+
+            // Toggle footer buttons
+            document.getElementById("btn-back").style.display = currentStep > 1 ? "block" : "none";
+            document.getElementById("btn-next").style.display = currentStep < totalSteps ? "block" : "none";
+            document.getElementById("btn-generate").style.display = currentStep === totalSteps ? "block" : "none";
+            
+            if (currentStep === totalSteps) {
+                generatePrompt();
+            }
+        }
+
+        function gatherFormData() {
+            return {
+                name: document.getElementById("form-pname").value,
+                client: document.getElementById("form-cname").value,
+                type: document.getElementById("form-ptype").value,
+                location: document.getElementById("form-location").value,
+                width: document.getElementById("form-pwidth").value,
+                length: document.getElementById("form-plength").value,
+                facing: document.getElementById("form-facing").value,
+                corner: document.getElementById("form-corner").value,
+                road: document.getElementById("form-road").value,
+                floors: document.getElementById("form-floors").value,
+                bedrooms: document.getElementById("form-bedrooms").value,
+                bathrooms: document.getElementById("form-bathrooms").value,
+                pooja: document.getElementById("form-pooja").checked,
+                parking: document.getElementById("form-parking").checked,
+                balcony: document.getElementById("form-balcony").checked,
+                style: document.getElementById("form-style").value,
+                budget: document.getElementById("form-budget").value,
+                prompt: document.getElementById("form-prompt").value
+            };
+        }
+
+        function saveAsDraft() {
+            const data = gatherFormData();
+            const proj = ArchFlow.createProject(data);
+            ArchFlow.showToast("Project saved as draft", "warning");
+            setTimeout(() => {
+                window.location.href = "dashboard.html";
+            }, 800);
+        }
+
+        function handleFormSubmission(e) {
+            e.preventDefault();
+            const data = gatherFormData();
+            const proj = ArchFlow.createProject(data);
+            
+            // Route to generation output results screen with loading overlay trigger query
+            window.location.href = "ai-generate-result.html?generating=true";
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Center - ArchFlow AI Platform</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/app.js"></script>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- SIDEBAR -->
+        <aside class="app-sidebar">
+            <div class="sidebar-logo">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;">
+                    <rect width="32" height="32" rx="8" fill="#4f46e5" />
+                    <path d="M7 22V10L16 5L25 10V22L16 27L7 22Z" stroke="white" stroke-width="2" stroke-linejoin="round" />
+                </svg>
+                <span>ArchFlow <span style="font-weight:400;color:var(--accent-indigo);">AI</span></span>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="dashboard.html" id="menu-dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" /></svg>
+                    Dashboard
+                </a>
+                <a href="new-project.html" id="menu-new-project">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    New Project
+                </a>
+                <a href="my-projects.html" id="menu-my-projects">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z" /></svg>
+                    My Projects
+                </a>
+                <a href="templates.html" id="menu-templates">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
+                    Templates Library
+                </a>
+                <a href="editor-2d.html" id="menu-editor-2d">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    2D Editor Workspace
+                </a>
+                <a href="viewer-3d.html" id="menu-viewer-3d">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    3D Viewer Workspace
+                </a>
+                <a href="style-variations.html" id="menu-variations">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    Style Variations
+                </a>
+                <a href="export.html" class="active" id="menu-export">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Export Center
+                </a>
+                <a href="team.html" id="menu-team">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                    Clients & Team
+                </a>
+                <a href="settings.html" id="menu-settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    Settings
+                </a>
+                <a href="docs.html" id="menu-docs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                    Help & Support
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-billing-widget">
+                    <h5>Render Credits</h5>
+                    <div class="sidebar-progress-bar">
+                        <div class="sidebar-progress-fill" style="width: 92%;"></div>
+                    </div>
+                    <div class="sidebar-billing-details">
+                        <span>92 / 100 Left</span>
+                        <span style="font-weight:600;color:var(--success);">Pro</span>
+                    </div>
+                </div>
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar" id="sidebar-avatar-initials">RC</div>
+                    <div class="sidebar-user-info">
+                        <span class="sidebar-user-name" id="sidebar-user-display-name">Ramesh Chandra</span>
+                        <span class="sidebar-user-role" id="sidebar-company-display-name">Apex Builders Co.</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN MAIN -->
+        <main class="app-main">
+            
+            <!-- TOPBAR -->
+            <header class="app-topbar">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <h3 style="font-size:18px;margin:0;" id="export-project-title">Export Proposal</h3>
+                </div>
+            </header>
+
+            <!-- APP CONTENT -->
+            <div class="app-content">
+                <div class="app-page-header">
+                    <div class="app-page-title">
+                        <h2>Client Presentation & Export Center</h2>
+                        <p>Bundle layout plans and 3D elevation swatches into custom presentation PDFs.</p>
+                    </div>
+                </div>
+
+                <!-- EXPORT SPLIT DOCK -->
+                <div class="export-split-grid">
+                    
+                    <!-- Left: Form selectors -->
+                    <div class="card" style="padding:28px;">
+                        <h3 style="font-size:18px;margin-bottom:20px;">Configure PDF Proposal Bundle</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Include Sections:</label>
+                            <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+                                <label class="form-checkbox">
+                                    <input type="checkbox" id="chk-cover" checked onchange="updatePreview()"> Title Cover Page
+                                </label>
+                                <label class="form-checkbox">
+                                    <input type="checkbox" id="chk-brief" checked onchange="updatePreview()"> Requirement Briefing Page
+                                </label>
+                                <label class="form-checkbox">
+                                    <input type="checkbox" id="chk-2d" checked onchange="updatePreview()"> 2D Blueprint Layout drawings
+                                </label>
+                                <label class="form-checkbox">
+                                    <input type="checkbox" id="chk-3d" checked onchange="updatePreview()"> 3D Concept Elevations
+                                </label>
+                                <label class="form-checkbox">
+                                    <input type="checkbox" id="chk-vastu" checked onchange="updatePreview()"> Vastu compliance advisory
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="border-top:1px solid var(--border-color);padding-top:20px;">
+                            <label class="form-label">Branding Options</label>
+                            <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px;">
+                                <label class="form-checkbox">
+                                    <input type="checkbox" id="chk-logo" checked onchange="updatePreview()"> Attach company business logo
+                                </label>
+                                <label class="form-checkbox">
+                                    <input type="checkbox" id="chk-designer" checked onchange="updatePreview()"> Attach planner/designer bio
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:24px;">
+                            <button class="btn btn-primary" onclick="triggerPDFDownload()">💾 Download PDF</button>
+                            <button class="btn btn-secondary" onclick="alert('Exported architectural drawings as high quality zip package.')">🗂️ Export PNGs (ZIP)</button>
+                        </div>
+
+                        <!-- Share portal -->
+                        <div style="background-color:var(--bg-primary);border-radius:8px;padding:16px;margin-top:24px;border:1px solid var(--border-color);">
+                            <label class="form-label">Create Shareable Client Review Link</label>
+                            <div style="display:flex;gap:8px;margin-top:8px;">
+                                <input type="text" class="form-control" id="share-link-box" value="https://archflow.ai/review/proj_1234" disabled style="font-size:12px;">
+                                <button class="btn btn-secondary btn-sm" onclick="copyShareLink()">Copy Link</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: PDF Cover preview -->
+                    <div>
+                        <span class="section-tag" style="text-align:left;">Cover Page Preview</span>
+                        <div class="presentation-preview-card">
+                            <div class="presentation-preview-grid-bg"></div>
+                            <div class="presentation-preview-content">
+                                <div style="display:flex;justify-content:space-between;align-items:center;">
+                                    <!-- Dynamic logo block -->
+                                    <div style="display:flex;align-items:center;gap:6px;" id="prev-logo-block">
+                                        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:20px;height:20px;">
+                                            <rect width="32" height="32" rx="8" fill="#4f46e5" />
+                                            <path d="M7 22V10L16 5L25 10V22L16 27L7 22Z" stroke="white" stroke-width="2" />
+                                        </svg>
+                                        <span style="font-size:12px;font-weight:700;" id="prev-company-name">Apex Builders Co.</span>
+                                    </div>
+                                    <span style="font-size:10px;color:var(--text-muted);">Confidential Review Copy</span>
+                                </div>
+
+                                <div class="presentation-title-block">
+                                    <span class="badge badge-indigo" style="margin-bottom:8px;" id="prev-style-badge">Standard Modern Choice</span>
+                                    <h3 id="prev-project-name">Koramangala 30x40 Duplex</h3>
+                                    <p style="color:var(--text-light);font-size:14px;" id="prev-client-name">Prepared for Ramesh C</p>
+                                </div>
+
+                                <div class="presentation-meta">
+                                    <span>Date: June 2026</span>
+                                    <span>Scale: 1:100 Snapped</span>
+                                    <span id="prev-designer-name">Designer: Ramesh Chandra</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- WIREUP SCRIPTS -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            ArchFlow.checkAuth();
+            
+            // Init initials avatar
+            const storedUser = localStorage.getItem("archflow_user_name");
+            const storedCompany = localStorage.getItem("archflow_company_name");
+            if (storedUser) {
+                document.getElementById("sidebar-user-display-name").innerText = storedUser;
+                const initials = storedUser.split(" ").map(w => w[0]).join("").toUpperCase();
+                document.getElementById("sidebar-avatar-initials").innerText = initials;
+                document.getElementById("prev-designer-name").innerText = `Designer: ${storedUser}`;
+            }
+            if (storedCompany) {
+                document.getElementById("prev-company-name").innerText = storedCompany;
+            }
+
+            const activeProj = ArchFlow.getActiveProject();
+            if (activeProj) {
+                document.getElementById("export-project-title").innerText = activeProj.name;
+                document.getElementById("prev-project-name").innerText = activeProj.name;
+                document.getElementById("prev-client-name").innerText = `Prepared for: ${activeProj.client}`;
+                document.getElementById("prev-style-badge").innerText = activeProj.selectedStyle;
+                
+                document.getElementById("share-link-box").value = `https://archflow.ai/review/${activeProj.id}`;
+            }
+        });
+
+        function updatePreview() {
+            const logoChecked = document.getElementById("chk-logo").checked;
+            const designerChecked = document.getElementById("chk-designer").checked;
+            
+            document.getElementById("prev-logo-block").style.opacity = logoChecked ? "1" : "0";
+            document.getElementById("prev-designer-name").style.opacity = designerChecked ? "1" : "0";
+        }
+
+        function triggerPDFDownload() {
+            ArchFlow.showToast("Compiling PDF pages...", "info");
+            setTimeout(() => {
+                ArchFlow.showToast("Design proposal downloaded successfully!", "success");
+            }, 1500);
+        }
+
+        function copyShareLink() {
+            const box = document.getElementById("share-link-box");
+            navigator.clipboard.writeText(box.value).then(() => {
+                ArchFlow.showToast("Review link copied to clipboard!", "success");
+            }).catch(() => {
+                // Fallback alert
+                alert(`Review Link: ${box.value}`);
+            });
+        }
+    </script>
+</body>
+</html>

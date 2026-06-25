@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - ArchFlow AI Platform</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body style="background-color:var(--bg-secondary);">
+
+    <div class="auth-split-layout">
+        
+        <!-- Left: Form -->
+        <div class="auth-form-panel">
+            <div class="auth-form-wrapper" style="max-width:480px;">
+                <a href="index.html" class="auth-logo-link logo">
+                    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;">
+                        <rect width="32" height="32" rx="8" fill="#4f46e5" />
+                        <path d="M7 22V10L16 5L25 10V22L16 27L7 22Z" stroke="white" stroke-width="2" stroke-linejoin="round" />
+                    </svg>
+                    <span>ArchFlow <span style="font-weight:400;color:var(--accent-indigo);">AI</span></span>
+                </a>
+                
+                <h2>Create Your Workspace</h2>
+                <p class="auth-subtitle">Start designing 2D floor plans & 3D house concept variations instantly.</p>
+                
+                <button type="button" class="btn btn-secondary btn-full" style="margin-bottom:20px;" onclick="simulateSocialSignup('Google')">
+                    <svg viewBox="0 0 24 24" width="16" height="16" style="margin-right:8px;" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    </svg>
+                    Register with Google
+                </button>
+                
+                <div class="auth-divider">or create workspace with email</div>
+                
+                <form id="signupForm" onsubmit="handleFormSignup(event)">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Full Name *</label>
+                            <input type="text" class="form-control" id="signupName" placeholder="Ramesh Chandra" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Company Name *</label>
+                            <input type="text" class="form-control" id="signupCompany" placeholder="Apex Builders Co." required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Email Address *</label>
+                            <input type="email" class="form-control" id="signupEmail" placeholder="ramesh@apex.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone Number *</label>
+                            <input type="tel" class="form-control" id="signupPhone" placeholder="+91 98765 43210" required>
+                        </div>
+                    </div>
+
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Password *</label>
+                            <input type="password" class="form-control" id="signupPassword" placeholder="••••••••" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Confirm Password *</label>
+                            <input type="password" class="form-control" id="signupConfirm" placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <label class="form-checkbox" style="margin-bottom:24px;">
+                        <input type="checkbox" required> I accept the <a href="#" style="color:var(--accent-indigo);font-weight:500;">Terms of Service</a> & <a href="#" style="color:var(--accent-indigo);font-weight:500;">Privacy Policy</a>.
+                    </label>
+                    
+                    <button type="submit" class="btn btn-primary btn-full btn-lg">Create Workspace & Continue</button>
+                </form>
+                
+                <p style="text-align:center;font-size:14px;color:var(--text-secondary);margin-top:24px;">
+                    Already have an account? <a href="login.html" style="color:var(--accent-indigo);font-weight:600;">Sign In</a>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Right: Graphic visual -->
+        <div class="auth-visual-panel">
+            <div class="mockup-grid-bg"></div>
+            <div class="auth-visual-content">
+                <div style="background-color:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:32px;border-radius:var(--border-radius-lg);margin-bottom:32px;text-align:left;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <span class="badge badge-indigo">2D Drafting Grid</span>
+                        <span style="font-size:11px;color:var(--text-muted);">Snap: Snapped</span>
+                    </div>
+                    <div style="background-color:#0b0f19;padding:12px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.08);">
+                        <svg viewBox="0 0 100 100" style="width:140px;height:140px;" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" fill="none">
+                            <rect x="5" y="5" width="90" height="90" stroke-dasharray="2 2"/>
+                            <rect x="15" y="15" width="30" height="30"/>
+                            <rect x="55" y="15" width="30" height="30"/>
+                            <rect x="15" y="55" width="70" height="30"/>
+                        </svg>
+                    </div>
+                </div>
+                <h3>Configure Specifications Easily</h3>
+                <p>Define plot dimensions, corner roads, room count requirements, and style variations within minutes.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function simulateSocialSignup(provider) {
+            localStorage.setItem("archflow_logged_in", "true");
+            localStorage.setItem("archflow_user_name", "Demo User");
+            localStorage.setItem("archflow_company_name", "Apex Builders");
+            window.location.href = "dashboard.html";
+        }
+
+        function handleFormSignup(e) {
+            e.preventDefault();
+            const p1 = document.getElementById("signupPassword").value;
+            const p2 = document.getElementById("signupConfirm").value;
+            if (p1 !== p2) {
+                alert("Passwords do not match!");
+                return;
+            }
+            localStorage.setItem("archflow_logged_in", "true");
+            localStorage.setItem("archflow_user_name", document.getElementById("signupName").value);
+            localStorage.setItem("archflow_company_name", document.getElementById("signupCompany").value);
+            window.location.href = "dashboard.html";
+        }
+    </script>
+
+</body>
+</html>

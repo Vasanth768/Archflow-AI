@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Style Variations - ArchFlow AI Platform</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/app.js"></script>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- SIDEBAR -->
+        <aside class="app-sidebar">
+            <div class="sidebar-logo">
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px;">
+                    <rect width="32" height="32" rx="8" fill="#4f46e5" />
+                    <path d="M7 22V10L16 5L25 10V22L16 27L7 22Z" stroke="white" stroke-width="2" stroke-linejoin="round" />
+                </svg>
+                <span>ArchFlow <span style="font-weight:400;color:var(--accent-indigo);">AI</span></span>
+            </div>
+            <nav class="sidebar-menu">
+                <a href="dashboard.html" id="menu-dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z" /></svg>
+                    Dashboard
+                </a>
+                <a href="new-project.html" id="menu-new-project">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    New Project
+                </a>
+                <a href="my-projects.html" id="menu-my-projects">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z" /></svg>
+                    My Projects
+                </a>
+                <a href="templates.html" id="menu-templates">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" /></svg>
+                    Templates Library
+                </a>
+                <a href="editor-2d.html" id="menu-editor-2d">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    2D Editor Workspace
+                </a>
+                <a href="viewer-3d.html" id="menu-viewer-3d">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    3D Viewer Workspace
+                </a>
+                <a href="style-variations.html" class="active" id="menu-variations">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    Style Variations
+                </a>
+                <a href="export.html" id="menu-export">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Export Center
+                </a>
+                <a href="team.html" id="menu-team">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                    Clients & Team
+                </a>
+                <a href="settings.html" id="menu-settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    Settings
+                </a>
+                <a href="docs.html" id="menu-docs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                    Help & Support
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="sidebar-billing-widget">
+                    <h5>Render Credits</h5>
+                    <div class="sidebar-progress-bar">
+                        <div class="sidebar-progress-fill" style="width: 92%;"></div>
+                    </div>
+                    <div class="sidebar-billing-details">
+                        <span>92 / 100 Left</span>
+                        <span style="font-weight:600;color:var(--success);">Pro</span>
+                    </div>
+                </div>
+                <div class="sidebar-user">
+                    <div class="sidebar-avatar" id="sidebar-avatar-initials">RC</div>
+                    <div class="sidebar-user-info">
+                        <span class="sidebar-user-name" id="sidebar-user-display-name">Ramesh Chandra</span>
+                        <span class="sidebar-user-role" id="sidebar-company-display-name">Apex Builders Co.</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN MAIN -->
+        <main class="app-main">
+            
+            <!-- TOPBAR -->
+            <header class="app-topbar">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <h3 style="font-size:18px;margin:0;" id="variations-project-title">Style Variations</h3>
+                    <span class="badge badge-indigo">Compare Mode Active</span>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn btn-secondary btn-sm" id="btn-trigger-compare" onclick="toggleCompareMode()">📊 Compare Selected</button>
+                    <a href="viewer-3d.html" class="btn btn-primary btn-sm">🏡 Open 3D Viewer</a>
+                </div>
+            </header>
+
+            <!-- APP CONTENT -->
+            <div class="app-content">
+                <div class="app-page-header">
+                    <div class="app-page-title">
+                        <h2>Side-by-Side Style Comparisons</h2>
+                        <p>Select multiple elevations to evaluate material costs and aesthetics with clients.</p>
+                    </div>
+                </div>
+
+                <!-- SIDE BY SIDE COMPARISON WINDOW (COMPARE MODE) -->
+                <div id="compare-splitscreen-box" class="card" style="display:none;margin-bottom:32px;padding:24px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                        <h4>Compare: <span id="comp-label-left">Left</span> vs <span id="comp-label-right">Right</span></h4>
+                        <button class="btn btn-secondary btn-sm" onclick="toggleCompareMode()">Exit Compare Mode</button>
+                    </div>
+                    <div class="compare-container-grid">
+                        <div class="compare-card">
+                            <div class="compare-image-box">
+                                <img id="compare-img-left" src="" alt="Left view">
+                                <div class="floating-badge" style="top:12px;left:12px;" id="compare-badge-left">Left</div>
+                            </div>
+                        </div>
+                        <div class="compare-card">
+                            <div class="compare-image-box">
+                                <img id="compare-img-right" src="" alt="Right view">
+                                <div class="floating-badge" style="top:12px;left:12px;" id="compare-badge-right">Right</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ALL VARIATIONS LISTING GRID -->
+                <div class="features-grid" id="variations-wrapper">
+                    <!-- Injected by script -->
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- WIREUP SCRIPTS -->
+    <script>
+        let selectedForCompare = [];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            ArchFlow.checkAuth();
+            
+            // Sync initials
+            const storedUser = localStorage.getItem("archflow_user_name");
+            if (storedUser) {
+                document.getElementById("sidebar-user-display-name").innerText = storedUser;
+                const initials = storedUser.split(" ").map(w => w[0]).join("").toUpperCase();
+                document.getElementById("sidebar-avatar-initials").innerText = initials;
+            }
+
+            renderVariationsGrid();
+        });
+
+        function renderVariationsGrid() {
+            const activeProj = ArchFlow.getActiveProject();
+            if (!activeProj) return;
+
+            document.getElementById("variations-project-title").innerText = activeProj.name;
+            const container = document.getElementById("variations-wrapper");
+            container.innerHTML = "";
+
+            activeProj.variations.forEach((v, index) => {
+                const isActive = activeProj.selectedStyle === v.name;
+                const isChecked = selectedForCompare.includes(v.name);
+
+                const card = document.createElement("div");
+                card.className = `compare-card card ${isActive ? 'selected' : ''}`;
+                card.style.borderWidth = isActive ? "2px" : "1px";
+                card.style.borderColor = isActive ? "var(--accent-indigo)" : "var(--border-color)";
+
+                card.innerHTML = `
+                    <div class="compare-image-box">
+                        <img src="${v.img}" alt="${v.name}">
+                        <div class="floating-badge" style="top:12px;right:12px;bottom:auto;background:rgba(15,23,42,0.85);">${v.tag}</div>
+                        <label style="position:absolute;top:12px;left:12px;background:rgba(15,23,42,0.9);padding:6px 12px;border-radius:4px;color:white;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,0.15);">
+                            <input type="checkbox" value="${v.name}" ${isChecked ? 'checked' : ''} onchange="handleCompareCheckbox(this)"> Compare
+                        </label>
+                    </div>
+                    <div class="compare-body">
+                        <div>
+                            <h3 style="font-size:18px;margin-bottom:6px;">${v.name}</h3>
+                            <p style="color:var(--text-secondary);font-size:12px;line-height:1.4;margin-bottom:16px;">${v.desc}</p>
+                        </div>
+                        <div style="display:flex;gap:10px;">
+                            <button class="btn btn-primary btn-sm" style="flex:1;" onclick="applyStyleSelection('${v.name}')">${isActive ? 'Active Style' : 'Use This Style'}</button>
+                            <button class="btn btn-secondary btn-sm" onclick="previewIn3D('${v.name}')">3D View</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function handleCompareCheckbox(cb) {
+            const val = cb.value;
+            if (cb.checked) {
+                if (selectedForCompare.length >= 2) {
+                    alert("You can compare up to 2 styles simultaneously.");
+                    cb.checked = false;
+                    return;
+                }
+                selectedForCompare.push(val);
+            } else {
+                selectedForCompare = selectedForCompare.filter(item => item !== val);
+            }
+        }
+
+        function applyStyleSelection(styleName) {
+            const activeProj = ArchFlow.getActiveProject();
+            ArchFlow.updateProjectStyleSelection(activeProj.id, styleName);
+            ArchFlow.showToast(`Applied ${styleName} as active selection.`, "success");
+            renderVariationsGrid();
+        }
+
+        function previewIn3D(styleName) {
+            const activeProj = ArchFlow.getActiveProject();
+            ArchFlow.updateProjectStyleSelection(activeProj.id, styleName);
+            window.location.href = "viewer-3d.html";
+        }
+
+        function toggleCompareMode() {
+            const compareBox = document.getElementById("compare-splitscreen-box");
+            
+            if (compareBox.style.display === "none") {
+                if (selectedForCompare.length < 2) {
+                    alert("Please select at least 2 style checkboxes above to compare.");
+                    return;
+                }
+                
+                const activeProj = ArchFlow.getActiveProject();
+                const style1 = activeProj.variations.find(v => v.name === selectedForCompare[0]);
+                const style2 = activeProj.variations.find(v => v.name === selectedForCompare[1]);
+                
+                document.getElementById("comp-label-left").innerText = style1.name;
+                document.getElementById("comp-label-right").innerText = style2.name;
+                
+                document.getElementById("compare-img-left").src = style1.img;
+                document.getElementById("compare-img-right").src = style2.img;
+                
+                document.getElementById("compare-badge-left").innerText = style1.tag;
+                document.getElementById("compare-badge-right").innerText = style2.tag;
+                
+                compareBox.style.display = "block";
+                compareBox.scrollIntoView({ behavior: "smooth" });
+                ArchFlow.showToast("Compare mode activated", "info");
+            } else {
+                compareBox.style.display = "none";
+                ArchFlow.showToast("Compare mode deactivated", "info");
+            }
+        }
+    </script>
+</body>
+</html>
