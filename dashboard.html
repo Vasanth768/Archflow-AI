@@ -1916,196 +1916,381 @@
     </main>
 </div>
 
+
 <!-- ══════════════════════════════════════════
      SCRIPTS
 ══════════════════════════════════════════ -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    ArchFlow.checkAuth();
+/* ═══════════════════════════════════════════════════════════════
+   ARCHFLOW AI · DASHBOARD — FULL BUTTON IMPLEMENTATIONS
+═══════════════════════════════════════════════════════════════ */
 
-    // ── Personalization ──────────────────────────────────────
-    const storedUser    = localStorage.getItem("archflow_user_name");
-    const storedCompany = localStorage.getItem("archflow_company_name");
-
-    const userName = storedUser ? storedUser.split(" ")[0] : "Architect";
-    const initials = storedUser
-        ? storedUser.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2)
-        : "DU";
-
-    if (storedUser) {
-        document.getElementById("sidebar-user-display-name").textContent  = storedUser;
-        document.getElementById("topbar-user-name").textContent            = storedUser;
-        document.getElementById("profile-name-main").textContent           = storedUser;
+// ── Toast System ──────────────────────────────────────────────
+function showToast(msg, type, duration) {
+    type = type || 'info'; duration = duration || 3500;
+    var container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position:fixed;bottom:28px;right:28px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;';
+        document.body.appendChild(container);
     }
-    if (storedCompany) {
-        document.getElementById("sidebar-company-display-name").textContent = storedCompany;
-        document.getElementById("profile-company-main").textContent         = storedCompany;
-    }
-
-    [
-        "sidebar-avatar-initials",
-        "topbar-avatar",
-        "profile-avatar-main"
-    ].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = initials;
-    });
-
-    // ── Greeting ─────────────────────────────────────────────
-    const h = new Date().getHours();
-    const greeting = h < 12
-        ? `Good Morning, <span class="gradient-name">${userName}!</span>`
-        : h < 17
-        ? `Good Afternoon, <span class="gradient-name">${userName}!</span>`
-        : `Good Evening, <span class="gradient-name">${userName}!</span>`;
-
-    document.getElementById("dashboard-dynamic-greeting").innerHTML = greeting;
-
-    // ── Live time badge ───────────────────────────────────────
-    const badge = document.getElementById("dashboard-current-time-badge");
-    if (badge) {
-        const fmt = new Date().toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
-        badge.textContent = `Live • ${fmt}`;
-    }
-
-    // ── Render projects ───────────────────────────────────────
-    renderRecentProjects();
-});
-
-// ── Ring animators ────────────────────────────────────────────
-function setRing(id, pct) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const circumference = 2 * Math.PI * 14; // r=14 → ~87.96
-    const offset = circumference - (Math.min(pct, 100) / 100) * circumference;
-    el.style.strokeDasharray  = circumference;
-    el.style.strokeDashoffset = circumference; // start at 0
-    setTimeout(() => { el.style.strokeDashoffset = offset; }, 200);
+    var C = { success:{ bg:'rgba(16,185,129,0.15)',border:'rgba(16,185,129,0.35)',icon:'✅',glow:'rgba(16,185,129,0.2)' },
+              error:  { bg:'rgba(244,63,94,0.15)', border:'rgba(244,63,94,0.35)', icon:'❌',glow:'rgba(244,63,94,0.2)' },
+              info:   { bg:'rgba(99,102,241,0.15)',border:'rgba(99,102,241,0.35)',icon:'ℹ️',glow:'rgba(99,102,241,0.2)' },
+              warning:{ bg:'rgba(245,158,11,0.15)',border:'rgba(245,158,11,0.35)',icon:'⚠️',glow:'rgba(245,158,11,0.2)' } };
+    var c = C[type] || C.info;
+    var toast = document.createElement('div');
+    toast.style.cssText = 'display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:12px;background:'+c.bg+';border:1px solid '+c.border+';backdrop-filter:blur(20px);box-shadow:0 8px 24px '+c.glow+';color:#f1f5f9;font-size:13px;font-weight:500;font-family:Inter,sans-serif;pointer-events:all;transform:translateX(120%);transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);max-width:340px;min-width:240px;cursor:pointer;';
+    toast.innerHTML = '<span style="font-size:16px;flex-shrink:0;">'+c.icon+'</span><span style="flex:1;">'+msg+'</span>';
+    container.appendChild(toast);
+    requestAnimationFrame(function(){ toast.style.transform='translateX(0)'; });
+    function dismiss(){ toast.style.transform='translateX(120%)'; setTimeout(function(){ toast.remove(); },350); }
+    toast.addEventListener('click', dismiss);
+    setTimeout(dismiss, duration);
 }
 
-// ── Render recent projects ────────────────────────────────────
+// ── Glass Confirmation Modal ──────────────────────────────────
+function showModal(opts) {
+    var existing = document.getElementById('glass-modal-overlay');
+    if (existing) existing.remove();
+    var type = opts.type || 'danger';
+    var TC = { danger:{ accent:'#f43f5e',bg:'rgba(244,63,94,0.12)', border:'rgba(244,63,94,0.3)' },
+               info:  { accent:'#6366f1',bg:'rgba(99,102,241,0.12)',border:'rgba(99,102,241,0.3)' },
+               warning:{accent:'#f59e0b',bg:'rgba(245,158,11,0.12)',border:'rgba(245,158,11,0.3)' } };
+    var tc = TC[type] || TC.danger;
+    var icons = { danger:'🗑️', info:'ℹ️', warning:'⚠️' };
+    var overlay = document.createElement('div');
+    overlay.id = 'glass-modal-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(2,4,8,0.78);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;';
+    overlay.innerHTML =
+        '<style>@keyframes smUp{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}</style>'+
+        '<div style="background:rgba(10,17,32,0.96);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:32px;max-width:420px;width:90%;box-shadow:0 24px 60px rgba(0,0,0,0.5);animation:smUp 0.25s ease;font-family:Inter,sans-serif;">'+
+          '<div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">'+
+            '<div style="width:44px;height:44px;border-radius:50%;background:'+tc.bg+';border:1px solid '+tc.border+';display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">'+(icons[type]||'ℹ️')+'</div>'+
+            '<div><div style="font-size:16px;font-weight:700;color:#f1f5f9;margin-bottom:4px;">'+opts.title+'</div>'+
+            '<div style="font-size:13px;color:#64748b;line-height:1.5;">'+opts.message+'</div></div>'+
+          '</div>'+
+          '<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px;">'+
+            '<button id="mc" style="padding:9px 20px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;font-size:13px;font-weight:600;cursor:pointer;font-family:Inter,sans-serif;" onmouseenter="this.style.background=\'rgba(255,255,255,0.09)\'" onmouseleave="this.style.background=\'rgba(255,255,255,0.05)\'">'+(opts.cancelText||'Cancel')+'</button>'+
+            '<button id="mok" style="padding:9px 20px;border-radius:10px;background:'+tc.bg+';border:1px solid '+tc.border+';color:'+tc.accent+';font-size:13px;font-weight:700;cursor:pointer;font-family:Inter,sans-serif;" onmouseenter="this.style.filter=\'brightness(1.2)\'" onmouseleave="this.style.filter=\'\'">'+(opts.confirmText||'Confirm')+'</button>'+
+          '</div>'+
+        '</div>';
+    function closeModal(){ overlay.remove(); }
+    overlay.querySelector('#mc').addEventListener('click', closeModal);
+    overlay.querySelector('#mok').addEventListener('click', function(){ closeModal(); opts.onConfirm && opts.onConfirm(); });
+    overlay.addEventListener('click', function(e){ if(e.target===overlay) closeModal(); });
+    document.body.appendChild(overlay);
+}
+
+// ── Notifications Panel ───────────────────────────────────────
+var notifOpen = false, notifPanel = null;
+var NOTIFS = [
+    { color:'#10b981',title:'Render cluster is online',  desc:'AP-SOUTH-02 is operational.',     time:'Just now',   unread:true  },
+    { color:'#f59e0b',title:'Credits auto-renewed',      desc:'100 Pro credits reset this cycle.',time:'2 hours ago',unread:true  },
+    { color:'#6366f1',title:'New template available',    desc:'Modern Villa 2BHK added.',         time:'Yesterday',  unread:false },
+    { color:'#8b5cf6',title:'Export ready',              desc:'Duplex Villa PDF is ready.',       time:'2 days ago', unread:false },
+];
+
+function toggleNotifPanel() {
+    if (notifOpen) { closeNotifPanel(); return; }
+    notifPanel = document.createElement('div');
+    notifPanel.id = 'notif-dropdown';
+    notifPanel.style.cssText = 'position:fixed;top:68px;right:90px;width:340px;z-index:5000;background:rgba(10,17,32,0.97);border:1px solid rgba(255,255,255,0.1);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,0.5);backdrop-filter:blur(24px);overflow:hidden;transform:scale(0.95) translateY(-8px);opacity:0;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);font-family:Inter,sans-serif;';
+    var rows = NOTIFS.map(function(n,i){
+        return '<div class="ndi" data-i="'+i+'" style="display:flex;gap:12px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;transition:background 0.15s;'+(n.unread?'background:rgba(99,102,241,0.04);':'')+'">'+
+            '<div style="width:9px;height:9px;border-radius:50%;background:'+n.color+';flex-shrink:0;margin-top:4px;box-shadow:0 0 6px '+n.color+';"></div>'+
+            '<div style="flex:1;"><div style="font-size:13px;font-weight:'+(n.unread?700:500)+';color:'+(n.unread?'#f1f5f9':'#94a3b8')+';margin-bottom:3px;">'+n.title+'</div>'+
+            '<div style="font-size:11.5px;color:#475569;margin-bottom:4px;">'+n.desc+'</div>'+
+            '<div style="font-size:10.5px;color:#334155;">'+n.time+'</div></div>'+
+            (n.unread?'<div class="ndu" style="width:7px;height:7px;border-radius:50%;background:#818cf8;align-self:center;flex-shrink:0;"></div>':'')+
+        '</div>';
+    }).join('');
+    notifPanel.innerHTML =
+        '<div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.07);">'+
+            '<span style="font-size:14px;font-weight:700;color:#f1f5f9;">Notifications</span>'+
+            '<span onclick="markAllRead(event)" style="font-size:11px;color:#818cf8;cursor:pointer;padding:4px 10px;border-radius:8px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);font-weight:600;">Mark all read</span>'+
+        '</div>'+rows+
+        '<div style="padding:13px 18px;text-align:center;border-top:1px solid rgba(255,255,255,0.05);">'+
+            '<span style="font-size:12px;color:#818cf8;cursor:pointer;font-weight:600;" onclick="closeNotifPanel();showToast(\'No further notifications.\',\'info\')">View all →</span>'+
+        '</div>';
+    notifPanel.querySelectorAll('.ndi').forEach(function(item){
+        item.addEventListener('mouseenter',function(){ item.style.background='rgba(255,255,255,0.03)'; });
+        item.addEventListener('mouseleave',function(){ item.style.background=''; });
+        item.addEventListener('click',function(){
+            var dot=item.querySelector('.ndu'); if(dot) dot.remove();
+            var t=item.querySelector('div[style*="font-weight:700"]'); if(t) t.style.fontWeight='500';
+        });
+    });
+    document.body.appendChild(notifPanel);
+    requestAnimationFrame(function(){ notifPanel.style.transform='scale(1) translateY(0)'; notifPanel.style.opacity='1'; });
+    notifOpen=true;
+    setTimeout(function(){ document.addEventListener('click', outsideNotifClick); }, 120);
+}
+function closeNotifPanel() {
+    if (!notifPanel) return;
+    notifPanel.style.transform='scale(0.95) translateY(-8px)'; notifPanel.style.opacity='0';
+    setTimeout(function(){ if(notifPanel){ notifPanel.remove(); notifPanel=null; } }, 250);
+    notifOpen=false; document.removeEventListener('click', outsideNotifClick);
+}
+function outsideNotifClick(e) {
+    var btn=document.getElementById('notif-topbar-btn');
+    if(notifPanel && !notifPanel.contains(e.target) && btn && !btn.contains(e.target)) closeNotifPanel();
+}
+function markAllRead(e) {
+    if(e) e.preventDefault();
+    document.querySelectorAll('.notif-unread-mark,.ndu').forEach(function(el){ el.remove(); });
+    showToast('All notifications marked as read.','success',2500);
+}
+
+// ── Profile Dropdown ──────────────────────────────────────────
+var profileOpen = false, profileDrop = null;
+function toggleProfileDropdown() {
+    if (profileOpen) { closeProfileDrop(); return; }
+    var name    = localStorage.getItem('archflow_user_name')    || 'Demo User';
+    var company = localStorage.getItem('archflow_company_name') || 'Apex Builders';
+    var initials = name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2);
+    profileDrop = document.createElement('div');
+    profileDrop.id = 'profile-dropdown';
+    profileDrop.style.cssText = 'position:fixed;top:68px;right:20px;width:240px;z-index:5000;background:rgba(10,17,32,0.97);border:1px solid rgba(255,255,255,0.1);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,0.5);backdrop-filter:blur(24px);overflow:hidden;transform:scale(0.95) translateY(-8px);opacity:0;transition:all 0.25s cubic-bezier(0.4,0,0.2,1);font-family:Inter,sans-serif;';
+    var menuItems = [
+        { icon:'👤', label:'My Profile', fn:"window.location.href='settings.html'", danger:false },
+        { icon:'⚙️', label:'Settings',   fn:"window.location.href='settings.html'", danger:false },
+        { icon:'👥', label:'Team',       fn:"window.location.href='team.html'",     danger:false },
+        { icon:'💳', label:'Billing',    fn:"showToast('Billing coming soon!','info')", danger:false },
+        { icon:'🚪', label:'Logout',     fn:"localStorage.removeItem('archflow_logged_in');window.location.href='index.html'", danger:true },
+    ];
+    profileDrop.innerHTML =
+        '<div style="padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px;">'+
+            '<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;">'+initials+'</div>'+
+            '<div><div style="font-size:13px;font-weight:700;color:#f1f5f9;">'+name+'</div>'+
+            '<div style="font-size:11px;color:#475569;margin-top:1px;">'+company+'</div>'+
+            '<div style="font-size:10px;font-weight:600;color:#818cf8;margin-top:4px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.2);border-radius:99px;padding:2px 8px;display:inline-block;">Pro Plan</div></div>'+
+        '</div>'+
+        menuItems.map(function(it){
+            return '<div onclick="'+it.fn+';closeProfileDrop();" style="display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer;transition:background 0.15s;color:'+(it.danger?'#f43f5e':'#94a3b8')+';" onmouseenter="this.style.background=\'rgba(255,255,255,0.04)\'" onmouseleave="this.style.background=\'\'">'+
+                '<span style="font-size:15px;width:20px;text-align:center;">'+it.icon+'</span>'+
+                '<span style="font-size:13px;font-weight:500;">'+it.label+'</span></div>';
+        }).join('');
+    document.body.appendChild(profileDrop);
+    requestAnimationFrame(function(){ profileDrop.style.transform='scale(1) translateY(0)'; profileDrop.style.opacity='1'; });
+    profileOpen=true;
+    setTimeout(function(){ document.addEventListener('click', outsideProfileClick); }, 120);
+}
+function closeProfileDrop() {
+    if (!profileDrop) return;
+    profileDrop.style.transform='scale(0.95) translateY(-8px)'; profileDrop.style.opacity='0';
+    setTimeout(function(){ if(profileDrop){ profileDrop.remove(); profileDrop=null; } }, 250);
+    profileOpen=false; document.removeEventListener('click', outsideProfileClick);
+}
+function outsideProfileClick(e) {
+    var mini=document.querySelector('.topbar-user-mini');
+    if(profileDrop && !profileDrop.contains(e.target) && mini && !mini.contains(e.target)) closeProfileDrop();
+}
+
+// ── Live Search Filter ────────────────────────────────────────
+function initSearch() {
+    var input = document.getElementById('topbar-search');
+    if (!input) return;
+    var t;
+    input.addEventListener('input', function(){
+        clearTimeout(t);
+        t = setTimeout(function(){
+            var q = input.value.trim().toLowerCase();
+            var rows = document.querySelectorAll('#dashboard-recent-projects-body tr');
+            var visible = 0;
+            rows.forEach(function(row){
+                if (row.id === 'search-no-result') return;
+                var show = !q || row.textContent.toLowerCase().includes(q);
+                row.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+            var nr = document.getElementById('search-no-result');
+            if (!q) { if(nr) nr.remove(); return; }
+            var tbody = document.getElementById('dashboard-recent-projects-body');
+            if (visible===0 && tbody) {
+                if (!nr) {
+                    nr=document.createElement('tr'); nr.id='search-no-result';
+                    nr.innerHTML='<td colspan="5" style="text-align:center;padding:28px;color:#475569;font-size:13px;">No projects match &ldquo;<strong style=\'color:#818cf8;\'>'+q+'</strong>&rdquo;</td>';
+                    tbody.appendChild(nr);
+                }
+            } else { if(nr) nr.remove(); }
+        }, 220);
+    });
+    input.addEventListener('keydown', function(e){
+        if(e.key==='Escape'){ input.value=''; input.dispatchEvent(new Event('input')); input.blur(); }
+    });
+}
+
+// ── Guide Step Click-through ──────────────────────────────────
+function initGuideSteps() {
+    var steps = document.querySelectorAll('.guide-step');
+    steps.forEach(function(step, idx){
+        step.style.cursor='pointer';
+        step.addEventListener('click', function(){
+            var check=step.querySelector('.gs-check'), label=step.querySelector('.gs-label');
+            if (!check||!label) return;
+            if (check.classList.contains('done')) {
+                showToast('Step already completed! ✅','success',2000);
+            } else if (check.classList.contains('current')) {
+                check.className='gs-check done'; check.textContent='✓';
+                label.classList.remove('current'); label.classList.add('done');
+                var next=steps[idx+1];
+                if (next) {
+                    var nc=next.querySelector('.gs-check'), nl=next.querySelector('.gs-label');
+                    if (nc && nc.classList.contains('pending')) {
+                        nc.className='gs-check current'; nc.textContent='→';
+                        nl.classList.remove('pending'); nl.classList.add('current');
+                    }
+                }
+                showToast('Step completed! Keep going 🚀','success');
+            }
+        });
+    });
+}
+
+// ── KPI Card Click Info ───────────────────────────────────────
+function initKPITooltips() {
+    var cards = [
+        ['.kpi-card.kpi-indigo','Active Projects: Total architectural projects in your workspace.'],
+        ['.kpi-card.kpi-amber', 'AI Render Credits: Each 3D render uses ~8 credits. Auto-renews monthly.'],
+        ['.kpi-card.kpi-blue',  'Presentation Exports: PDF/slides generated from your projects.'],
+        ['.kpi-card.kpi-violet','Team Workspace: 1 of 5 seats active. Invite collaborators in Team settings.'],
+    ];
+    cards.forEach(function(pair){
+        var el=document.querySelector(pair[0]);
+        if(el){ el.style.cursor='pointer'; el.addEventListener('click',function(){ showToast(pair[1],'info',3500); }); }
+    });
+}
+
+// ── Ring Animator ─────────────────────────────────────────────
+function setRing(id, pct) {
+    var el=document.getElementById(id); if(!el) return;
+    var circ=2*Math.PI*14;
+    var offset=circ-(Math.min(pct,100)/100)*circ;
+    el.style.strokeDasharray=circ; el.style.strokeDashoffset=circ;
+    setTimeout(function(){ el.style.strokeDashoffset=offset; }, 200);
+}
+
+// ── Render Recent Projects ────────────────────────────────────
 function renderRecentProjects() {
-    const projects     = ArchFlow.getProjects();
-    const projCount    = projects.length;
-    const creditsLeft  = Math.max(0, 100 - projCount * 8);
-    const exportsCount = projCount * 2;
+    var projects=ArchFlow.getProjects();
+    var projCount=projects.length;
+    var creditsLeft=Math.max(0,100-projCount*8);
+    var exportsCount=projCount*2;
 
-    // KPI values
-    document.getElementById("stat-total-projects").textContent = projCount;
-    document.getElementById("stat-credits").textContent        = creditsLeft;
-    document.getElementById("stat-exports").textContent        = exportsCount;
+    document.getElementById('stat-total-projects').textContent=projCount;
+    document.getElementById('stat-credits').textContent=creditsLeft;
+    document.getElementById('stat-exports').textContent=exportsCount;
 
-    // Sidebar credits
-    const creditsPct = Math.min(creditsLeft, 100);
-    const sidebarFill = document.getElementById("sidebar-credits-fill");
-    const sidebarText = document.getElementById("sidebar-credits-text");
-    if (sidebarFill) sidebarFill.style.width = `${creditsPct}%`;
-    if (sidebarText) sidebarText.textContent  = creditsLeft;
+    var creditsPct=Math.min(creditsLeft,100);
+    var sf=document.getElementById('sidebar-credits-fill'); if(sf) sf.style.width=creditsPct+'%';
+    var st=document.getElementById('sidebar-credits-text'); if(st) st.textContent=creditsLeft;
 
-    // Rings
-    setRing("ring-projects", Math.min((projCount / 10) * 100, 100));
-    setRing("ring-credits",  creditsPct);
-    setRing("ring-exports",  Math.min((exportsCount / 20) * 100, 100));
-    setRing("ring-team",     20);
+    setRing('ring-projects',Math.min((projCount/10)*100,100));
+    setRing('ring-credits', creditsPct);
+    setRing('ring-exports', Math.min((exportsCount/20)*100,100));
+    setRing('ring-team',    20);
 
-    // Table / empty state
-    const tableEl  = document.getElementById("projects-table-element");
-    const emptyEl  = document.getElementById("projects-empty-state-element");
-    const viewAll  = document.getElementById("btn-view-all");
+    var tableEl=document.getElementById('projects-table-element');
+    var emptyEl=document.getElementById('projects-empty-state-element');
+    var viewAll=document.getElementById('btn-view-all');
 
-    if (projects.length === 0) {
-        tableEl.style.display = "none";
-        emptyEl.style.display = "block";
-        viewAll.style.display = "none";
-        return;
+    if (projects.length===0) {
+        tableEl.style.display='none'; emptyEl.style.display='block'; viewAll.style.display='none'; return;
     }
+    tableEl.style.display='block'; emptyEl.style.display='none'; viewAll.style.display='inline-flex';
 
-    tableEl.style.display = "block";
-    emptyEl.style.display = "none";
-    viewAll.style.display = "inline-flex";
-
-    const body = document.getElementById("dashboard-recent-projects-body");
-    body.innerHTML = "";
-
-    const list = projects.slice().reverse().slice(0, 5);
-
-    list.forEach(p => {
-        let statusClass = "active";
-        if (p.status === "Completed") statusClass = "done";
-        if (p.status === "Draft")     statusClass = "draft";
-
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>
-                <div class="proj-name-cell">
-                    <div class="proj-thumb" onclick="selectActiveAndRoute('${p.id}','ai-generate-result.html')" style="cursor:pointer;">
-                        <img src="${ArchFlow.IMAGES.plan_thumb}" alt="Floor plan">
-                    </div>
-                    <div>
-                        <div class="proj-title" onclick="selectActiveAndRoute('${p.id}','project-details.html')">${p.name}</div>
-                        <div class="proj-client">Client: ${p.client}</div>
-                    </div>
-                </div>
-            </td>
-            <td>
-                <div style="font-size:12.5px;color:var(--text-2);">${p.width}ft × ${p.length}ft (${p.area} sqft)</div>
-                <div style="font-size:10.5px;color:var(--text-4);margin-top:2px;">${p.facing} Facing</div>
-            </td>
-            <td><span class="style-chip">${p.selectedStyle}</span></td>
-            <td><span class="status-chip ${statusClass}">${p.status}</span></td>
-            <td>
-                <div class="action-row">
-                    <button class="action-btn" onclick="selectActiveAndRoute('${p.id}','ai-generate-result.html')" title="View">👁️</button>
-                    <button class="action-btn" onclick="handleDuplicate('${p.id}')" title="Duplicate">📋</button>
-                    <button class="action-btn danger" onclick="handleDelete('${p.id}')" title="Delete">🗑️</button>
-                </div>
-            </td>
-        `;
+    var body=document.getElementById('dashboard-recent-projects-body');
+    body.innerHTML='';
+    var list=projects.slice().reverse().slice(0,5);
+    list.forEach(function(p){
+        var sc=p.status==='Completed'?'done':p.status==='Draft'?'draft':'active';
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td><div class="proj-name-cell">'+
+            '<div class="proj-thumb" onclick="selectActiveAndRoute(\''+p.id+'\',\'ai-generate-result.html\')" style="cursor:pointer;"><img src="'+ArchFlow.IMAGES.plan_thumb+'" alt="Floor plan"></div>'+
+            '<div><div class="proj-title" onclick="selectActiveAndRoute(\''+p.id+'\',\'project-details.html\')">'+p.name+'</div>'+
+            '<div class="proj-client">Client: '+p.client+'</div></div></div></td>'+
+            '<td><div style="font-size:12.5px;color:var(--text-2);">'+p.width+'ft × '+p.length+'ft ('+p.area+' sqft)</div>'+
+            '<div style="font-size:10.5px;color:var(--text-4);margin-top:2px;">'+p.facing+' Facing</div></td>'+
+            '<td><span class="style-chip">'+p.selectedStyle+'</span></td>'+
+            '<td><span class="status-chip '+sc+'">'+p.status+'</span></td>'+
+            '<td><div class="action-row">'+
+            '<button class="action-btn" onclick="selectActiveAndRoute(\''+p.id+'\',\'ai-generate-result.html\')" title="View">👁️</button>'+
+            '<button class="action-btn" onclick="handleDuplicate(\''+p.id+'\')" title="Duplicate">📋</button>'+
+            '<button class="action-btn danger" onclick="handleDelete(\''+p.id+'\')" title="Delete">🗑️</button>'+
+            '</div></td>';
         body.appendChild(tr);
     });
 }
 
 function loadSampleProject() {
-    const sampleData = {
-        name: "Duplex Villa - Ramesh C", client: "Ramesh C", type: "Duplex",
-        location: "Koramangala, Bangalore", width: 30, length: 40, facing: "East",
-        corner: false, road: "30ft Main Road", floors: 2, bedrooms: 3, bathrooms: 3,
-        pooja: true, parking: true, balcony: true, style: "Standard Modern",
-        budget: "Mid Range",
-        prompt: "Design a 30x40 east-facing 2-floor house with 3 bedrooms, parking, pooja room and a standard modern exterior."
-    };
-    ArchFlow.createProject(sampleData);
-    ArchFlow.showToast("Sample Duplex loaded into workspace!", "success");
+    ArchFlow.createProject({ name:'Duplex Villa - Ramesh C',client:'Ramesh C',type:'Duplex',
+        location:'Koramangala, Bangalore',width:30,length:40,facing:'East',corner:false,
+        road:'30ft Main Road',floors:2,bedrooms:3,bathrooms:3,pooja:true,parking:true,
+        balcony:true,style:'Standard Modern',budget:'Mid Range',
+        prompt:'Design a 30x40 east-facing 2-floor house with 3 bedrooms, parking, pooja room and a standard modern exterior.' });
+    showToast('Sample Duplex Villa loaded into workspace!','success');
     renderRecentProjects();
 }
-
-function selectActiveAndRoute(id, route) {
-    ArchFlow.setActiveProjectId(id);
-    window.location.href = route;
-}
-
-function handleDuplicate(id) {
-    ArchFlow.duplicateProject(id);
-    renderRecentProjects();
-}
-
+function selectActiveAndRoute(id, route) { ArchFlow.setActiveProjectId(id); window.location.href=route; }
+function handleDuplicate(id) { ArchFlow.duplicateProject(id); showToast('Project duplicated!','success',2500); renderRecentProjects(); }
 function handleDelete(id) {
-    if (confirm("Are you sure you want to delete this project?")) {
-        ArchFlow.deleteProject(id);
-        renderRecentProjects();
+    var proj=ArchFlow.getProjects().find(function(p){ return p.id===id; });
+    showModal({ title:'Delete Project',
+        message: proj ? 'Delete "<strong style="color:#f1f5f9;">'+proj.name+'</strong>"? This cannot be undone.' : 'Delete this project? This cannot be undone.',
+        confirmText:'Delete', cancelText:'Cancel', type:'danger',
+        onConfirm:function(){ ArchFlow.deleteProject(id); showToast('Project deleted.','error',2500); renderRecentProjects(); }
+    });
+}
+
+// ── DOMContentLoaded ─────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+    ArchFlow.checkAuth();
+
+    var storedUser    = localStorage.getItem('archflow_user_name');
+    var storedCompany = localStorage.getItem('archflow_company_name');
+    var userName  = storedUser ? storedUser.split(' ')[0] : 'Architect';
+    var initials  = storedUser ? storedUser.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2) : 'DU';
+
+    if (storedUser) {
+        ['sidebar-user-display-name','topbar-user-name','profile-name-main'].forEach(function(id){
+            var el=document.getElementById(id); if(el) el.textContent=storedUser;
+        });
     }
-}
+    if (storedCompany) {
+        ['sidebar-company-display-name','profile-company-main'].forEach(function(id){
+            var el=document.getElementById(id); if(el) el.textContent=storedCompany;
+        });
+    }
+    ['sidebar-avatar-initials','topbar-avatar','profile-avatar-main'].forEach(function(id){
+        var el=document.getElementById(id); if(el) el.textContent=initials;
+    });
 
-function markAllRead(e) {
-    e.preventDefault();
-    document.querySelectorAll(".notif-unread-mark").forEach(el => el.remove());
-    ArchFlow.showToast && ArchFlow.showToast("All notifications marked as read.", "success");
-}
+    // Greeting
+    var h=new Date().getHours();
+    document.getElementById('dashboard-dynamic-greeting').innerHTML =
+        h<12 ? 'Good Morning, <span class="gradient-name">'+userName+'!</span>' :
+        h<17 ? 'Good Afternoon, <span class="gradient-name">'+userName+'!</span>' :
+               'Good Evening, <span class="gradient-name">'+userName+'!</span>';
 
-function toggleNotifPanel() {
-    // Could expand to a dropdown – for now shows a toast
-    if (ArchFlow.showToast) ArchFlow.showToast("No new notifications since last check.", "info");
-}
+    // Live badge
+    var badge=document.getElementById('dashboard-current-time-badge');
+    if(badge) badge.textContent='Live • '+new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+
+    // Wire profile mini click
+    var mini=document.querySelector('.topbar-user-mini');
+    if(mini) mini.addEventListener('click', toggleProfileDropdown);
+
+    // Wire sidebar user card → settings
+    var sidebarCard=document.querySelector('.sidebar-user-card');
+    if(sidebarCard) sidebarCard.addEventListener('click', function(){ window.location.href='settings.html'; });
+
+    renderRecentProjects();
+    initSearch();
+    initGuideSteps();
+    initKPITooltips();
+});
 </script>
 
 </body>
