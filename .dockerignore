@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+.next
+__pycache__
+*.pyc
+.env
+.git
+.gitignore
+README.md
+*.log
+docker-compose.yml
+.DS_Store
+*.md
