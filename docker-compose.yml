@@ -1,0 +1,176 @@
+version: '3.8'
+
+networks:
+  archflow-network:
+    driver: bridge
+    name: archflow-network
+
+volumes:
+  archflow-postgres-data:
+  archflow-redis-data:
+  archflow-minio-data:
+
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  archflow-postgres:
+    image: postgres:16-alpine
+    container_name: archflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-archflow}
+      POSTGRES_USER: ${POSTGRES_USER:-archflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-StrongPassword123}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - archflow-postgres-data:/var/lib/postgresql/data
+    networks:
+      - archflow-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-archflow} -d ${POSTGRES_DB:-archflow}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  archflow-redis:
+    image: redis:7-alpine
+    container_name: archflow-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6380}:6379"
+    volumes:
+      - archflow-redis-data:/data
+    networks:
+      - archflow-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  archflow-minio:
+    image: minio/minio:latest
+    container_name: archflow-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-StrongPassword123}
+    command: server /data --console-address ":9001"
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - archflow-minio-data:/data
+    networks:
+      - archflow-network
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  archflow-pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: archflow-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@archflow.ai
+      PGADMIN_DEFAULT_PASSWORD: ${POSTGRES_PASSWORD:-StrongPassword123}
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    networks:
+      - archflow-network
+    logging: *default-logging
+
+  archflow-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: archflow-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-5001}:5001"
+    environment:
+      - PORT=${BACKEND_PORT:-5001}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-archflow}:${POSTGRES_PASSWORD:-StrongPassword123}@archflow-postgres:5432/${POSTGRES_DB:-archflow}
+      - REDIS_URL=redis://archflow-redis:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - NODE_ENV=${NODE_ENV:-development}
+    networks:
+      - archflow-network
+    depends_on:
+      archflow-postgres:
+        condition: service_healthy
+      archflow-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${BACKEND_PORT:-5001}/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  archflow-ai:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: archflow-ai
+    restart: unless-stopped
+    ports:
+      - "${AI_SERVICE_PORT:-8000}:8000"
+    environment:
+      - BACKEND_URL=http://archflow-backend:${BACKEND_PORT:-5001}
+    networks:
+      - archflow-network
+    depends_on:
+      - archflow-backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${AI_SERVICE_PORT:-8000}/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+
+  archflow-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: archflow-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3001}:3001"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api
+      - NEXT_PUBLIC_AI_URL=http://localhost:8080/ai
+    networks:
+      - archflow-network
+    depends_on:
+      archflow-backend:
+        condition: service_healthy
+    logging: *default-logging
+
+  archflow-nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: archflow-nginx
+    restart: unless-stopped
+    ports:
+      - "${NGINX_PORT:-8080}:8080"
+    networks:
+      - archflow-network
+    depends_on:
+      - archflow-frontend
+      - archflow-backend
+      - archflow-ai
+    logging: *default-logging
