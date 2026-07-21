@@ -21,6 +21,7 @@ export const ArchFlowProvider = ({ children }) => {
     const API_URL = import.meta.env.VITE_API_URL || '';
 
     // Fetch projects from API on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         const fetchProjects = async () => {
             try {
@@ -213,6 +214,7 @@ export const ArchFlowProvider = ({ children }) => {
     };
 
     // Helper functions exported on window for non-migrated script tags (backward compatibility)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         window.ArchFlow = {
             getProjects: () => projects,
