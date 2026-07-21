@@ -1,0 +1,9 @@
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+.agents/
+.gemini/
+*.md
+node_modules/
+data/

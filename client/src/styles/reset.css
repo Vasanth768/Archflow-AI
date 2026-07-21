@@ -1,0 +1,79 @@
+/* --- RESET & BASE STYLES --- */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    width: 100%;
+}
+
+body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* Headings default to marketing colors, overridden in scoped wrappers */
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-title);
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.25;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+    transition: var(--transition-color);
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Accessibility Focus Ring styling */
+:focus-visible {
+    outline: 2px solid var(--accent-indigo);
+    outline-offset: 2px;
+}
+
+/* Scoped override for glassmorphism focus states */
+.dash-shell :focus-visible,
+.auth-split-layout :focus-visible {
+    outline: 2px solid var(--indigo-light);
+    outline-offset: 2px;
+}
+
+/* Standard selection styling */
+::selection {
+    background-color: var(--accent-indigo-light);
+    color: var(--accent-indigo);
+}
+
+.dash-shell ::selection {
+    background-color: rgba(99, 102, 241, 0.3);
+    color: var(--text-1);
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto !important;
+    }
+    
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}

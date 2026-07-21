@@ -45,18 +45,58 @@ const ARCH_IMAGES = {
 // Initial Mock Projects Data
 const INITIAL_PROJECTS = [];
 
-// LocalStorage Persistence Handlers
-function getProjects() {
-    let projects = localStorage.getItem("archflow_projects");
-    if (!projects) {
+let cachedProjects = null;
+
+function fetchProjectsFromServer() {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', '/api/projects', false); // Synchronous block to avoid breaking page rendering
+    try {
+        xhr.send();
+        if (xhr.status === 200) {
+            const data = JSON.parse(xhr.responseText);
+            cachedProjects = data;
+            localStorage.setItem("archflow_projects", JSON.stringify(data));
+            return data;
+        }
+    } catch (e) {
+        console.warn("Failed to fetch projects from backend API, using localStorage fallback:", e);
+    }
+    
+    let localData = localStorage.getItem("archflow_projects");
+    if (!localData) {
         localStorage.setItem("archflow_projects", JSON.stringify(INITIAL_PROJECTS));
+        cachedProjects = INITIAL_PROJECTS;
         return INITIAL_PROJECTS;
     }
-    return JSON.parse(projects);
+    cachedProjects = JSON.parse(localData);
+    return cachedProjects;
+}
+
+function getProjects() {
+    if (cachedProjects === null) {
+        return fetchProjectsFromServer();
+    }
+    return cachedProjects;
 }
 
 function saveProjects(projects) {
+    cachedProjects = projects;
     localStorage.setItem("archflow_projects", JSON.stringify(projects));
+    
+    // Save to server asynchronously to keep UI responsive
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/projects', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status !== 200) {
+            console.error("Failed to save projects to server:", xhr.responseText);
+        }
+    };
+    try {
+        xhr.send(JSON.stringify(projects));
+    } catch (e) {
+        console.error("Failed to transmit projects save data:", e);
+    }
 }
 
 function getProjectById(id) {

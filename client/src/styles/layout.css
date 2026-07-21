@@ -1,0 +1,147 @@
+/* --- LAYOUTS AND GRIDS --- */
+
+.container {
+    width: 100%;
+    max-width: var(--max-width-container);
+    margin: 0 auto;
+    padding: 0 var(--spacing-6);
+}
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: var(--spacing-12);
+    align-items: center;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--spacing-6);
+}
+
+/* Card grids for public sections */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-8);
+}
+
+/* --- App Dashboard Layout --- */
+.dash-shell {
+    position: relative;
+    z-index: 1;
+    width: 100vw;
+    max-width: 100vw;
+    min-height: 100vh;
+    background-color: var(--bg-void);
+    color: var(--text-1);
+    overflow-x: hidden;
+}
+
+/* Scoped Dashboard Background Aurora */
+.dash-shell::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 80% 60% at 10% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 70% 50% at 90% 20%, rgba(139, 92, 246, 0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 70% at 50% 90%, rgba(34, 211, 238, 0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 70%, rgba(16, 185, 129, 0.06) 0%, transparent 60%),
+        var(--bg-void);
+    z-index: -2;
+    pointer-events: none;
+}
+
+.dash-shell::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: -1;
+    pointer-events: none;
+    animation: gridDrift 20s linear infinite;
+}
+
+.dash-main {
+    margin-left: var(--sidebar-width);
+    width: calc(100vw - var(--sidebar-width));
+    max-width: calc(100vw - var(--sidebar-width));
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+.dash-content {
+    padding: var(--spacing-8);
+    flex: 1;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.dash-grid {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: var(--spacing-6);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-5);
+    margin-bottom: var(--spacing-8);
+}
+
+.dash-layout-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--spacing-6);
+}
+
+/* --- Interactive Workspace Layouts --- */
+.editor-layout-container {
+    display: grid;
+    grid-template-columns: 240px 1fr 280px;
+    height: calc(100vh - 180px);
+    min-height: 600px;
+    gap: var(--spacing-5);
+    overflow: hidden;
+}
+
+.viewer-3d-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    height: calc(100vh - var(--navbar-height));
+    overflow: hidden;
+}
+
+.compare-container-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-6);
+}
+
+.export-split-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: var(--spacing-8);
+}
+
+.results-container-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: var(--spacing-6);
+}
+
+/* Auth split layouts */
+.auth-split-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+}
