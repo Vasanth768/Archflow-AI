@@ -1,0 +1,115 @@
+/* --- MODAL DIALOGS & OVERLAYS --- */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(9, 13, 22, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-4);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-container {
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-color);
+    max-width: 540px;
+    width: 100%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+    transform: translateY(20px);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.show .modal-container {
+    transform: translateY(0);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--spacing-5) var(--spacing-6);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title {
+    font-family: var(--font-title);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.modal-close-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-1);
+    border-radius: var(--border-radius-sm);
+    transition: var(--transition-color);
+}
+
+.modal-close-btn:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+}
+
+.modal-body {
+    padding: var(--spacing-6);
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4) var(--spacing-6);
+    background-color: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+}
+
+/* --- Dark/Glassmorphic Modal overrides --- */
+.dash-shell .modal-container,
+.auth-split-layout .modal-container {
+    background-color: var(--bg-elevated);
+    border-color: var(--glass-border);
+    color: var(--text-1);
+}
+
+.dash-shell .modal-header,
+.auth-split-layout .modal-header {
+    border-bottom-color: var(--glass-border);
+}
+
+.dash-shell .modal-close-btn:hover,
+.auth-split-layout .modal-close-btn:hover {
+    color: var(--text-1);
+    background-color: var(--glass-2);
+}
+
+.dash-shell .modal-footer,
+.auth-split-layout .modal-footer {
+    background-color: var(--bg-surface);
+    border-top-color: var(--glass-border);
+}

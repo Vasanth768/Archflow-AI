@@ -1,0 +1,272 @@
+/* --- CARD COMPONENTS --- */
+
+.card {
+    background-color: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.25s ease,
+                box-shadow 0.25s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: #cbd5e1;
+}
+
+/* Option selection card (Wizard checkboxes/radios) */
+.option-select-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    background-color: var(--bg-secondary);
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.option-select-card input[type="radio"],
+.option-select-card input[type="checkbox"] {
+    display: none;
+}
+
+.option-select-card:hover {
+    border-color: #cbd5e1;
+    background-color: var(--bg-primary);
+}
+
+.option-select-card.selected {
+    border-color: var(--accent-indigo);
+    background-color: var(--accent-indigo-light);
+    color: var(--accent-indigo);
+    font-weight: 600;
+}
+
+.option-select-card svg {
+    width: 24px;
+    height: 24px;
+    margin-bottom: 8px;
+}
+
+/* Swatches for Elevations */
+.swatch-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    cursor: pointer;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.swatch-card:hover {
+    border-color: #cbd5e1;
+    transform: translateX(4px);
+}
+
+.swatch-card.selected {
+    border-color: var(--accent-indigo);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.swatch-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.swatch-details {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Compare variations cards */
+.compare-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.compare-image-box {
+    aspect-ratio: 16/10;
+    overflow: hidden;
+    position: relative;
+}
+
+.compare-image-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.compare-body {
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Presentation PDF preview card */
+.presentation-preview-card {
+    background-color: #0b0f19;
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-color-dark);
+    padding: 32px;
+    color: var(--text-white);
+    aspect-ratio: 1.414/1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+}
+
+/* --- Dark/Glassmorphic Cards (Dashboard Context) --- */
+
+/* Scoped dark theme default card override */
+.dash-shell .card,
+.auth-split-layout .card {
+    background-color: var(--bg-dark-card);
+    border-color: var(--border-color-dark);
+    color: var(--text-1);
+}
+
+/* Scoped dark theme select card override */
+.dash-shell .option-select-card,
+.auth-split-layout .option-select-card {
+    background-color: rgba(255, 255, 255, 0.02);
+    border-color: var(--glass-border);
+}
+
+.dash-shell .option-select-card:hover,
+.auth-split-layout .option-select-card:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--glass-border-bright);
+}
+
+.dash-shell .option-select-card.selected,
+.auth-split-layout .option-select-card.selected {
+    background-color: rgba(99, 102, 241, 0.15);
+    border-color: var(--indigo-light);
+    color: var(--text-1);
+}
+
+/* Glass Card Definition */
+.glass-card {
+    background: rgba(10, 17, 32, 0.6);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--r-lg);
+    padding: var(--spacing-6);
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r-lg);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.04) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+/* KPI Score cards */
+.kpi-card {
+    padding: 22px;
+    border-radius: var(--r-lg);
+    background: rgba(10, 17, 32, 0.65);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                border-color 0.25s ease,
+                box-shadow 0.25s ease;
+    cursor: default;
+}
+
+.kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    filter: blur(40px);
+    opacity: 0.6;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.4s ease;
+}
+
+.kpi-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r-lg);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--glass-border-bright);
+}
+
+.kpi-card:hover::before {
+    opacity: 1;
+    transform: scale(1.2);
+}
+
+/* Colored glowing shadows for KPI categories */
+.kpi-card.kpi-indigo::before { background: rgba(99, 102, 241, 0.3); }
+.kpi-card.kpi-amber::before  { background: rgba(245, 158, 11, 0.3); }
+.kpi-card.kpi-blue::before   { background: rgba(59, 130, 246, 0.3); }
+.kpi-card.kpi-violet::before { background: rgba(139, 92, 246, 0.3); }
+
+.kpi-card.kpi-indigo:hover { box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2); border-color: rgba(99, 102, 241, 0.3); }
+.kpi-card.kpi-amber:hover  { box-shadow: 0 20px 40px rgba(245, 158, 11, 0.2);  border-color: rgba(245, 158, 11, 0.3); }
+.kpi-card.kpi-blue:hover   { box-shadow: 0 20px 40px rgba(59, 130, 246, 0.2);  border-color: rgba(59, 130, 246, 0.3); }
+.kpi-card.kpi-violet:hover { box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2); border-color: rgba(139, 92, 246, 0.3); }
+
+/* Selected card state */
+.dash-shell .card.selected,
+.auth-split-layout .card.selected {
+    border: 2px solid var(--accent-indigo) !important;
+    box-shadow: 0 0 16px rgba(99, 102, 241, 0.2);
+}
+
+/* --- Contrast helpers for dark card elements on public pages --- */
+[style*="var(--bg-dark-card)"] {
+    background-color: var(--bg-dark-card) !important;
+    border-color: var(--border-color-dark) !important;
+}
+
+[style*="var(--bg-dark-card)"] p,
+[style*="var(--bg-dark-card)"] ul,
+[style*="var(--bg-dark-card)"] li,
+[style*="var(--bg-dark-card)"] label {
+    color: var(--text-2) !important;
+}
+
+[style*="var(--bg-dark-card)"] h3,
+[style*="var(--bg-dark-card)"] h4,
+[style*="var(--bg-dark-card)"] span,
+[style*="var(--bg-dark-card)"] div:not([style*="display"]) {
+    color: var(--text-1) !important;
+}
+
