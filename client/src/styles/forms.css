@@ -1,0 +1,100 @@
+/* --- FORM CONTROLS & INPUTS --- */
+
+.form-group {
+    margin-bottom: var(--spacing-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-2);
+}
+
+.form-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-1);
+}
+
+.form-control {
+    width: 100%;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    padding: 10px 14px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control::placeholder {
+    color: var(--text-muted);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-indigo);
+    background-color: var(--bg-secondary);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-6);
+    font-size: 13px;
+}
+
+.form-checkbox {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
+.form-checkbox input {
+    accent-color: var(--accent-indigo);
+    cursor: pointer;
+}
+
+/* Textarea resizing controls */
+.prompt-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* --- Dark/Glassmorphic Form Modifiers (Dashboard & Auth Panel) --- */
+.dash-shell .form-label,
+.auth-split-layout .form-label {
+    color: var(--text-3);
+}
+
+.dash-shell .form-control,
+.auth-split-layout .form-control {
+    background: var(--glass-1);
+    border: 1px solid var(--glass-border);
+    color: var(--text-1);
+}
+
+.dash-shell .form-control::placeholder,
+.auth-split-layout .form-control::placeholder {
+    color: var(--text-4);
+}
+
+.dash-shell .form-control:focus,
+.auth-split-layout .form-control:focus {
+    border-color: rgba(99, 102, 241, 0.4);
+    background: var(--glass-2);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08), var(--glow-indigo);
+}
+
+/* Custom select styling for dark dropdowns */
+.dash-shell select.form-control,
+.auth-split-layout select.form-control {
+    background-color: var(--bg-deep);
+}
+
+.dash-shell select.form-control option {
+    background-color: var(--bg-surface);
+    color: var(--text-1);
+}
