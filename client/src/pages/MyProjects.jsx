@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useArchFlow } from '../context/ArchFlowContext';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function MyProjects() {
     const navigate = useNavigate();
     const { projects, selectProject, duplicateProject, deleteProject } = useArchFlow();
     const [search, setSearch] = useState('');
+    const [deleteModalProject, setDeleteModalProject] = useState(null);
 
     const handleSelectProject = (id) => {
         selectProject(id);
@@ -93,13 +95,24 @@ export default function MyProjects() {
                                     <button onClick={() => handleSelectProject(p.id)} className="btn btn-secondary" style={{ flex: 1, padding: '8px 0', fontSize: 12 }}>Open</button>
                                     <button onClick={() => handleEditProject(p.id)} className="btn btn-ghost" style={{ padding: '8px 10px', fontSize: 12 }} title="Edit 2D Plan">✏️</button>
                                     <button onClick={() => duplicateProject(p.id)} className="btn btn-ghost" style={{ padding: '8px 10px', fontSize: 12 }} title="Duplicate">📋</button>
-                                    <button onClick={() => deleteProject(p.id)} className="btn btn-ghost" style={{ padding: '8px 10px', fontSize: 12, color: 'var(--rose)' }} title="Delete">🗑️</button>
+                                    <button onClick={() => setDeleteModalProject(p)} className="btn btn-ghost" style={{ padding: '8px 10px', fontSize: 12, color: 'var(--rose)' }} title="Delete">🗑️</button>
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={!!deleteModalProject}
+                onClose={() => setDeleteModalProject(null)}
+                onConfirm={() => deleteModalProject && deleteProject(deleteModalProject.id)}
+                title="Delete Project?"
+                message="This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+            />
         </div>
     );
 }

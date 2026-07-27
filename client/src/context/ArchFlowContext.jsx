@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import Toast from '../components/Toast';
 
 const ArchFlowContext = createContext(null);
 
@@ -12,8 +13,15 @@ const ARCH_IMAGES = {
     plan_thumb: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230f172a'/><line x1='10' y1='10' x2='90' y2='10' stroke='white' stroke-width='1'/><line x1='10' y1='10' x2='10' y2='90' stroke='white' stroke-width='1'/><line x1='90' y1='10' x2='90' y2='90' stroke='white' stroke-width='1'/><line x1='10' y1='90' x2='90' y2='90' stroke='white' stroke-width='1'/><line x1='50' y1='10' x2='50' y2='90' stroke='white' stroke-dasharray='3' stroke-width='1'/><rect x='15' y='15' width='30' height='30' fill='none' stroke='white' stroke-width='1'/><rect x='55' y='15' width='30' height='30' fill='none' stroke='white' stroke-width='1'/><rect x='15' y='55' width='70' height='30' fill='none' stroke='white' stroke-width='1'/></svg>"
 };
 
+const DEFAULT_PROJECTS = [
+    { id: 'f1', name: '30x40 East Facing House', client: 'Ramesh C', width: 30, length: 40, floors: 2, status: 'In Progress', time: '2 hours ago', badge: 'ref-badge-blue', area: 1200, facing: 'East', bedrooms: 3, bathrooms: 3, createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() },
+    { id: 'f2', name: 'Duplex Villa - 40x60', client: 'Suresh Builders', width: 40, length: 60, floors: 2, status: 'AI Generated', time: '1 day ago', badge: 'ref-badge-green', area: 2400, facing: 'North', bedrooms: 4, bathrooms: 4, createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() },
+    { id: 'f3', name: 'Modern House - 20x30', client: 'Kumar Family', width: 20, length: 30, floors: 1, status: 'Completed', time: '2 days ago', badge: 'ref-badge-teal', area: 600, facing: 'West', bedrooms: 2, bathrooms: 2, createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() },
+    { id: 'f4', name: 'Premium Villa - 50x80', client: 'Greenfield Developers', width: 50, length: 80, floors: 2, status: 'In Progress', time: '3 days ago', badge: 'ref-badge-blue', area: 4000, facing: 'South', bedrooms: 5, bathrooms: 5, createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() }
+];
+
 export const ArchFlowProvider = ({ children }) => {
-    const [projects, setProjects] = useState([]);
+    const [projects, setProjects] = useState(DEFAULT_PROJECTS);
     const [activeProjectId, setActiveProjectId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState(null);
@@ -44,11 +52,25 @@ export const ArchFlowProvider = ({ children }) => {
                 console.warn("Failed to load projects from server, loading from localStorage fallback:", e);
                 const localData = localStorage.getItem("archflow_projects");
                 if (localData) {
-                    const parsed = JSON.parse(localData);
-                    setProjects(parsed);
-                    if (parsed.length > 0) {
-                        setActiveProjectId(parsed[0].id);
+                    try {
+                        const parsed = JSON.parse(localData);
+                        if (Array.isArray(parsed) && parsed.length > 0) {
+                            setProjects(parsed);
+                            setActiveProjectId(parsed[0].id);
+                        } else {
+                            setProjects(DEFAULT_PROJECTS);
+                            localStorage.setItem("archflow_projects", JSON.stringify(DEFAULT_PROJECTS));
+                            setActiveProjectId(DEFAULT_PROJECTS[0].id);
+                        }
+                    } catch (err) {
+                        setProjects(DEFAULT_PROJECTS);
+                        localStorage.setItem("archflow_projects", JSON.stringify(DEFAULT_PROJECTS));
+                        setActiveProjectId(DEFAULT_PROJECTS[0].id);
                     }
+                } else {
+                    setProjects(DEFAULT_PROJECTS);
+                    localStorage.setItem("archflow_projects", JSON.stringify(DEFAULT_PROJECTS));
+                    setActiveProjectId(DEFAULT_PROJECTS[0].id);
                 }
             } finally {
                 setLoading(false);
@@ -153,7 +175,7 @@ export const ArchFlowProvider = ({ children }) => {
     };
 
     const duplicateProject = (id) => {
-        const project = projects.find(p => p.id === id);
+        const project = projects.find(p => p.id === id) || DEFAULT_PROJECTS.find(p => p.id === id);
         if (!project) return;
 
         const clone = JSON.parse(JSON.stringify(project));
@@ -181,6 +203,40 @@ export const ArchFlowProvider = ({ children }) => {
             }
         }
         showToast("Project deleted successfully", "warning");
+    };
+
+    const renameProject = (id, newName) => {
+        let found = false;
+        const updated = projects.map(p => {
+            if (p.id === id) {
+                found = true;
+                return { ...p, name: newName, lastUpdated: new Date().toISOString() };
+            }
+            return p;
+        });
+        if (!found) {
+            const fallback = DEFAULT_PROJECTS.find(p => p.id === id) || { id, name: newName, client: 'Self', width: 30, length: 40, floors: 2, status: 'In Progress', time: 'Just now', badge: 'ref-badge-blue' };
+            updated.push({ ...fallback, name: newName, lastUpdated: new Date().toISOString() });
+        }
+        saveProjectsList(updated);
+        showToast("Project renamed successfully", "success");
+    };
+
+    const archiveProject = (id) => {
+        let found = false;
+        const updated = projects.map(p => {
+            if (p.id === id) {
+                found = true;
+                return { ...p, status: "Archived", lastUpdated: new Date().toISOString() };
+            }
+            return p;
+        });
+        if (!found) {
+            const fallback = DEFAULT_PROJECTS.find(p => p.id === id) || { id, name: `Project ${id}`, client: 'Self', width: 30, length: 40, floors: 2, status: 'Archived', time: 'Just now', badge: 'ref-badge-blue' };
+            updated.push({ ...fallback, status: "Archived", lastUpdated: new Date().toISOString() });
+        }
+        saveProjectsList(updated);
+        showToast("Project archived successfully", "info");
     };
 
     const updateProjectRoomLayout = (projectId, rooms) => {
@@ -225,6 +281,8 @@ export const ArchFlowProvider = ({ children }) => {
             createProject,
             duplicateProject,
             deleteProject,
+            renameProject,
+            archiveProject,
             updateProjectRoomLayout,
             updateProjectStyleSelection,
             updateProjectMaterials,
@@ -249,6 +307,8 @@ export const ArchFlowProvider = ({ children }) => {
             createProject,
             duplicateProject,
             deleteProject,
+            renameProject,
+            archiveProject,
             updateProjectRoomLayout,
             updateProjectStyleSelection,
             updateProjectMaterials,
@@ -256,11 +316,7 @@ export const ArchFlowProvider = ({ children }) => {
             IMAGES: ARCH_IMAGES
         }}>
             {children}
-            {toast && (
-                <div id="app-toast" className={`toast-notification show ${toast.type}`}>
-                    {toast.message}
-                </div>
-            )}
+            <Toast toast={toast} onClose={() => setToast(null)} />
         </ArchFlowContext.Provider>
     );
 };
