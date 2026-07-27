@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useArchFlow } from '../context/ArchFlowContext';
+import RenameProjectModal from '../components/RenameProjectModal';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function Dashboard() {
-    const { projects } = useArchFlow();
+    const { projects, duplicateProject, deleteProject, renameProject, archiveProject } = useArchFlow();
     const navigate = useNavigate();
     const [userName, setUserName] = useState("Ramesh");
     const [activeMenuId, setActiveMenuId] = useState(null);
+    const [renameModalProject, setRenameModalProject] = useState(null);
+    const [deleteModalProject, setDeleteModalProject] = useState(null);
+    const [archiveModalProject, setArchiveModalProject] = useState(null);
 
     useEffect(() => {
         const savedProfile = localStorage.getItem("archflow_profile_name");
@@ -44,25 +49,27 @@ export default function Dashboard() {
         { id: 'f4', name: 'Premium Villa - 50x80', client: 'Greenfield Developers', width: 50, length: 80, floors: 2, status: 'In Progress', time: '3 days ago', badge: 'ref-badge-blue' }
     ];
 
-    const displayProjects = projects && projects.length > 0 
-        ? projects.slice(0, 4).map((p, idx) => {
-            const fb = fallbackProjects[idx % 4];
-            return {
-                id: p.id || `p-${idx}`,
-                name: p.name || fb.name,
-                client: p.client || fb.client,
-                width: p.width || fb.width,
-                length: p.length || fb.length,
-                floors: p.floors || fb.floors,
-                status: p.status === 'Finalized' ? 'Completed' : (p.status || fb.status),
-                time: fb.time,
-                badge: p.status === 'Finalized' ? 'ref-badge-teal' : fb.badge
-            };
-          })
-        : fallbackProjects;
+    const existingIds = new Set((projects || []).map(p => p.id));
+    const displayProjects = (projects || []).slice(0, 4).map((p, idx) => {
+        const fb = fallbackProjects[idx % 4] || {};
+        return {
+            id: p.id || `p-${idx}`,
+            name: p.name || fb.name || "Untitled Project",
+            client: p.client || fb.client || "Self",
+            width: p.width || fb.width || 30,
+            length: p.length || fb.length || 40,
+            floors: p.floors || fb.floors || 1,
+            status: p.status === 'Finalized' ? 'Completed' : (p.status || fb.status || "In Progress"),
+            time: p.time || fb.time || "Just now",
+            badge: p.status === 'Finalized' ? 'ref-badge-teal' : (p.badge || fb.badge || "ref-badge-blue")
+        };
+    });
 
-    while (displayProjects.length < 4) {
-        displayProjects.push(fallbackProjects[displayProjects.length]);
+    for (const fb of fallbackProjects) {
+        if (displayProjects.length < 4 && !existingIds.has(fb.id)) {
+            displayProjects.push(fb);
+            existingIds.add(fb.id);
+        }
     }
 
     const toggleMenu = (e, id) => {
@@ -211,20 +218,20 @@ export default function Dashboard() {
                                                     <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                                     <span>Open</span>
                                                 </button>
-                                                <button type="button" className="ref-dropdown-item" role="menuitem" onClick={() => { alert(`Renaming project: ${p.name}`); setActiveMenuId(null); }}>
+                                                <button type="button" className="ref-dropdown-item" role="menuitem" onClick={() => { setRenameModalProject(p); setActiveMenuId(null); }}>
                                                     <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                                     <span>Rename</span>
                                                 </button>
-                                                <button type="button" className="ref-dropdown-item" role="menuitem" onClick={() => { alert(`Duplicated project: ${p.name}`); setActiveMenuId(null); }}>
+                                                <button type="button" className="ref-dropdown-item" role="menuitem" onClick={() => { duplicateProject(p.id); setActiveMenuId(null); }}>
                                                     <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"/></svg>
                                                     <span>Duplicate</span>
                                                 </button>
-                                                <button type="button" className="ref-dropdown-item" role="menuitem" onClick={() => { alert(`Archived project: ${p.name}`); setActiveMenuId(null); }}>
+                                                <button type="button" className="ref-dropdown-item" role="menuitem" onClick={() => { setArchiveModalProject(p); setActiveMenuId(null); }}>
                                                     <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
                                                     <span>Archive</span>
                                                 </button>
                                                 <div className="ref-dropdown-divider"></div>
-                                                <button type="button" className="ref-dropdown-item ref-dropdown-delete" role="menuitem" onClick={() => { alert(`Deleted project: ${p.name}`); setActiveMenuId(null); }}>
+                                                <button type="button" className="ref-dropdown-item ref-dropdown-delete" role="menuitem" onClick={() => { setDeleteModalProject(p); setActiveMenuId(null); }}>
                                                     <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                                     <span>Delete</span>
                                                 </button>
@@ -435,6 +442,36 @@ export default function Dashboard() {
                     </div>
                 </div>
             </div>
+
+            {/* Custom Modal Dialogs */}
+            <RenameProjectModal
+                isOpen={!!renameModalProject}
+                onClose={() => setRenameModalProject(null)}
+                onSave={(newName) => renameModalProject && renameProject(renameModalProject.id, newName)}
+                currentName={renameModalProject?.name || ""}
+            />
+
+            <ConfirmationModal
+                isOpen={!!deleteModalProject}
+                onClose={() => setDeleteModalProject(null)}
+                onConfirm={() => deleteModalProject && deleteProject(deleteModalProject.id)}
+                title="Delete Project?"
+                message="This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+            />
+
+            <ConfirmationModal
+                isOpen={!!archiveModalProject}
+                onClose={() => setArchiveModalProject(null)}
+                onConfirm={() => archiveModalProject && archiveProject(archiveModalProject.id)}
+                title="Archive Project?"
+                message="This project will be moved to your archived items."
+                confirmText="Archive"
+                cancelText="Cancel"
+                variant="warning"
+            />
         </div>
     );
 }

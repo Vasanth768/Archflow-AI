@@ -9,6 +9,12 @@ export default function DashboardLayout() {
     const [credits, setCredits] = useState(632);
 
     useEffect(() => {
+        const isLoggedIn = localStorage.getItem("archflow_logged_in");
+        if (isLoggedIn !== "true" && !user) {
+            navigate('/login');
+            return;
+        }
+
         const savedProfile = localStorage.getItem("archflow_profile_name");
         if (savedProfile) {
             setUserName(savedProfile);
@@ -20,7 +26,7 @@ export default function DashboardLayout() {
         if (savedCredits) {
             setCredits(parseInt(savedCredits, 10));
         }
-    }, [user]);
+    }, [user, navigate]);
 
     const handleLogout = () => {
         logout();
