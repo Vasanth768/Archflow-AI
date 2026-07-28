@@ -35,6 +35,12 @@ export default function NewProject() {
     const navigate = useNavigate();
     const { createProject, showToast, IMAGES } = useArchFlow();
 
+    useEffect(() => {
+        if (window.location.search.includes('mode=ai')) {
+            navigate('/ai-generator', { replace: true });
+        }
+    }, [navigate]);
+
     // Wizard Step & Validation State
     const [currentStep, setCurrentStep] = useState(1);
     const [completedSteps, setCompletedSteps] = useState([]);
