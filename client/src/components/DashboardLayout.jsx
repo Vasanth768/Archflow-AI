@@ -83,7 +83,7 @@ export default function DashboardLayout() {
                     </NavLink>
 
                     {/* 4. AI Generator */}
-                    <NavLink to="/new-project?mode=ai" className={({ isActive }) => `ref-nav-item ${isActive ? 'active' : ''}`} id="menu-ai-generator">
+                    <NavLink to="/ai-generator" className={({ isActive }) => `ref-nav-item ${isActive ? 'active' : ''}`} id="menu-ai-generator">
                         <svg className="ref-nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                         AI Generator
                     </NavLink>

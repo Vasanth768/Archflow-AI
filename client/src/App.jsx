@@ -18,6 +18,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import MyProjects from './pages/MyProjects';
 import NewProject from './pages/NewProject';
+import AiGenerator from './pages/AiGenerator';
 import ProjectDetails from './pages/ProjectDetails';
 import Editor from './pages/Editor';
 import Viewer from './pages/Viewer';
@@ -53,6 +54,7 @@ export default function App() {
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/my-projects" element={<MyProjects />} />
                         <Route path="/new-project" element={<NewProject />} />
+                        <Route path="/ai-generator" element={<AiGenerator />} />
                         <Route path="/project-details" element={<ProjectDetails />} />
                         <Route path="/editor" element={<Editor />} />
                         <Route path="/viewer" element={<Viewer />} />
