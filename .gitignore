@@ -13,3 +13,32 @@ Desktop.ini
 *.ntvs*
 *.njsproj
 *.sln
+*.sw?
+*.bak
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env*.local
+
+# Python / Virtualenv
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+ENV/
+
+# Scratch & Temporary scripts
+scratch/
+patch*.js
+patch_*.js
+test_*.js
+test_*.txt
+*.bak
+
+# Generated candidate images in server/data
+server/data/*.jpg
+

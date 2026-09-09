@@ -1,4 +1,4 @@
-﻿version: '3.8'
+version: '3.8'
 
 networks:
   archflow-network:
@@ -99,10 +99,25 @@ services:
     restart: unless-stopped
     ports:
       - "${SERVER_PORT:-8081}:8081"
+    environment:
+      - PRIMARY_IMAGE_PROVIDER=${PRIMARY_IMAGE_PROVIDER:-qwen}
+      - FALLBACK_IMAGE_PROVIDER=${FALLBACK_IMAGE_PROVIDER:-local}
+      - LOCAL_IMAGE_API_URL=${LOCAL_IMAGE_API_URL:-http://archflow-ai:8000/generate}
+      - HUGGINGFACE_INFERENCE_ENABLED=${HUGGINGFACE_INFERENCE_ENABLED:-false}
+      - HF_IMAGE_MODEL=${HF_IMAGE_MODEL:-black-forest-labs/FLUX.1-schnell}
+      - QWEN_IMAGE_ENDPOINT=${QWEN_IMAGE_ENDPOINT:-https://router.huggingface.co/nscale/v1/images/generations}
+      - QWEN_IMAGE_API_KEY=${QWEN_IMAGE_API_KEY:-}
+      - IMAGE_GENERATION_CACHE_ENABLED=${IMAGE_GENERATION_CACHE_ENABLED:-false}
     volumes:
       - ./server/data:/app/data
     networks:
       - archflow-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8081/api/designs/generate/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
     logging: *default-logging
 
   archflow-ai:
@@ -115,10 +130,13 @@ services:
       - "${AI_SERVICE_PORT:-8000}:8000"
     environment:
       - SERVER_URL=http://archflow-server:${SERVER_PORT:-8081}
+      - HF_API_TOKEN=${QWEN_IMAGE_API_KEY:-}
+      - HF_IMAGE_MODEL=${HF_IMAGE_MODEL:-stabilityai/stable-diffusion-2-1}
     networks:
       - archflow-network
     depends_on:
-      - archflow-server
+      archflow-server:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${AI_SERVICE_PORT:-8000}/ || exit 1"]
       interval: 10s
@@ -137,7 +155,8 @@ services:
     networks:
       - archflow-network
     depends_on:
-      - archflow-server
+      archflow-server:
+        condition: service_healthy
     logging: *default-logging
 
   archflow-nginx:
@@ -151,7 +170,10 @@ services:
     networks:
       - archflow-network
     depends_on:
-      - archflow-client
-      - archflow-server
-      - archflow-ai
+      archflow-client:
+        condition: service_started
+      archflow-server:
+        condition: service_healthy
+      archflow-ai:
+        condition: service_started
     logging: *default-logging
