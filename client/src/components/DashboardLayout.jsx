@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useArchFlow } from '../context/ArchFlowContext';
 
 export default function DashboardLayout() {
     const { logout, user } = useArchFlow();
     const navigate = useNavigate();
+    const location = useLocation();
     const [userName, setUserName] = useState("Ramesh C");
     const [credits, setCredits] = useState(632);
+
+    const isStudioPage = location.pathname.includes('/editor') || location.pathname.includes('/ai-generator') || location.pathname.includes('/viewer');
 
     useEffect(() => {
         const isLoggedIn = localStorage.getItem("archflow_logged_in");
@@ -49,16 +52,15 @@ export default function DashboardLayout() {
                 <Link to="/dashboard" className="ref-sidebar-brand">
                     <div className="ref-brand-logo">
                         <div className="ref-brand-logo-icon">
-                            <svg width="18" height="18" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M7 22V10L16 5L25 10V22L16 27L7 22Z" stroke="white" strokeWidth="2.5" strokeLinejoin="round" />
+                            <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M15.9998 3.33301L3.99976 27.333H10.6664L15.9998 15.333L21.3331 27.333H27.9998L15.9998 3.33301Z" fill="#2563EB"/>
+                                <path d="M15.9998 15.333L10.6664 27.333H3.99976L15.9998 3.33301V15.333Z" fill="#06B6D4"/>
                             </svg>
                         </div>
-                        <span>ArchFlow AI</span>
-                    </div>
-                    <div className="ref-brand-collapse" title="Collapse Sidebar">
-                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                        </svg>
+                        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
+                            <span style={{ fontSize: '18px', fontWeight: 700, color: '#FFFFFF' }}>ArchFlow AI</span>
+                            <span style={{ fontSize: '11px', fontWeight: 400, color: '#64748B' }}>AI-Powered Architecture Platform</span>
+                        </div>
                     </div>
                 </Link>
 
@@ -130,13 +132,20 @@ export default function DashboardLayout() {
                         Activity / Logs
                     </NavLink>
 
-                    {/* 12. Settings */}
+                    {/* 12. Notifications */}
+                    <NavLink to="/my-projects?tab=notifications" className={({ isActive }) => `ref-nav-item ${isActive ? 'active' : ''}`} id="menu-notifications">
+                        <svg className="ref-nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        Notifications
+                        <span className="ref-notif-badge-sidebar" style={{ marginLeft: 'auto', background: '#6D28D9', color: '#FFFFFF', fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '99px' }}>6</span>
+                    </NavLink>
+
+                    {/* 13. Settings */}
                     <NavLink to="/settings" className={({ isActive }) => `ref-nav-item ${isActive ? 'active' : ''}`} id="menu-settings">
                         <svg className="ref-nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         Settings
                     </NavLink>
 
-                    {/* 13. Help & Support */}
+                    {/* 14. Help & Support */}
                     <NavLink to="/docs" className={({ isActive }) => `ref-nav-item ${isActive ? 'active' : ''}`} id="menu-docs">
                         <svg className="ref-nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
                         Help &amp; Support
@@ -145,60 +154,63 @@ export default function DashboardLayout() {
 
                 {/* BOTTOM CARD ("Your Plan") */}
                 <div className="ref-sidebar-plan">
-                    <div className="ref-plan-header">
+                    <div style={{ fontSize: '11.5px', color: '#94A3B8', fontWeight: 600, marginBottom: '6px' }}>Your Plan</div>
+                    <div className="ref-plan-header" style={{ marginBottom: '12px' }}>
                         <svg className="ref-plan-crown" width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-                        <span>Pro Plan</span>
+                        <span style={{ color: '#FFFFFF', fontSize: '14px', fontWeight: 700 }}>Pro Plan</span>
                     </div>
-                    <div className="ref-plan-label">Credits Used</div>
-                    <div className="ref-plan-val" id="sidebar-credits-text">{credits} / 1,000</div>
-                    <div className="ref-plan-track">
-                        <div className="ref-plan-fill" id="sidebar-credits-fill" style={{ width: `${Math.min(100, (credits / 1000) * 100)}%` }}></div>
+                    <div className="ref-plan-label" style={{ color: '#94A3B8', fontSize: '11.5px' }}>Credits Used</div>
+                    <div className="ref-plan-val" id="sidebar-credits-text" style={{ color: '#FFFFFF', fontSize: '13.5px', fontWeight: 700, marginBottom: '8px' }}>{credits} / 1,000</div>
+                    <div className="ref-plan-track" style={{ background: '#334155', height: '6px', borderRadius: '99px', marginBottom: '16px', overflow: 'hidden' }}>
+                        <div className="ref-plan-fill" id="sidebar-credits-fill" style={{ width: `${Math.min(100, (credits / 1000) * 100)}%`, background: '#2563EB', height: '100%' }}></div>
                     </div>
-                    <button type="button" className="ref-plan-btn" onClick={() => navigate('/pricing')}>
+                    <button type="button" className="ref-plan-btn" onClick={() => navigate('/pricing')} style={{ background: 'linear-gradient(135deg, #6D28D9, #3B82F6)', color: '#FFFFFF', fontWeight: 700, fontSize: '13px', borderRadius: '10px', height: '38px', width: '100%', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(109, 40, 217, 0.35)' }}>
                         Upgrade Plan
                     </button>
                 </div>
             </aside>
 
             {/* MAIN PANEL */}
-            <div className="ref-main">
+            <div className="ref-main" style={(isStudioPage && !location.pathname.includes('/viewer')) ? { height: '100vh', overflow: 'hidden' } : {}}>
                 {/* WHITE TOPBAR */}
-                <header className="ref-topbar">
-                    <div className="ref-search-box">
-                        <svg className="ref-search-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        <input type="text" className="ref-search-input" placeholder="Search projects, clients, plans..." />
-                    </div>
+                {!isStudioPage && (
+                    <header className="ref-topbar">
+                        <div className="ref-search-box">
+                            <svg className="ref-search-icon" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            <input type="text" className="ref-search-input" placeholder="Search projects, clients, plans..." />
+                        </div>
 
-                    <div className="ref-topbar-actions">
-                        {/* Notification Bell */}
-                        <button type="button" className="ref-icon-btn" title="Notifications" id="notif-topbar-btn">
-                            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                            <span className="ref-notif-dot">6</span>
-                        </button>
+                        <div className="ref-topbar-actions">
+                            {/* Notification Bell */}
+                            <button type="button" className="ref-icon-btn" title="Notifications" id="notif-topbar-btn">
+                                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                                <span className="ref-notif-dot">6</span>
+                            </button>
 
-                        {/* Messages / Chat Icon */}
-                        <button type="button" className="ref-icon-btn" title="Messages">
-                            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-                        </button>
+                            {/* Messages / Chat Icon */}
+                            <button type="button" className="ref-icon-btn" title="Messages">
+                                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+                            </button>
 
-                        {/* Help Circle Icon */}
-                        <button type="button" className="ref-icon-btn" title="Help & Support" onClick={() => navigate('/docs')}>
-                            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        </button>
+                            {/* Help Circle Icon */}
+                            <button type="button" className="ref-icon-btn" title="Help & Support" onClick={() => navigate('/docs')}>
+                                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </button>
 
-                        {/* User Profile Section */}
-                        <div className="ref-profile-wrap" onClick={handleLogout} title="Click to Logout">
-                            <div className="ref-avatar" id="topbar-avatar">{getInitials(userName)}</div>
-                            <div className="ref-user-meta">
-                                <span className="ref-user-name" id="topbar-user-name">{userName}</span>
-                                <span className="ref-user-plan">Premium Plan</span>
+                            {/* User Profile Section */}
+                            <div className="ref-profile-wrap" onClick={handleLogout} title="Click to Logout">
+                                <div className="ref-avatar" id="topbar-avatar">{getInitials(userName)}</div>
+                                <div className="ref-user-meta">
+                                    <span className="ref-user-name" id="topbar-user-name">{userName}</span>
+                                    <span className="ref-user-plan">Premium Plan</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </header>
+                    </header>
+                )}
 
                 {/* PAGE CONTENTS */}
-                <div className="ref-content">
+                <div className="ref-content" style={(isStudioPage && !location.pathname.includes('/viewer')) ? { padding: 0, maxWidth: '100%', height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' } : (location.pathname.includes('/viewer') ? { padding: 0, maxWidth: '100%', display: 'flex', flexDirection: 'column' } : {})}>
                     <Outlet />
                 </div>
             </div>

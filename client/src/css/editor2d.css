@@ -1,0 +1,622 @@
+/* ==========================================================================
+   2D ARCHITECTURAL CAD EDITOR STYLES (EXACT TARGET REFERENCE REPLICA)
+   ========================================================================== */
+
+.ed-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: #FFFFFF;
+    color: #111827;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+/* --- 1. TOP HEADER BAR --- */
+.ed-header {
+    height: 56px;
+    padding: 0 20px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E5E7EB;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    z-index: 20;
+}
+
+.ed-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.ed-back-link {
+    font-size: 13px;
+    font-weight: 500;
+    color: #4B5563;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.15s ease;
+}
+
+.ed-back-link:hover {
+    color: #111827;
+}
+
+.ed-header-divider {
+    width: 1px;
+    height: 20px;
+    background: #E5E7EB;
+}
+
+.ed-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+.ed-status-badge {
+    background: #DCFCE7;
+    color: #16A34A;
+    border: 1px solid #BBF7D0;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.ed-header-center {
+    display: flex;
+    align-items: center;
+}
+
+.ed-floor-select-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ed-floor-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: #6B7280;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.ed-floor-select {
+    background: transparent;
+    border: none;
+    padding: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    cursor: pointer;
+    outline: none;
+    font-family: inherit;
+}
+
+.ed-header-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.ed-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    background: transparent;
+    border: none;
+    color: #4B5563;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    padding: 4px 6px;
+}
+
+.ed-action-btn:hover:not(:disabled) {
+    color: #111827;
+}
+
+.ed-action-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.ed-gen3d-btn {
+    background: #2563EB;
+    color: #FFFFFF;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
+}
+
+.ed-gen3d-btn:hover {
+    background: #1D4ED8;
+}
+
+.ed-user-profile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 6px;
+    cursor: pointer;
+}
+
+.ed-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #2563EB;
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ed-user-meta {
+    display: flex;
+    flex-direction: column;
+}
+
+.ed-user-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.2;
+}
+
+.ed-user-plan {
+    font-size: 11px;
+    color: #6B7280;
+    line-height: 1.2;
+}
+
+/* --- 2. CAD TOOL RIBBON --- */
+.ed-toolbar {
+    height: 56px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E5E7EB;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 0 16px;
+    flex-shrink: 0;
+    z-index: 15;
+    overflow-x: auto;
+}
+
+.ed-tool-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: #4B5563;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+
+.ed-tool-btn:hover {
+    background: #F3F4F6;
+    color: #111827;
+}
+
+.ed-tool-btn.active {
+    background: #EFF6FF;
+    color: #2563EB;
+}
+
+/* --- 3. MAIN BODY CONTAINER --- */
+.ed-body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* --- CENTER CANVAS AREA --- */
+.ed-canvas-area {
+    flex: 1;
+    background: #FFFFFF;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* --- LEFT SUB-TOOLS PANEL (FLOATING CARD) --- */
+.ed-subtools-panel {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 115px;
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 20;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.ed-subtools-header {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    padding: 0 4px;
+}
+
+.ed-subtools-list {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.ed-subtool-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: #4B5563;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+    transition: all 0.15s ease;
+}
+
+.ed-subtool-btn:hover {
+    background: #F3F4F6;
+    color: #111827;
+}
+
+.ed-subtool-btn.active {
+    background: #EFF6FF;
+    color: #2563EB;
+}
+
+.ed-subtool-btn.delete {
+    color: #DC2626;
+}
+
+.ed-subtool-btn.delete:hover {
+    background: #FEF2F2;
+    color: #B91C1C;
+}
+
+/* --- BOTTOM-LEFT VIEW CONTROLS --- */
+.ed-view-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    padding: 10px 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 20;
+}
+
+.ed-view-header {
+    font-size: 11px;
+    font-weight: 600;
+    color: #4B5563;
+}
+
+.ed-view-btns {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ed-view-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid #E5E7EB;
+    background: #FFFFFF;
+    color: #4B5563;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.ed-view-btn:hover {
+    background: #F3F4F6;
+    color: #111827;
+}
+
+.ed-scale-select {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid #E5E7EB;
+    font-size: 12px;
+    font-weight: 500;
+    color: #4B5563;
+    background: #FFFFFF;
+    outline: none;
+    font-family: inherit;
+}
+
+/* --- BOTTOM-RIGHT MINIMAP BOX --- */
+.ed-minimap-box {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 160px;
+    height: 120px;
+    background: #FFFFFF;
+    border: 1px solid #3B82F6;
+    border-radius: 8px;
+    padding: 4px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+    z-index: 20;
+    overflow: hidden;
+}
+
+/* --- RIGHT PROPERTIES PANEL --- */
+.ed-props-panel {
+    width: 280px;
+    background: #FFFFFF;
+    border-left: 1px solid #E5E7EB;
+    display: flex;
+    flex-direction: column;
+    z-index: 20;
+    overflow-y: auto;
+}
+
+.ed-props-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid #E5E7EB;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.ed-props-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+}
+
+.ed-props-close {
+    background: transparent;
+    border: none;
+    color: #6B7280;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+}
+
+.ed-props-close:hover {
+    color: #111827;
+}
+
+.ed-props-content {
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.ed-prop-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ed-prop-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #6B7280;
+}
+
+.ed-room-swatch-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    background: #F9FAFB;
+}
+
+.ed-room-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 1px solid #D1D5DB;
+}
+
+.ed-room-name-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.ed-props-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.ed-prop-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ed-input, .ed-select {
+    width: 100%;
+    padding: 7px 10px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #111827;
+    background: #F9FAFB;
+    outline: none;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.ed-select {
+    background: #FFFFFF;
+    cursor: pointer;
+}
+
+.ed-props-divider {
+    height: 1px;
+    background: #E5E7EB;
+    margin: 4px 0;
+}
+
+.ed-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #111827;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+}
+
+.ed-color-input-wrap, .ed-unit-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    background: #FFFFFF;
+}
+
+.ed-color-picker {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.ed-color-hex {
+    font-size: 11px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.ed-unit-input-wrap .ed-input {
+    border: none;
+    padding: 0;
+    background: transparent;
+}
+
+.ed-unit-suffix {
+    font-size: 11px;
+    color: #6B7280;
+}
+
+.ed-textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #111827;
+    background: #FFFFFF;
+    resize: vertical;
+    outline: none;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+/* --- 4. BOTTOM STATUS BAR --- */
+.ed-statusbar {
+    height: 36px;
+    background: #FFFFFF;
+    border-top: 1px solid #E5E7EB;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #6B7280;
+    flex-shrink: 0;
+    z-index: 20;
+}
+
+.ed-statusbar-left {
+    display: flex;
+    gap: 20px;
+}
+
+.ed-statusbar-right {
+    display: flex;
+    gap: 16px;
+}
+
+.ed-status-toggle {
+    background: transparent;
+    border: none;
+    color: #4B5563;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+}
+
+.ed-status-toggle strong {
+    color: #2563EB;
+}

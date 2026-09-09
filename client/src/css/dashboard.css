@@ -37,8 +37,8 @@
     --ref-shadow-blue: 0 4px 14px rgba(37, 99, 235, 0.35);
     
     /* Dimensions */
-    --ref-sidebar-width: 240px;
-    --ref-topbar-height: 68px;
+    --ref-sidebar-width: 15.5vw;
+    --ref-topbar-height: 64px;
     --ref-radius-lg: 16px;
     --ref-radius-md: 12px;
     --ref-radius-sm: 8px;
@@ -92,7 +92,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 0 6px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
     text-decoration: none;
 }
 
@@ -107,15 +107,14 @@
 }
 
 .ref-brand-logo-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+    width: 36px;
+    height: 36px;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #FFFFFF;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    box-shadow: none;
 }
 
 .ref-brand-collapse {
@@ -133,7 +132,7 @@
 .ref-sidebar-nav {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
     flex: 1;
 }
 
@@ -141,10 +140,10 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 9px 14px;
+    padding: 8px 14px;
     border-radius: 10px;
     color: var(--ref-text-light);
-    font-size: 13.5px;
+    font-size: 15px;
     font-weight: 500;
     text-decoration: none;
     transition: all 0.2s ease;

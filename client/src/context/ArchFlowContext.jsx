@@ -1,5 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import Toast from '../components/Toast';
+import { CanonicalOption04 } from '../engine/cad/CanonicalOption04.js';
+import { createEmptyPlan } from '../engine/cad/CanonicalSchema.js';
+import { ArchitectureAIProvider } from '../engine/cad/ArchitectureAIProvider.js';
+import { ConstraintValidator } from '../engine/cad/ConstraintValidator.js';
 
 const ArchFlowContext = createContext(null);
 
@@ -13,71 +17,185 @@ const ARCH_IMAGES = {
     plan_thumb: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230f172a'/><line x1='10' y1='10' x2='90' y2='10' stroke='white' stroke-width='1'/><line x1='10' y1='10' x2='10' y2='90' stroke='white' stroke-width='1'/><line x1='90' y1='10' x2='90' y2='90' stroke='white' stroke-width='1'/><line x1='10' y1='90' x2='90' y2='90' stroke='white' stroke-width='1'/><line x1='50' y1='10' x2='50' y2='90' stroke='white' stroke-dasharray='3' stroke-width='1'/><rect x='15' y='15' width='30' height='30' fill='none' stroke='white' stroke-width='1'/><rect x='55' y='15' width='30' height='30' fill='none' stroke='white' stroke-width='1'/><rect x='15' y='55' width='70' height='30' fill='none' stroke='white' stroke-width='1'/></svg>"
 };
 
+const aiProvider = new ArchitectureAIProvider();
+const validator = new ConstraintValidator();
+
 const DEFAULT_PROJECTS = [
-    { id: 'f1', name: '30x40 East Facing House', client: 'Ramesh C', width: 30, length: 40, floors: 2, status: 'In Progress', time: '2 hours ago', badge: 'ref-badge-blue', area: 1200, facing: 'East', bedrooms: 3, bathrooms: 3, createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() },
-    { id: 'f2', name: 'Duplex Villa - 40x60', client: 'Suresh Builders', width: 40, length: 60, floors: 2, status: 'AI Generated', time: '1 day ago', badge: 'ref-badge-green', area: 2400, facing: 'North', bedrooms: 4, bathrooms: 4, createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() },
-    { id: 'f3', name: 'Modern House - 20x30', client: 'Kumar Family', width: 20, length: 30, floors: 1, status: 'Completed', time: '2 days ago', badge: 'ref-badge-teal', area: 600, facing: 'West', bedrooms: 2, bathrooms: 2, createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() },
-    { id: 'f4', name: 'Premium Villa - 50x80', client: 'Greenfield Developers', width: 50, length: 80, floors: 2, status: 'In Progress', time: '3 days ago', badge: 'ref-badge-blue', area: 4000, facing: 'South', bedrooms: 5, bathrooms: 5, createdAt: new Date().toISOString(), lastUpdated: new Date().toISOString() }
+    {
+        id: 'f1',
+        name: 'GF Scheme Plan - Option 04',
+        client: 'KS Infra',
+        width: 45,
+        length: 70,
+        floors: 1,
+        status: 'Completed',
+        time: '2 hours ago',
+        badge: 'ref-badge-blue',
+        area: 1405,
+        facing: 'East',
+        bedrooms: 2,
+        bathrooms: 4,
+        plan: CanonicalOption04,
+        rooms: CanonicalOption04.rooms,
+        walls: CanonicalOption04.walls,
+        doors: CanonicalOption04.doors,
+        windows: CanonicalOption04.windows,
+        stairs: CanonicalOption04.stairs,
+        columns: CanonicalOption04.columns,
+        furniture: CanonicalOption04.furniture,
+        generatedDesigns: [],
+        createdAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+    },
+    {
+        id: 'f2',
+        name: 'Duplex Villa - 40x60',
+        client: 'Suresh Builders',
+        width: 40,
+        length: 60,
+        floors: 2,
+        status: 'AI Generated',
+        time: '1 day ago',
+        badge: 'ref-badge-green',
+        area: 2400,
+        facing: 'North',
+        bedrooms: 4,
+        bathrooms: 4,
+        generatedDesigns: [],
+        createdAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+    },
+    {
+        id: 'f3',
+        name: 'Modern House - 20x30',
+        client: 'Kumar Family',
+        width: 20,
+        length: 30,
+        floors: 1,
+        status: 'Completed',
+        time: '2 days ago',
+        badge: 'ref-badge-teal',
+        area: 600,
+        facing: 'West',
+        bedrooms: 2,
+        bathrooms: 2,
+        generatedDesigns: [],
+        createdAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+    },
+    {
+        id: 'f4',
+        name: 'Premium Villa - 50x80',
+        client: 'Greenfield Developers',
+        width: 50,
+        length: 80,
+        floors: 2,
+        status: 'In Progress',
+        time: '3 days ago',
+        badge: 'ref-badge-blue',
+        area: 4000,
+        facing: 'South',
+        bedrooms: 5,
+        bathrooms: 5,
+        generatedDesigns: [],
+        createdAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+    }
 ];
 
 export const ArchFlowProvider = ({ children }) => {
     const [projects, setProjects] = useState(DEFAULT_PROJECTS);
-    const [activeProjectId, setActiveProjectId] = useState(null);
+    const [activeProjectId, setActiveProjectId] = useState('f1');
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState(null);
 
     const API_URL = import.meta.env.VITE_API_URL || '';
 
+    const normalizeProject = (p) => {
+        if (p.id === 'f1' || (p.width === 45 && p.length === 70)) {
+            return {
+                ...p,
+                plan: CanonicalOption04,
+                walls: CanonicalOption04.walls,
+                rooms: CanonicalOption04.rooms,
+                doors: CanonicalOption04.doors,
+                windows: CanonicalOption04.windows,
+                furniture: CanonicalOption04.furniture,
+                stairs: CanonicalOption04.stairs,
+                columns: CanonicalOption04.columns
+            };
+        }
+        if (!p.plan) {
+            const blank = createEmptyPlan({
+                id: p.id,
+                name: p.name,
+                client: p.client,
+                width: p.width || 30,
+                length: p.length || 40,
+                facing: p.facing || 'East',
+                floors: p.floors || 1
+            });
+            return {
+                ...p,
+                plan: blank,
+                walls: blank.walls,
+                rooms: p.rooms || blank.rooms,
+                doors: blank.doors,
+                windows: blank.windows,
+                furniture: blank.furniture
+            };
+        }
+        return p;
+    };
+
     // Fetch projects from API on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         const fetchProjects = async () => {
             try {
                 const res = await fetch(`${API_URL}/api/projects`);
                 if (res.ok) {
                     const data = await res.json();
-                    setProjects(data);
-                    
-                    const savedActiveId = localStorage.getItem("archflow_active_project_id");
-                    if (savedActiveId && data.find(p => p.id === savedActiveId)) {
-                        setActiveProjectId(savedActiveId);
-                    } else if (data.length > 0) {
-                        setActiveProjectId(data[0].id);
-                        localStorage.setItem("archflow_active_project_id", data[0].id);
+                    if (data && data.length > 0) {
+                        const normalized = data.map(normalizeProject);
+                        setProjects(normalized);
+                        localStorage.setItem("archflow_projects", JSON.stringify(normalized));
+                        setActiveProjectId(normalized[0].id);
+                        localStorage.setItem("archflow_active_project_id", normalized[0].id);
                     }
                 } else {
                     throw new Error("HTTP " + res.status);
                 }
             } catch (e) {
-                console.warn("Failed to load projects from server, loading from localStorage fallback:", e);
+                console.warn("Loading from localStorage fallback:", e);
                 const localData = localStorage.getItem("archflow_projects");
                 if (localData) {
                     try {
                         const parsed = JSON.parse(localData);
                         if (Array.isArray(parsed) && parsed.length > 0) {
-                            setProjects(parsed);
-                            setActiveProjectId(parsed[0].id);
+                            const normalized = parsed.map(normalizeProject);
+                            setProjects(normalized);
+                            setActiveProjectId(normalized[0].id);
                         } else {
                             setProjects(DEFAULT_PROJECTS);
                             localStorage.setItem("archflow_projects", JSON.stringify(DEFAULT_PROJECTS));
-                            setActiveProjectId(DEFAULT_PROJECTS[0].id);
+                            setActiveProjectId('f1');
                         }
                     } catch (err) {
                         setProjects(DEFAULT_PROJECTS);
                         localStorage.setItem("archflow_projects", JSON.stringify(DEFAULT_PROJECTS));
-                        setActiveProjectId(DEFAULT_PROJECTS[0].id);
+                        setActiveProjectId('f1');
                     }
                 } else {
                     setProjects(DEFAULT_PROJECTS);
                     localStorage.setItem("archflow_projects", JSON.stringify(DEFAULT_PROJECTS));
-                    setActiveProjectId(DEFAULT_PROJECTS[0].id);
+                    setActiveProjectId('f1');
                 }
             } finally {
                 setLoading(false);
             }
         };
         fetchProjects();
-    }, []);
+    }, [API_URL]);
 
     const showToast = (message, type = "success") => {
         setToast({ message, type });
@@ -101,18 +219,6 @@ export const ArchFlowProvider = ({ children }) => {
         }
     };
 
-    const generateDefaultRooms = (width, length) => {
-        const rooms = [];
-        rooms.push({ id: "r_1", name: "Living Hall", x: 2, y: 2, w: Math.floor(width * 0.45), h: Math.floor(length * 0.35), type: "living" });
-        rooms.push({ id: "r_2", name: "Kitchen", x: Math.floor(width * 0.55), y: 2, w: Math.floor(width * 0.35), h: Math.floor(length * 0.22), type: "kitchen" });
-        rooms.push({ id: "r_3", name: "Dining Hall", x: Math.floor(width * 0.55), y: Math.floor(length * 0.28), w: Math.floor(width * 0.35), h: Math.floor(length * 0.18), type: "dining" });
-        rooms.push({ id: "r_4", name: "Master Bedroom", x: Math.floor(width * 0.45), y: Math.floor(length * 0.5), w: Math.floor(width * 0.45), h: Math.floor(length * 0.28), type: "bedroom" });
-        rooms.push({ id: "r_5", name: "Kids Bedroom", x: 2, y: Math.floor(length * 0.42), w: Math.floor(width * 0.38), h: Math.floor(length * 0.22), type: "bedroom" });
-        rooms.push({ id: "r_6", name: "Common Bathroom", x: 2, y: Math.floor(length * 0.67), w: Math.floor(width * 0.25), h: Math.floor(length * 0.12), type: "toilet" });
-        rooms.push({ id: "r_7", name: "Car Parking Portico", x: 2, y: Math.floor(length * 0.82), w: Math.floor(width * 0.8), h: Math.floor(length * 0.15), type: "parking" });
-        return rooms;
-    };
-
     const getActiveProject = () => {
         return projects.find(p => p.id === activeProjectId) || projects[0] || null;
     };
@@ -127,11 +233,23 @@ export const ArchFlowProvider = ({ children }) => {
         const length = parseInt(data.length) || 40;
         const area = width * length;
 
-        const newProj = {
+        const newPlan = createEmptyPlan({
             id: "project_" + Date.now(),
             name: data.name || `House Plan - ${width}x${length}`,
             client: data.client || "Self",
             type: data.type || "Residential",
+            width: width,
+            length: length,
+            facing: data.facing || "East",
+            floors: parseInt(data.floors) || 1,
+            style: data.style || "Standard Modern"
+        });
+
+        const newProj = {
+            id: newPlan.project.id,
+            name: newPlan.project.name,
+            client: newPlan.project.client,
+            type: newPlan.project.type,
             location: data.location || "Default Site Location",
             width: width,
             length: length,
@@ -153,12 +271,13 @@ export const ArchFlowProvider = ({ children }) => {
             lastUpdated: new Date().toISOString(),
             status: "Draft",
             selectedStyle: data.style || "Standard Modern",
-            materials: {
-                facade: "concrete-plaster",
-                railings: "steel-grill",
-                lighting: "warm-led"
-            },
-            rooms: generateDefaultRooms(width, length),
+            materials: newPlan.materials,
+            plan: newPlan,
+            rooms: newPlan.rooms,
+            walls: newPlan.walls,
+            doors: newPlan.doors,
+            windows: newPlan.windows,
+            furniture: newPlan.furniture,
             variations: [
                 { name: "Budget Friendly", img: ARCH_IMAGES.budget, desc: "Cost-optimized concrete structure, local standard materials, compact structural spans.", tag: "Low Cost" },
                 { name: "Standard Modern", img: ARCH_IMAGES.standard, desc: "Clean geometric elevations, wooden accents, double glazing, Vastu compliance.", tag: "Best Choice" },
@@ -172,6 +291,27 @@ export const ArchFlowProvider = ({ children }) => {
         saveProjectsList(updated);
         selectProject(newProj.id);
         return newProj;
+    };
+
+    const updateProjectPlan = (projectId, updatedPlan) => {
+        const updated = projects.map(p => {
+            if (p.id === projectId) {
+                return {
+                    ...p,
+                    plan: updatedPlan,
+                    walls: updatedPlan.walls,
+                    rooms: updatedPlan.rooms,
+                    doors: updatedPlan.doors,
+                    windows: updatedPlan.windows,
+                    furniture: updatedPlan.furniture,
+                    stairs: updatedPlan.stairs,
+                    columns: updatedPlan.columns,
+                    lastUpdated: new Date().toISOString()
+                };
+            }
+            return p;
+        });
+        saveProjectsList(updated);
     };
 
     const duplicateProject = (id) => {
@@ -206,43 +346,21 @@ export const ArchFlowProvider = ({ children }) => {
     };
 
     const renameProject = (id, newName) => {
-        let found = false;
         const updated = projects.map(p => {
             if (p.id === id) {
-                found = true;
                 return { ...p, name: newName, lastUpdated: new Date().toISOString() };
             }
             return p;
         });
-        if (!found) {
-            const fallback = DEFAULT_PROJECTS.find(p => p.id === id) || { id, name: newName, client: 'Self', width: 30, length: 40, floors: 2, status: 'In Progress', time: 'Just now', badge: 'ref-badge-blue' };
-            updated.push({ ...fallback, name: newName, lastUpdated: new Date().toISOString() });
-        }
         saveProjectsList(updated);
         showToast("Project renamed successfully", "success");
-    };
-
-    const archiveProject = (id) => {
-        let found = false;
-        const updated = projects.map(p => {
-            if (p.id === id) {
-                found = true;
-                return { ...p, status: "Archived", lastUpdated: new Date().toISOString() };
-            }
-            return p;
-        });
-        if (!found) {
-            const fallback = DEFAULT_PROJECTS.find(p => p.id === id) || { id, name: `Project ${id}`, client: 'Self', width: 30, length: 40, floors: 2, status: 'Archived', time: 'Just now', badge: 'ref-badge-blue' };
-            updated.push({ ...fallback, status: "Archived", lastUpdated: new Date().toISOString() });
-        }
-        saveProjectsList(updated);
-        showToast("Project archived successfully", "info");
     };
 
     const updateProjectRoomLayout = (projectId, rooms) => {
         const updated = projects.map(p => {
             if (p.id === projectId) {
-                return { ...p, rooms, lastUpdated: new Date().toISOString() };
+                const plan = p.plan ? { ...p.plan, rooms } : { ...createEmptyPlan(), rooms };
+                return { ...p, rooms, plan, lastUpdated: new Date().toISOString() };
             }
             return p;
         });
@@ -269,34 +387,6 @@ export const ArchFlowProvider = ({ children }) => {
         saveProjectsList(updated);
     };
 
-    // Helper functions exported on window for non-migrated script tags (backward compatibility)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useEffect(() => {
-        window.ArchFlow = {
-            getProjects: () => projects,
-            saveProjects: saveProjectsList,
-            getProjectById: (id) => projects.find(p => p.id === id) || projects[0],
-            getActiveProject,
-            setActiveProjectId: selectProject,
-            createProject,
-            duplicateProject,
-            deleteProject,
-            renameProject,
-            archiveProject,
-            updateProjectRoomLayout,
-            updateProjectStyleSelection,
-            updateProjectMaterials,
-            showToast,
-            checkAuth: () => {
-                const loggedIn = localStorage.getItem("archflow_logged_in");
-                if (loggedIn !== "true" && !window.location.pathname.includes("login.html") && !window.location.pathname.includes("signup.html")) {
-                    window.location.href = "/login";
-                }
-            },
-            IMAGES: ARCH_IMAGES
-        };
-    }, [projects, activeProjectId]);
-
     return (
         <ArchFlowContext.Provider value={{
             projects,
@@ -305,14 +395,16 @@ export const ArchFlowProvider = ({ children }) => {
             selectProject,
             getActiveProject,
             createProject,
+            updateProjectPlan,
             duplicateProject,
             deleteProject,
             renameProject,
-            archiveProject,
             updateProjectRoomLayout,
             updateProjectStyleSelection,
             updateProjectMaterials,
             showToast,
+            aiProvider,
+            validator,
             IMAGES: ARCH_IMAGES
         }}>
             {children}
