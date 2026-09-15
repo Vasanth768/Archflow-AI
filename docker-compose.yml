@@ -56,7 +56,7 @@ services:
     logging: *default-logging
 
   archflow-minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     container_name: archflow-minio
     restart: unless-stopped
     environment:
