@@ -1,8 +1,8 @@
 /**
- * Constraint & Geometry Validation Engine
+ * ConstraintValidator.js - Deterministic Architectural Constraint & Geometry Validation Engine
  * 
- * Deterministically checks all geometric rules, architectural constraints,
- * opening attachments, and plot containment.
+ * Verifies all geometric rules, architectural constraints, opening attachments,
+ * wall connectivity, and user requirement preservation.
  * All units are in canonical INCHES.
  */
 
@@ -16,9 +16,10 @@ export const ValidationStatus = {
 
 export class ConstraintValidator {
     constructor(options = {}) {
-        this.minRoomWidth = options.minRoomWidth || 72; // 6'-0" (72 inches)
-        this.minRoomArea = options.minRoomArea || 36;   // 36 sq ft
-        this.minDoorWidth = options.minDoorWidth || 30; // 2'-6"
+        this.minRoomWidth = options.minRoomWidth || 48; // 4'-0" (e.g. for pooja/toilet)
+        this.minStandardRoomWidth = options.minStandardRoomWidth || 72; // 6'-0"
+        this.minRoomArea = options.minRoomArea || 20;   // sq ft
+        this.minDoorWidth = options.minDoorWidth || 28; // 2'-4"
         this.minWindowWidth = options.minWindowWidth || 24; // 2'-0"
         this.tolerance = options.tolerance || 0.1;
     }
@@ -45,7 +46,7 @@ export class ConstraintValidator {
             issues.push({ level: 'ERROR', code: 'INVALID_SITE_BOUNDS', message: 'Site width and length must be positive dimensions.' });
         }
 
-        // 2. Validate Walls
+        // 2. Validate Walls & Wall Map
         const walls = plan.walls || [];
         if (walls.length === 0) {
             issues.push({ level: 'ERROR', code: 'NO_WALLS', message: 'The plan contains no walls.' });
@@ -86,7 +87,7 @@ export class ConstraintValidator {
             }
         });
 
-        // 3. Validate Doors Attachment
+        // 3. Validate Door Attachments
         const doors = plan.doors || [];
         doors.forEach(d => {
             const hostWall = wallMap.get(d.wallId);
@@ -113,7 +114,7 @@ export class ConstraintValidator {
             }
         });
 
-        // 4. Validate Windows Attachment
+        // 4. Validate Window Attachments
         const windows = plan.windows || [];
         windows.forEach(w => {
             const hostWall = wallMap.get(w.wallId);
@@ -140,7 +141,7 @@ export class ConstraintValidator {
             }
         });
 
-        // 5. Validate Rooms
+        // 5. Validate Rooms & Check Overlaps
         const rooms = plan.rooms || [];
         let totalPlottedAreaSqInches = 0;
 
@@ -148,10 +149,9 @@ export class ConstraintValidator {
             const clearW = r.clearDimensions?.width ?? r.w ?? 0;
             const clearL = r.clearDimensions?.length ?? r.h ?? 0;
             const areaSqInches = clearW * clearL;
-            const areaSqFt = sqInchesToSqFt(areaSqInches);
             totalPlottedAreaSqInches += areaSqInches;
 
-            if (clearW < this.minRoomWidth && clearL < this.minRoomWidth && !['toilet', 'bathroom', 'store', 'pooja'].includes(r.type)) {
+            if (clearW < this.minStandardRoomWidth && clearL < this.minStandardRoomWidth && !['toilet', 'attached_toilet', 'bathroom', 'store', 'pooja'].includes(r.type)) {
                 issues.push({
                     level: 'WARNING',
                     code: 'ROOM_TOO_NARROW',
@@ -160,19 +160,32 @@ export class ConstraintValidator {
                 });
             }
 
-            // Check overlap with other rooms
+            // Check overlap with other rooms (Zero-tolerance)
             for (let j = idx + 1; j < rooms.length; j++) {
                 const r2 = rooms[j];
                 if (this.roomsOverlap(r, r2)) {
                     issues.push({
-                        level: 'WARNING',
+                        level: 'ERROR',
                         code: 'ROOM_OVERLAP',
                         entityId: r.id,
-                        message: `Room "${r.name}" overlaps with "${r2.name}".`
+                        message: `Room "${r.name}" overlaps with room "${r2.name}".`
                     });
                 }
             }
         });
+
+        // 6. Validate Requirement Tracking
+        if (plan.metadata && plan.metadata.requirementVerification) {
+            plan.metadata.requirementVerification.forEach(req => {
+                if (req.status === 'CONSTRAINT_CONFLICT') {
+                    issues.push({
+                        level: 'WARNING',
+                        code: 'CONSTRAINT_CONFLICT',
+                        message: `Requirement Conflict: ${req.requirement} - ${req.reason}`
+                    });
+                }
+            });
+        }
 
         const errors = issues.filter(i => i.level === 'ERROR').map(i => i.message);
         const warnings = issues.filter(i => i.level === 'WARNING').map(i => i.message);
@@ -220,3 +233,5 @@ export class ConstraintValidator {
                  y2 + h2 - this.tolerance <= y1);
     }
 }
+
+export default ConstraintValidator;

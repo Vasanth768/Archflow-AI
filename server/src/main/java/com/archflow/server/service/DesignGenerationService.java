@@ -23,6 +23,9 @@ public class DesignGenerationService {
     @Autowired
     private ArchitecturalImageValidator imageValidator;
 
+    @Autowired
+    private ArchitecturalImagePromptBuilder promptBuilder;
+
     @org.springframework.beans.factory.annotation.Value("${IMAGE_GENERATION_CACHE_ENABLED:true}")
     private boolean cacheEnabled;
 

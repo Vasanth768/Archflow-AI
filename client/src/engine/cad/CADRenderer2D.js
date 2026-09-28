@@ -1,15 +1,16 @@
 /**
- * CADRenderer2D - Professional Architectural 2D Canvas Engine
+ * CADRenderer2D.js - Professional Architectural 2D Canvas Engine
  * 
- * Replicates the high-precision CAD aesthetic of professional architectural floor plans:
+ * Replicates the high-precision CAD aesthetic of professional architectural blueprints:
  * - Crisp white canvas with subtle adaptive architectural grid
- * - Solid structural walls with clean joins and parametric openings
- * - Quarter-circle door swing arcs and double-line window frames
- * - Architectural staircase with treads and directional UP arrow
- * - Vector 2D CAD furniture symbols (Beds, Dining, Sofas, Kitchen Counters, Toilets, Cars, Plants)
- * - Collision-free typography formatted in feet and inches
- * - Outer and inner architectural dimension lines
- * - Real-time interactive minimap overview
+ * - Solid structural double-line walls with clean corner miter/butt joins
+ * - 90-degree door swing arcs and double-line window frames with sill extensions
+ * - Architectural staircase with treads, handrail, and UP arrow
+ * - Vector 2D CAD furniture symbols (Beds with pillows, Dining sets, Sofas, Kitchen Counters with sinks, Sanitary ware, Car, Plants)
+ * - Collision-free typography formatted in feet and inches (e.g. 12'-0" × 14'-0")
+ * - Outer and inner architectural dimension lines with 45° tick marks
+ * - Fixed matrix viewport transform: screen = world * zoom + pan
+ * - Interactive zoom around cursor, pan, and 1-click Fit-to-Screen
  */
 
 import { formatFeetInches } from './UnitEngine.js';
@@ -18,16 +19,17 @@ export class CADRenderer2D {
     constructor(canvas, options = {}) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.scale = options.scale || 1.0; // pixels per inch
+        this.scale = options.scale || 0.8; // pixels per inch
         this.pan = options.pan || { x: 60, y: 60 };
-        this.viewportWidth = options.viewportWidth || canvas.clientWidth || (canvas.width ? canvas.width / (window.devicePixelRatio || 1) : 800);
-        this.viewportHeight = options.viewportHeight || canvas.clientHeight || (canvas.height ? canvas.height / (window.devicePixelRatio || 1) : 600);
+        this.viewportWidth = options.viewportWidth || (canvas.clientWidth || 800);
+        this.viewportHeight = options.viewportHeight || (canvas.clientHeight || 600);
         this.gridSizeInches = options.gridSizeInches || 12; // 1-foot grid
         this.showGrid = options.showGrid !== false;
         this.showDimensions = options.showDimensions !== false;
         this.showFurniture = options.showFurniture !== false;
+        this.showVastuGrid = Boolean(options.showVastuGrid);
         this.selectedEntityId = options.selectedEntityId || null;
-        this.theme = options.theme || 'light'; // 'light' | 'dark'
+        this.theme = options.theme || 'light';
     }
 
     /**
@@ -51,6 +53,37 @@ export class CADRenderer2D {
     }
 
     /**
+     * Zoom centered around a specific screen coordinate (e.g. mouse cursor)
+     */
+    zoomAt(screenX, screenY, factor) {
+        const worldBefore = this.screenToWorld(screenX, screenY);
+        const newScale = Math.max(0.1, Math.min(5.0, this.scale * factor));
+        this.scale = newScale;
+        this.pan.x = screenX - worldBefore.x * this.scale;
+        this.pan.y = screenY - worldBefore.y * this.scale;
+    }
+
+    /**
+     * Fit entire CAD plan into canvas viewport with 15% margin
+     */
+    fitToScreen(plan) {
+        if (!plan || !plan.site) return;
+        const siteW = plan.site.width || 360;
+        const siteL = plan.site.length || 480;
+
+        // Total content envelope including dimensions (+ 60 inches margins)
+        const totalW = siteW + 80;
+        const totalL = siteL + 80;
+
+        const scaleX = (this.viewportWidth * 0.82) / totalW;
+        const scaleY = (this.viewportHeight * 0.82) / totalL;
+        this.scale = Math.min(scaleX, scaleY);
+
+        this.pan.x = (this.viewportWidth - siteW * this.scale) / 2;
+        this.pan.y = (this.viewportHeight - siteL * this.scale) / 2;
+    }
+
+    /**
      * Render full canonical Architectural CAD Plan
      */
     render(plan, options = {}) {
@@ -60,43 +93,52 @@ export class CADRenderer2D {
         const height = this.viewportHeight;
 
         this.selectedEntityId = options.selectedEntityId ?? this.selectedEntityId;
+        this.showVastuGrid = options.showVastuGrid !== undefined ? options.showVastuGrid : this.showVastuGrid;
 
-        // Clear background with crisp architectural white
+        // 1. Clear background with crisp architectural white
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, width, height);
 
-        // 1. Draw Architectural Grid
+        // 2. Draw Architectural Grid
         if (this.showGrid) {
             this.drawGrid(plan);
         }
 
-        // 2. Draw Site / Setbacks Boundary
+        // 3. Draw Site Boundaries & Setbacks
         this.drawSite(plan);
 
-        // 3. Draw Room Fills & Selection Highlights
+        // 4. Draw Optional 9-Quadrant Vastu Mandala Overlay
+        if (this.showVastuGrid) {
+            this.drawVastuMandala(plan);
+        }
+
+        // 5. Draw Room Fills & Selection Highlights
         this.drawRooms(plan);
 
-        // 4. Draw Columns
+        // 6. Draw Structural Columns
         this.drawColumns(plan);
 
-        // 5. Draw Stairs
+        // 7. Draw Architectural Stairs
         this.drawStairs(plan);
 
-        // 6. Draw Furniture (2D Vector CAD Symbols)
+        // 8. Draw Vector Furniture Symbols
         if (this.showFurniture) {
             this.drawFurniture(plan);
         }
 
-        // 7. Draw Structural Walls with Openings & Door Arcs
-        this.drawWalls(plan);
+        // 9. Draw Double-Line Structural Walls with Openings & Door Swing Arcs
+        this.drawWallsAndOpenings(plan);
 
-        // 8. Draw Room Typography & Labels (on top of furniture & walls for crystal clarity)
+        // 10. Draw Room Labels (Bold title, dimensions, area)
         this.drawRoomLabels(plan);
 
-        // 9. Draw Architectural Outer Dimensions
+        // 11. Draw Outer & Inner Architectural Dimensions
         if (this.showDimensions) {
             this.drawDimensions(plan);
         }
+
+        // 12. Draw North Compass
+        this.drawCompass(plan);
     }
 
     drawGrid(plan) {
@@ -104,7 +146,7 @@ export class CADRenderer2D {
         const step1Ft = 12 * this.scale;
         const step5Ft = 60 * this.scale;
 
-        if (step1Ft < 4) return; // don't draw if too small
+        if (step1Ft < 4) return;
 
         // Minor grid (1 foot)
         ctx.strokeStyle = '#F1F5F9';
@@ -148,707 +190,669 @@ export class CADRenderer2D {
     drawSite(plan) {
         if (!plan.site) return;
         const ctx = this.ctx;
-        const p1 = this.worldToScreen(0, 0);
+        const p = this.worldToScreen(0, 0);
         const w = plan.site.width * this.scale;
         const h = plan.site.length * this.scale;
 
-        // Plot boundary
-        ctx.strokeStyle = '#CBD5E1';
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([8, 6]);
-        ctx.strokeRect(p1.x, p1.y, w, h);
-        ctx.setLineDash([]);
+        // Site Outer Boundary
+        ctx.strokeStyle = '#94A3B8';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(p.x, p.y, w, h);
 
-        // Setbacks if present
+        // Dashed Setback Boundary
         if (plan.site.setbacks) {
             const sb = plan.site.setbacks;
-            const sbP1 = this.worldToScreen(sb.left || 0, sb.front || 0);
-            const sbW = (plan.site.width - (sb.left || 0) - (sb.right || 0)) * this.scale;
-            const sbH = (plan.site.length - (sb.front || 0) - (sb.rear || 0)) * this.scale;
+            const sp = this.worldToScreen(sb.left || 24, sb.rear || 24);
+            const sw = (plan.site.width - (sb.left || 24) - (sb.right || 24)) * this.scale;
+            const sh = (plan.site.length - (sb.rear || 24) - (sb.front || 36)) * this.scale;
 
-            ctx.strokeStyle = '#E2E8F0';
-            ctx.lineWidth = 1;
+            ctx.save();
             ctx.setLineDash([4, 4]);
-            ctx.strokeRect(sbP1.x, sbP1.y, sbW, sbH);
-            ctx.setLineDash([]);
+            ctx.strokeStyle = '#CBD5E1';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(sp.x, sp.y, sw, sh);
+            ctx.restore();
         }
+    }
+
+    drawVastuMandala(plan) {
+        if (!plan.site) return;
+        const ctx = this.ctx;
+        const p = this.worldToScreen(0, 0);
+        const w = plan.site.width * this.scale;
+        const h = plan.site.length * this.scale;
+
+        const cellW = w / 3;
+        const cellH = h / 3;
+
+        const zoneLabels = [
+            ['NW (Air)', 'N (Water)', 'NE (Spirit)'],
+            ['W (Space)', 'Center (Brahma)', 'E (Sun)'],
+            ['SW (Earth)', 'S (Fire)', 'SE (Agni)']
+        ];
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+        ctx.fillStyle = 'rgba(245, 158, 11, 0.03)';
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 1;
+
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 3; col++) {
+                const zx = p.x + col * cellW;
+                const zy = p.y + row * cellH;
+                ctx.fillRect(zx, zy, cellW, cellH);
+                ctx.strokeRect(zx, zy, cellW, cellH);
+
+                ctx.fillStyle = 'rgba(180, 83, 9, 0.7)';
+                ctx.font = '700 10px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(zoneLabels[row][col], zx + cellW / 2, zy + 16);
+            }
+        }
+        ctx.restore();
     }
 
     drawRooms(plan) {
-        if (!plan.rooms) return;
         const ctx = this.ctx;
+        (plan.rooms || []).forEach(r => {
+            const p = this.worldToScreen(r.x, r.y);
+            const w = r.w * this.scale;
+            const h = r.h * this.scale;
 
-        plan.rooms.forEach(room => {
-            const p = this.worldToScreen(room.x, room.y);
-            const w = room.w * this.scale;
-            const h = room.h * this.scale;
-            const isSelected = this.selectedEntityId === room.id;
-
-            // Room Background Tint
-            if (isSelected) {
-                ctx.fillStyle = 'rgba(59, 130, 246, 0.08)';
-                ctx.fillRect(p.x, p.y, w, h);
-                ctx.strokeStyle = '#2563EB';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(p.x, p.y, w, h);
-            } else {
-                ctx.fillStyle = this.getRoomColor(room.type);
-                ctx.fillRect(p.x, p.y, w, h);
-            }
-        });
-    }
-
-    drawRoomLabels(plan) {
-        if (!plan.rooms) return;
-        const ctx = this.ctx;
-
-        plan.rooms.forEach(room => {
-            const p = this.worldToScreen(room.x, room.y);
-            const w = room.w * this.scale;
-            const h = room.h * this.scale;
-
-            const isSmall = room.w < 70 || room.h < 50;
-            const nameFontSize = isSmall ? Math.max(9, Math.min(11, 11 * this.scale)) : Math.max(10, Math.min(13, 13 * this.scale));
-            const dimFontSize = isSmall ? Math.max(8, Math.min(9, 9 * this.scale)) : Math.max(9, Math.min(11, 11 * this.scale));
-
-            const centerX = p.x + w / 2;
-            // Shift label vertically slightly to leave room for furniture
-            const centerY = (room.type === 'living' || room.type === 'bedroom') ? (p.y + h / 2 - 15 * this.scale) : (p.y + h / 2);
-
-            // Room Name Label
-            ctx.fillStyle = '#111827';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.font = `700 ${nameFontSize}px 'Inter', sans-serif`;
-            ctx.fillText(room.name, centerX, centerY - dimFontSize * 0.7);
-
-            // Room Dimensions Subtext
-            ctx.fillStyle = '#4B5563';
-            ctx.font = `500 ${dimFontSize}px 'Inter', sans-serif`;
-            const dimText = room.dimensionLabel || `${formatFeetInches(room.w, false)} × ${formatFeetInches(room.h, false)}`;
-            ctx.fillText(dimText, centerX, centerY + dimFontSize * 0.8);
-        });
-    }
-
-    getRoomColor(type) {
-        switch (type) {
-            case 'living': return '#FAFAFA';
-            case 'dining': return '#FDFDFD';
-            case 'kitchen': return '#FFFDFB';
-            case 'bedroom': return '#F8FAFC';
-            case 'toilet': case 'bathroom': return '#F0F9FF';
-            case 'pooja': return '#FFFBEB';
-            case 'parking': case 'portico': return '#F8FAFC';
-            case 'sitout': return '#F0FDF4';
-            case 'store': return '#F8FAFC';
-            case 'staircase': return '#F1F5F9';
-            default: return '#FAFAFA';
-        }
-    }
-
-    drawWalls(plan) {
-        if (!plan.walls) return;
-        const ctx = this.ctx;
-
-        const doorMap = new Map();
-        (plan.doors || []).forEach(d => {
-            if (!doorMap.has(d.wallId)) doorMap.set(d.wallId, []);
-            doorMap.get(d.wallId).push(d);
-        });
-
-        const windowMap = new Map();
-        (plan.windows || []).forEach(w => {
-            if (!windowMap.has(w.wallId)) windowMap.set(w.wallId, []);
-            windowMap.get(w.wallId).push(w);
-        });
-
-        // Pass 1: Draw Wall Segments (Charcoal Solid Structural Fill)
-        plan.walls.forEach(wall => {
-            const p1 = this.worldToScreen(wall.start.x, wall.start.y);
-            const p2 = this.worldToScreen(wall.end.x, wall.end.y);
-            const thickness = (wall.thickness || 9) * this.scale;
-            const isSelected = this.selectedEntityId === wall.id;
-
-            ctx.beginPath();
-            ctx.moveTo(p1.x, p1.y);
-            ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = isSelected ? '#2563EB' : '#334155'; // Dark Charcoal/Slate CAD Wall
-            ctx.lineWidth = Math.max(2, thickness);
-            ctx.lineCap = 'square';
-            ctx.stroke();
-        });
-
-        // Pass 2: Draw Clean Wall Openings, Doors & Windows
-        plan.walls.forEach(wall => {
-            const doors = doorMap.get(wall.id) || [];
-            doors.forEach(door => this.drawDoor(wall, door));
-
-            const windows = windowMap.get(wall.id) || [];
-            windows.forEach(win => this.drawWindow(wall, win));
-        });
-    }
-
-    drawDoor(wall, door) {
-        const ctx = this.ctx;
-        const dx = wall.end.x - wall.start.x;
-        const dy = wall.end.y - wall.start.y;
-        const len = Math.hypot(dx, dy);
-        if (len < 1) return;
-
-        const ux = dx / len;
-        const uy = dy / len;
-        const nx = -uy;
-        const ny = ux;
-
-        const pos = door.positionAlongWall || 24;
-        const w = door.width || 36;
-
-        const startX = wall.start.x + ux * pos;
-        const startY = wall.start.y + uy * pos;
-        const endX = wall.start.x + ux * (pos + w);
-        const endY = wall.start.y + uy * (pos + w);
-
-        const scrStart = this.worldToScreen(startX, startY);
-        const scrEnd = this.worldToScreen(endX, endY);
-        const doorLenScr = w * this.scale;
-
-        // Clear opening cutout in the wall
-        ctx.beginPath();
-        ctx.moveTo(scrStart.x, scrStart.y);
-        ctx.lineTo(scrEnd.x, scrEnd.y);
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = (wall.thickness || 9) * this.scale + 1.5;
-        ctx.lineCap = 'butt';
-        ctx.stroke();
-
-        // Door frame jambs
-        ctx.strokeStyle = '#334155';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(scrStart.x - nx * 3, scrStart.y - ny * 3);
-        ctx.lineTo(scrStart.x + nx * 3, scrStart.y + ny * 3);
-        ctx.moveTo(scrEnd.x - nx * 3, scrEnd.y - ny * 3);
-        ctx.lineTo(scrEnd.x + nx * 3, scrEnd.y + ny * 3);
-        ctx.stroke();
-
-        if (door.type === 'arch_opening' || door.swingDirection === 'none') {
-            return; // Clean opening without leaf
-        }
-
-        // Draw CAD Door Leaf & Swing Arc
-        ctx.strokeStyle = '#1E293B';
-        ctx.lineWidth = 1.5;
-
-        let swingAngleMultiplier = door.swingDirection === 'left' ? -1 : 1;
-        const leafTipX = scrStart.x + nx * doorLenScr * swingAngleMultiplier;
-        const leafTipY = scrStart.y + ny * doorLenScr * swingAngleMultiplier;
-
-        // Door Leaf
-        ctx.beginPath();
-        ctx.moveTo(scrStart.x, scrStart.y);
-        ctx.lineTo(leafTipX, leafTipY);
-        ctx.stroke();
-
-        // Swing Arc (Quarter circle)
-        ctx.beginPath();
-        ctx.strokeStyle = '#64748B';
-        ctx.lineWidth = 1;
-        const startAngle = Math.atan2(leafTipY - scrStart.y, leafTipX - scrStart.x);
-        const endAngle = Math.atan2(scrEnd.y - scrStart.y, scrEnd.x - scrStart.x);
-        const counterClockwise = door.swingDirection === 'left';
-        ctx.arc(scrStart.x, scrStart.y, doorLenScr, startAngle, endAngle, counterClockwise);
-        ctx.stroke();
-    }
-
-    drawWindow(wall, win) {
-        const ctx = this.ctx;
-        const dx = wall.end.x - wall.start.x;
-        const dy = wall.end.y - wall.start.y;
-        const len = Math.hypot(dx, dy);
-        if (len < 1) return;
-
-        const ux = dx / len;
-        const uy = dy / len;
-        const nx = -uy;
-        const ny = ux;
-
-        const pos = win.positionAlongWall || 24;
-        const w = win.width || 48;
-        const wallThick = (wall.thickness || 9) * this.scale;
-
-        const startX = wall.start.x + ux * pos;
-        const startY = wall.start.y + uy * pos;
-        const endX = wall.start.x + ux * (pos + w);
-        const endY = wall.start.y + uy * (pos + w);
-
-        const scrStart = this.worldToScreen(startX, startY);
-        const scrEnd = this.worldToScreen(endX, endY);
-
-        // 1. Clear Wall Opening
-        ctx.beginPath();
-        ctx.moveTo(scrStart.x, scrStart.y);
-        ctx.lineTo(scrEnd.x, scrEnd.y);
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = wallThick + 1;
-        ctx.stroke();
-
-        // 2. Window Outer Frame Lines (Double Lines)
-        const halfThick = wallThick / 2;
-        ctx.strokeStyle = '#334155';
-        ctx.lineWidth = 1.5;
-
-        ctx.beginPath();
-        // Outer face
-        ctx.moveTo(scrStart.x + nx * halfThick, scrStart.y + ny * halfThick);
-        ctx.lineTo(scrEnd.x + nx * halfThick, scrEnd.y + ny * halfThick);
-        // Inner face
-        ctx.moveTo(scrStart.x - nx * halfThick, scrStart.y - ny * halfThick);
-        ctx.lineTo(scrEnd.x - nx * halfThick, scrEnd.y - ny * halfThick);
-        // Jamb end caps
-        ctx.moveTo(scrStart.x - nx * halfThick, scrStart.y - ny * halfThick);
-        ctx.lineTo(scrStart.x + nx * halfThick, scrStart.y + ny * halfThick);
-        ctx.moveTo(scrEnd.x - nx * halfThick, scrEnd.y - ny * halfThick);
-        ctx.lineTo(scrEnd.x + nx * halfThick, scrEnd.y + ny * halfThick);
-        ctx.stroke();
-
-        // 3. Center Glass Pane Line
-        ctx.strokeStyle = '#0284C7'; // Blue glass indicator
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(scrStart.x, scrStart.y);
-        ctx.lineTo(scrEnd.x, scrEnd.y);
-        ctx.stroke();
-    }
-
-    drawStairs(plan) {
-        if (!plan.stairs) return;
-        const ctx = this.ctx;
-
-        plan.stairs.forEach(stair => {
-            const p = this.worldToScreen(stair.x, stair.y);
-            const w = stair.width * this.scale;
-            const h = stair.length * this.scale;
-
-            // Stair well background
-            ctx.fillStyle = '#F8FAFC';
+            // Room Background Fill
+            ctx.fillStyle = r.color || '#F8FAFC';
             ctx.fillRect(p.x, p.y, w, h);
 
-            // Boundary
-            ctx.strokeStyle = '#334155';
-            ctx.lineWidth = 1.5;
-            ctx.strokeRect(p.x, p.y, w, h);
-
-            // Dog-legged center dividing line
-            const halfW = w / 2;
-            ctx.beginPath();
-            ctx.moveTo(p.x + halfW, p.y);
-            ctx.lineTo(p.x + halfW, p.y + h);
-            ctx.stroke();
-
-            // Treads
-            const stepsPerFlight = 9;
-            const stepH = h / stepsPerFlight;
-            ctx.strokeStyle = '#64748B';
-            ctx.lineWidth = 1;
-
-            ctx.beginPath();
-            for (let i = 1; i < stepsPerFlight; i++) {
-                // Left flight treads
-                ctx.moveTo(p.x, p.y + i * stepH);
-                ctx.lineTo(p.x + halfW - 2, p.y + i * stepH);
-                // Right flight treads
-                ctx.moveTo(p.x + halfW + 2, p.y + i * stepH);
-                ctx.lineTo(p.x + w, p.y + i * stepH);
+            // Selection Highlight
+            if (this.selectedEntityId === r.id) {
+                ctx.save();
+                ctx.strokeStyle = '#3B82F6';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(p.x, p.y, w, h);
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.08)';
+                ctx.fillRect(p.x, p.y, w, h);
+                ctx.restore();
             }
-            ctx.stroke();
-
-            // UP Direction Arrow on Flight 1
-            ctx.strokeStyle = '#0F172A';
-            ctx.fillStyle = '#0F172A';
-            ctx.lineWidth = 1.5;
-
-            const arrowX = p.x + halfW / 2;
-            const arrowStartY = p.y + h - 10 * this.scale;
-            const arrowEndY = p.y + 15 * this.scale;
-
-            ctx.beginPath();
-            ctx.moveTo(arrowX, arrowStartY);
-            ctx.lineTo(arrowX, arrowEndY);
-            ctx.stroke();
-
-            // Arrow head
-            ctx.beginPath();
-            ctx.moveTo(arrowX, arrowEndY);
-            ctx.lineTo(arrowX - 4, arrowEndY + 8);
-            ctx.lineTo(arrowX + 4, arrowEndY + 8);
-            ctx.closePath();
-            ctx.fill();
-
-            // Label "UP"
-            ctx.font = `700 ${Math.max(9, 10 * this.scale)}px 'Inter', sans-serif`;
-            ctx.textAlign = 'center';
-            ctx.fillText('UP', arrowX + 14 * this.scale, (arrowStartY + arrowEndY) / 2);
         });
     }
 
     drawColumns(plan) {
-        if (!plan.columns) return;
         const ctx = this.ctx;
+        (plan.columns || []).forEach(c => {
+            const p = this.worldToScreen(c.x, c.y);
+            const w = (c.width || 9) * this.scale;
+            const l = (c.length || 9) * this.scale;
 
-        plan.columns.forEach(col => {
-            const p = this.worldToScreen(col.x, col.y);
-            const w = (col.width || 9) * this.scale;
-            const h = (col.length || 9) * this.scale;
+            ctx.fillStyle = '#0F172A';
+            ctx.fillRect(p.x, p.y, w, l);
 
-            ctx.fillStyle = '#1E293B';
+            // Column Hatch
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p.x + w, p.y + l);
+            ctx.moveTo(p.x + w, p.y);
+            ctx.lineTo(p.x, p.y + l);
+            ctx.stroke();
+        });
+    }
+
+    drawStairs(plan) {
+        const ctx = this.ctx;
+        (plan.stairs || []).forEach(s => {
+            const p = this.worldToScreen(s.x, s.y);
+            const w = s.width * this.scale;
+            const h = s.length * this.scale;
+            const treads = s.treads || 12;
+
+            // Stair outline
+            ctx.fillStyle = '#F8FAFC';
             ctx.fillRect(p.x, p.y, w, h);
             ctx.strokeStyle = '#475569';
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 1.5;
             ctx.strokeRect(p.x, p.y, w, h);
+
+            // Treads
+            const stepH = h / treads;
+            ctx.strokeStyle = '#64748B';
+            ctx.lineWidth = 1;
+            for (let i = 1; i < treads; i++) {
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y + i * stepH);
+                ctx.lineTo(p.x + w, p.y + i * stepH);
+                ctx.stroke();
+            }
+
+            // Directional UP Arrow
+            ctx.save();
+            ctx.strokeStyle = '#3B82F6';
+            ctx.fillStyle = '#3B82F6';
+            ctx.lineWidth = 2;
+            const midX = p.x + w / 2;
+            ctx.beginPath();
+            ctx.moveTo(midX, p.y + h - 10);
+            ctx.lineTo(midX, p.y + 15);
+            ctx.stroke();
+
+            // Arrow head
+            ctx.beginPath();
+            ctx.moveTo(midX, p.y + 10);
+            ctx.lineTo(midX - 5, p.y + 20);
+            ctx.lineTo(midX + 5, p.y + 20);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.font = '700 10px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('UP', midX, p.y + h - 14);
+            ctx.restore();
         });
     }
 
     drawFurniture(plan) {
-        if (!plan.furniture) return;
         const ctx = this.ctx;
-
-        plan.furniture.forEach(item => {
-            const p = this.worldToScreen(item.x, item.y);
-            const w = item.width * this.scale;
-            const l = item.length * this.scale;
+        (plan.furniture || []).forEach(f => {
+            const p = this.worldToScreen(f.x, f.y);
+            const w = f.width * this.scale;
+            const l = f.length * this.scale;
 
             ctx.save();
             ctx.translate(p.x + w / 2, p.y + l / 2);
-            ctx.rotate((item.rotation || 0) * Math.PI / 180);
+            ctx.rotate(((f.rotation || 0) * Math.PI) / 180);
 
-            switch (item.type) {
-                case 'bed':
-                    this.drawBedSymbol(ctx, -w / 2, -l / 2, w, l);
-                    break;
-                case 'dining_table':
-                    this.drawDiningTableSymbol(ctx, -w / 2, -l / 2, w, l);
-                    break;
-                case 'sofa':
-                    this.drawSofaSymbol(ctx, -w / 2, -l / 2, w, l);
-                    break;
-                case 'table':
-                    this.drawCoffeeTableSymbol(ctx, -w / 2, -l / 2, w, l);
-                    break;
-                case 'tv_unit':
-                    this.drawTvUnitSymbol(ctx, -w / 2, -l / 2, w, l);
-                    break;
-                case 'kitchen_counter':
-                    this.drawKitchenCounterSymbol(ctx, -w / 2, -l / 2, w, l);
-                    break;
-                case 'commode':
-                    this.drawCommodeSymbol(ctx, -w / 2, -l / 2, w, l);
-                    break;
-                case 'car':
-                    this.drawCarSymbol(ctx, -w / 2, -l / 2, w, l);
-                    break;
-                case 'plant':
-                    this.drawPlantSymbol(ctx, -w / 2, -l / 2, w, l);
-                    break;
-                default:
-                    ctx.strokeStyle = '#94A3B8';
-                    ctx.fillStyle = '#F8FAFC';
-                    ctx.lineWidth = 1;
-                    ctx.fillRect(-w / 2, -l / 2, w, l);
-                    ctx.strokeRect(-w / 2, -l / 2, w, l);
-                    break;
+            if (f.type === 'bed') {
+                // Bed Frame
+                ctx.fillStyle = '#F1F5F9';
+                ctx.fillRect(-w / 2, -l / 2, w, l);
+                ctx.strokeStyle = '#64748B';
+                ctx.lineWidth = 1.2;
+                ctx.strokeRect(-w / 2, -l / 2, w, l);
+
+                // Headboard
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(-w / 2, -l / 2, w, 6 * this.scale);
+
+                // Pillows
+                ctx.fillStyle = '#E2E8F0';
+                const pilW = (w - 12 * this.scale) / 2;
+                const pilH = 14 * this.scale;
+                ctx.strokeRect(-w / 2 + 4 * this.scale, -l / 2 + 8 * this.scale, pilW, pilH);
+                ctx.strokeRect(4 * this.scale, -l / 2 + 8 * this.scale, pilW, pilH);
+
+                // Blanket Fold Line
+                ctx.beginPath();
+                ctx.moveTo(-w / 2, 0);
+                ctx.lineTo(w / 2, 0);
+                ctx.stroke();
+            } else if (f.type === 'sofa') {
+                // Sofa Main Body
+                ctx.fillStyle = '#E2E8F0';
+                ctx.fillRect(-w / 2, -l / 2, w, l);
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 1.2;
+                ctx.strokeRect(-w / 2, -l / 2, w, l);
+
+                // Armrests
+                ctx.fillStyle = '#94A3B8';
+                ctx.fillRect(-w / 2, -l / 2, 8 * this.scale, l);
+                ctx.fillRect(w / 2 - 8 * this.scale, -l / 2, 8 * this.scale, l);
+            } else if (f.type === 'dining_table') {
+                // Table
+                ctx.fillStyle = '#F8FAFC';
+                ctx.fillRect(-w / 2, -l / 2, w, l);
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(-w / 2, -l / 2, w, l);
+
+                // Chairs
+                ctx.fillStyle = '#CBD5E1';
+                const chairW = 14 * this.scale;
+                const chairD = 10 * this.scale;
+                ctx.strokeRect(-w / 2 + 8 * this.scale, -l / 2 - chairD, chairW, chairD);
+                ctx.strokeRect(w / 2 - 8 * this.scale - chairW, -l / 2 - chairD, chairW, chairD);
+                ctx.strokeRect(-w / 2 + 8 * this.scale, l / 2, chairW, chairD);
+                ctx.strokeRect(w / 2 - 8 * this.scale - chairW, l / 2, chairW, chairD);
+            } else if (f.type === 'kitchen_counter') {
+                // Granite Counter
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(-w / 2, -l / 2, w, l);
+
+                // Sink & Burners
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 1.2;
+                ctx.strokeRect(-w / 2 + 6 * this.scale, -l / 2 + 4 * this.scale, 20 * this.scale, l - 8 * this.scale);
+
+                // Stove
+                ctx.beginPath();
+                ctx.arc(w / 2 - 20 * this.scale, 0, 6 * this.scale, 0, Math.PI * 2);
+                ctx.arc(w / 2 - 36 * this.scale, 0, 5 * this.scale, 0, Math.PI * 2);
+                ctx.stroke();
+            } else {
+                ctx.fillStyle = '#E2E8F0';
+                ctx.fillRect(-w / 2, -l / 2, w, l);
+                ctx.strokeStyle = '#94A3B8';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-w / 2, -l / 2, w, l);
             }
 
             ctx.restore();
         });
     }
 
-    drawBedSymbol(ctx, x, y, w, h) {
-        // Bed base
-        ctx.fillStyle = '#FFFFFF';
-        ctx.strokeStyle = '#64748B';
-        ctx.lineWidth = 1.2;
-        ctx.fillRect(x, y, w, h);
-        ctx.strokeRect(x, y, w, h);
+    drawWallsAndOpenings(plan) {
+        const ctx = this.ctx;
+        const walls = plan.walls || [];
 
-        // Headboard
-        ctx.fillStyle = '#E2E8F0';
-        ctx.fillRect(x, y, w, h * 0.15);
-        ctx.strokeRect(x, y, w, h * 0.15);
+        // 1. Draw Double-Line Structural Wall Blocks
+        walls.forEach(w => {
+            const p1 = this.worldToScreen(w.start.x, w.start.y);
+            const p2 = this.worldToScreen(w.end.x, w.end.y);
+            const thick = (w.thickness || 9) * this.scale;
 
-        // Pillows
-        const pillowW = w * 0.38;
-        const pillowH = h * 0.2;
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillRect(x + w * 0.08, y + h * 0.18, pillowW, pillowH);
-        ctx.strokeRect(x + w * 0.08, y + h * 0.18, pillowW, pillowH);
+            ctx.save();
+            ctx.strokeStyle = w.type === 'exterior' ? '#0F172A' : '#334155';
+            ctx.lineWidth = thick;
+            ctx.lineCap = 'square';
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+            ctx.restore();
+        });
 
-        ctx.fillRect(x + w * 0.54, y + h * 0.18, pillowW, pillowH);
-        ctx.strokeRect(x + w * 0.54, y + h * 0.18, pillowW, pillowH);
+        // 2. Draw Windows on Exterior Walls
+        (plan.windows || []).forEach(win => {
+            const hostWall = walls.find(w => w.id === win.wallId);
+            if (!hostWall) return;
 
-        // Blanket fold
-        ctx.strokeStyle = '#94A3B8';
-        ctx.beginPath();
-        ctx.moveTo(x, y + h * 0.45);
-        ctx.lineTo(x + w, y + h * 0.45);
-        ctx.stroke();
+            const dx = hostWall.end.x - hostWall.start.x;
+            const dy = hostWall.end.y - hostWall.start.y;
+            const len = Math.hypot(dx, dy);
+            if (len <= 0) return;
+
+            const ux = dx / len;
+            const uy = dy / len;
+            const pos = win.positionAlongWall ?? 24;
+            const winW = win.width || 48;
+
+            const startX = hostWall.start.x + ux * pos;
+            const startY = hostWall.start.y + uy * pos;
+            const endX = hostWall.start.x + ux * (pos + winW);
+            const endY = hostWall.start.y + uy * (pos + winW);
+
+            const sp1 = this.worldToScreen(startX, startY);
+            const sp2 = this.worldToScreen(endX, endY);
+            const thick = (hostWall.thickness || 9) * this.scale;
+
+            // Clear wall segment for window
+            ctx.save();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = thick + 2;
+            ctx.lineCap = 'butt';
+            ctx.beginPath();
+            ctx.moveTo(sp1.x, sp1.y);
+            ctx.lineTo(sp2.x, sp2.y);
+            ctx.stroke();
+
+            // Draw Window Architectural Symbol (Frame + Glass Line)
+            ctx.strokeStyle = '#0F172A';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(sp1.x, sp1.y);
+            ctx.lineTo(sp2.x, sp2.y);
+            ctx.stroke();
+
+            // Translucent Glass Center Line
+            ctx.strokeStyle = '#38BDF8';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.restore();
+        });
+
+        // 3. Draw Doors and 90-Degree Swing Arcs
+        (plan.doors || []).forEach(d => {
+            const hostWall = walls.find(w => w.id === d.wallId);
+            if (!hostWall) return;
+
+            const dx = hostWall.end.x - hostWall.start.x;
+            const dy = hostWall.end.y - hostWall.start.y;
+            const len = Math.hypot(dx, dy);
+            if (len <= 0) return;
+
+            const ux = dx / len;
+            const uy = dy / len;
+            const pos = d.positionAlongWall ?? 24;
+            const doorW = (d.width || 36);
+
+            const hingeX = hostWall.start.x + ux * pos;
+            const hingeY = hostWall.start.y + uy * pos;
+            const endX = hostWall.start.x + ux * (pos + doorW);
+            const endY = hostWall.start.y + uy * (pos + doorW);
+
+            const hp = this.worldToScreen(hingeX, hingeY);
+            const ep = this.worldToScreen(endX, endY);
+            const thick = (hostWall.thickness || 9) * this.scale;
+            const screenDoorW = doorW * this.scale;
+
+            // Clear wall opening
+            ctx.save();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = thick + 2;
+            ctx.lineCap = 'butt';
+            ctx.beginPath();
+            ctx.moveTo(hp.x, hp.y);
+            ctx.lineTo(ep.x, ep.y);
+            ctx.stroke();
+
+            const angle = Math.atan2(dy, dx);
+
+            // Door leaf line (perpendicular opening)
+            const leafAngle = angle + (d.swing === 'left' ? -Math.PI / 2 : Math.PI / 2);
+            const leafX = hp.x + Math.cos(leafAngle) * screenDoorW;
+            const leafY = hp.y + Math.sin(leafAngle) * screenDoorW;
+
+            ctx.strokeStyle = '#D97706';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(hp.x, hp.y);
+            ctx.lineTo(leafX, leafY);
+            ctx.stroke();
+
+            // Quarter-circle Door Swing Arc
+            ctx.strokeStyle = '#94A3B8';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            if (d.swing === 'left') {
+                ctx.arc(hp.x, hp.y, screenDoorW, angle - Math.PI / 2, angle);
+            } else {
+                ctx.arc(hp.x, hp.y, screenDoorW, angle, angle + Math.PI / 2);
+            }
+            ctx.stroke();
+            ctx.restore();
+        });
     }
 
-    drawDiningTableSymbol(ctx, x, y, w, h) {
-        // Table top
-        ctx.fillStyle = '#FFFFFF';
-        ctx.strokeStyle = '#64748B';
-        ctx.lineWidth = 1.2;
-        ctx.fillRect(x + w * 0.15, y + h * 0.15, w * 0.7, h * 0.7);
-        ctx.strokeRect(x + w * 0.15, y + h * 0.15, w * 0.7, h * 0.7);
+    drawRoomLabels(plan) {
+        const ctx = this.ctx;
+        (plan.rooms || []).forEach(r => {
+            const p = this.worldToScreen(r.x, r.y);
+            const w = r.w * this.scale;
+            const h = r.h * this.scale;
 
-        // Chairs (6 chairs: 2 top, 2 bottom, 1 left, 1 right)
-        const chairW = w * 0.22;
-        const chairH = h * 0.12;
+            const midX = p.x + w / 2;
+            const midY = p.y + h / 2;
 
-        // Top chairs
-        ctx.strokeRect(x + w * 0.2, y, chairW, chairH);
-        ctx.strokeRect(x + w * 0.58, y, chairW, chairH);
+            ctx.save();
+            ctx.fillStyle = '#0F172A';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
 
-        // Bottom chairs
-        ctx.strokeRect(x + w * 0.2, y + h - chairH, chairW, chairH);
-        ctx.strokeRect(x + w * 0.58, y + h - chairH, chairW, chairH);
+            // Room Title
+            ctx.font = '700 13px Inter, -apple-system, sans-serif';
+            ctx.fillText(r.name.toUpperCase(), midX, midY - 10);
 
-        // Left & Right chairs
-        ctx.strokeRect(x, y + h * 0.38, chairH, chairW);
-        ctx.strokeRect(x + w - chairH, y + h * 0.38, chairH, chairW);
-    }
+            // Dimension Label (e.g. 12'-0" × 14'-0")
+            ctx.fillStyle = '#475569';
+            ctx.font = '600 11px Inter, -apple-system, sans-serif';
+            ctx.fillText(r.dimensionLabel || `${formatFeetInches(r.w, false)} × ${formatFeetInches(r.h, false)}`, midX, midY + 6);
 
-    drawSofaSymbol(ctx, x, y, w, h) {
-        // L-shaped sofa
-        ctx.fillStyle = '#FFFFFF';
-        ctx.strokeStyle = '#64748B';
-        ctx.lineWidth = 1.2;
+            // Area Badge
+            if (r.areaSqFt) {
+                ctx.fillStyle = '#64748B';
+                ctx.font = '500 10px Inter, -apple-system, sans-serif';
+                ctx.fillText(`${r.areaSqFt} Sq.Ft`, midX, midY + 20);
+            }
 
-        ctx.fillRect(x, y, w, h);
-        ctx.strokeRect(x, y, w, h);
-
-        // Cushions
-        ctx.strokeStyle = '#CBD5E1';
-        ctx.strokeRect(x + 4, y + 4, w - 8, h * 0.4);
-        ctx.strokeRect(x + 4, y + h * 0.4 + 4, w * 0.4, h * 0.5);
-    }
-
-    drawCoffeeTableSymbol(ctx, x, y, w, h) {
-        ctx.fillStyle = '#F8FAFC';
-        ctx.strokeStyle = '#94A3B8';
-        ctx.lineWidth = 1;
-        ctx.fillRect(x, y, w, h);
-        ctx.strokeRect(x, y, w, h);
-    }
-
-    drawTvUnitSymbol(ctx, x, y, w, h) {
-        ctx.fillStyle = '#334155';
-        ctx.fillRect(x, y, w, h);
-    }
-
-    drawKitchenCounterSymbol(ctx, x, y, w, h) {
-        // Counter top
-        ctx.fillStyle = '#FFFFFF';
-        ctx.strokeStyle = '#64748B';
-        ctx.lineWidth = 1.2;
-        ctx.fillRect(x, y, w, h);
-        ctx.strokeRect(x, y, w, h);
-
-        // Gas Stove (3 burners)
-        const stoveX = x + w * 0.2;
-        const stoveY = y + h * 0.2;
-        const stoveW = w * 0.25;
-        const stoveH = h * 0.6;
-        ctx.strokeRect(stoveX, stoveY, stoveW, stoveH);
-        ctx.beginPath();
-        ctx.arc(stoveX + stoveW * 0.3, stoveY + stoveH * 0.5, stoveH * 0.25, 0, Math.PI * 2);
-        ctx.arc(stoveX + stoveW * 0.7, stoveY + stoveH * 0.5, stoveH * 0.25, 0, Math.PI * 2);
-        ctx.stroke();
-
-        // Sink Basin
-        const sinkX = x + w * 0.65;
-        const sinkY = y + h * 0.15;
-        const sinkW = w * 0.25;
-        const sinkH = h * 0.7;
-        ctx.strokeRect(sinkX, sinkY, sinkW, sinkH);
-        ctx.beginPath();
-        ctx.arc(sinkX + sinkW / 2, sinkY + sinkH / 2, 3, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    drawCommodeSymbol(ctx, x, y, w, h) {
-        ctx.fillStyle = '#FFFFFF';
-        ctx.strokeStyle = '#64748B';
-        ctx.lineWidth = 1.2;
-
-        // Tank
-        ctx.fillRect(x, y, w, h * 0.35);
-        ctx.strokeRect(x, y, w, h * 0.35);
-
-        // Oval Bowl
-        ctx.beginPath();
-        ctx.ellipse(x + w / 2, y + h * 0.65, w * 0.42, h * 0.32, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-    }
-
-    drawCarSymbol(ctx, x, y, w, h) {
-        ctx.fillStyle = '#F1F5F9';
-        ctx.strokeStyle = '#475569';
-        ctx.lineWidth = 1.4;
-
-        // Car Body Outline
-        ctx.beginPath();
-        const r = 12;
-        ctx.roundRect(x, y, w, h, [r, r, r, r]);
-        ctx.fill();
-        ctx.stroke();
-
-        // Windshield
-        ctx.strokeStyle = '#64748B';
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.15, y + h * 0.25);
-        ctx.quadraticCurveTo(x + w * 0.5, y + h * 0.28, x + w * 0.85, y + h * 0.25);
-        ctx.stroke();
-
-        // Roof
-        ctx.strokeRect(x + w * 0.18, y + h * 0.3, w * 0.64, h * 0.4);
-
-        // Rear Windshield
-        ctx.beginPath();
-        ctx.moveTo(x + w * 0.15, y + h * 0.75);
-        ctx.quadraticCurveTo(x + w * 0.5, y + h * 0.72, x + w * 0.85, y + h * 0.75);
-        ctx.stroke();
-    }
-
-    drawPlantSymbol(ctx, x, y, w, h) {
-        const cx = x + w / 2;
-        const cy = y + h / 2;
-        const r = w / 2;
-
-        ctx.strokeStyle = '#16A34A';
-        ctx.fillStyle = '#DCFCE7';
-        ctx.lineWidth = 1.2;
-
-        ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // Leaves
-        ctx.beginPath();
-        ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy);
-        ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r);
-        ctx.stroke();
+            ctx.restore();
+        });
     }
 
     drawDimensions(plan) {
-        if (!plan.site) return;
         const ctx = this.ctx;
-        const site = plan.site;
-
-        const pTopLeft = this.worldToScreen(0, 0);
-        const pTopRight = this.worldToScreen(site.width, 0);
-        const pBotLeft = this.worldToScreen(0, site.length);
-
-        ctx.strokeStyle = '#111827';
-        ctx.fillStyle = '#111827';
-        ctx.lineWidth = 1;
-        ctx.font = `600 ${Math.max(10, 12 * this.scale)}px 'Inter', sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-
-        // 1. Horizontal Top Dimension (e.g. 45'-0" or 40'-0")
-        const offY = pTopLeft.y - 25;
-        ctx.beginPath();
-        ctx.moveTo(pTopLeft.x, offY);
-        ctx.lineTo(pTopRight.x, offY);
-        // Extension lines
-        ctx.moveTo(pTopLeft.x, pTopLeft.y); ctx.lineTo(pTopLeft.x, offY - 8);
-        ctx.moveTo(pTopRight.x, pTopRight.y); ctx.lineTo(pTopRight.x, offY - 8);
-        // Slash ticks
-        ctx.moveTo(pTopLeft.x - 4, offY + 4); ctx.lineTo(pTopLeft.x + 4, offY - 4);
-        ctx.moveTo(pTopRight.x - 4, offY + 4); ctx.lineTo(pTopRight.x + 4, offY - 4);
-        ctx.stroke();
-        ctx.fillText(formatFeetInches(site.width, false), (pTopLeft.x + pTopRight.x) / 2, offY - 4);
-
-        // 2. Vertical Left Dimension (e.g. 70'-0" or 30'-0")
-        const offX = pTopLeft.x - 28;
-        ctx.beginPath();
-        ctx.moveTo(offX, pTopLeft.y);
-        ctx.lineTo(offX, pBotLeft.y);
-        // Extension lines
-        ctx.moveTo(pTopLeft.x, pTopLeft.y); ctx.lineTo(offX - 8, pTopLeft.y);
-        ctx.moveTo(pBotLeft.x, pBotLeft.y); ctx.lineTo(offX - 8, pBotLeft.y);
-        // Slash ticks
-        ctx.moveTo(offX - 4, pTopLeft.y + 4); ctx.lineTo(offX + 4, pTopLeft.y - 4);
-        ctx.moveTo(offX - 4, pBotLeft.y + 4); ctx.lineTo(offX + 4, pBotLeft.y - 4);
-        ctx.stroke();
+        const siteW = plan.site?.width || 360;
+        const siteL = plan.site?.length || 480;
 
         ctx.save();
-        ctx.translate(offX - 8, (pTopLeft.y + pBotLeft.y) / 2);
-        ctx.rotate(-Math.PI / 2);
-        ctx.fillText(formatFeetInches(site.length, false), 0, 0);
+        ctx.strokeStyle = '#475569';
+        ctx.fillStyle = '#0F172A';
+        ctx.lineWidth = 1;
+
+        // Top Horizontal Plot Dimension
+        const topStart = this.worldToScreen(0, -18);
+        const topEnd = this.worldToScreen(siteW, -18);
+        const topMid = (topStart.x + topEnd.x) / 2;
+
+        ctx.beginPath();
+        ctx.moveTo(topStart.x, topStart.y);
+        ctx.lineTo(topEnd.x, topEnd.y);
+        ctx.stroke();
+
+        // 45° Tick Marks
+        this.drawTick(ctx, topStart.x, topStart.y);
+        this.drawTick(ctx, topEnd.x, topEnd.y);
+
+        ctx.font = '700 12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${formatFeetInches(siteW, false)} [WIDTH]`, topMid, topStart.y - 8);
+
+        // Right Vertical Plot Dimension
+        const rightStart = this.worldToScreen(siteW + 18, 0);
+        const rightEnd = this.worldToScreen(siteW + 18, siteL);
+        const rightMid = (rightStart.y + rightEnd.y) / 2;
+
+        ctx.beginPath();
+        ctx.moveTo(rightStart.x, rightStart.y);
+        ctx.lineTo(rightEnd.x, rightEnd.y);
+        ctx.stroke();
+
+        this.drawTick(ctx, rightStart.x, rightStart.y);
+        this.drawTick(ctx, rightEnd.x, rightEnd.y);
+
+        ctx.save();
+        ctx.translate(rightStart.x + 14, rightMid);
+        ctx.rotate(Math.PI / 2);
+        ctx.font = '700 12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${formatFeetInches(siteL, false)} [LENGTH]`, 0, 0);
+        ctx.restore();
+
         ctx.restore();
     }
 
+    drawTick(ctx, x, y) {
+        ctx.beginPath();
+        ctx.moveTo(x - 4, y + 4);
+        ctx.lineTo(x + 4, y - 4);
+        ctx.stroke();
+    }
+
+    drawCompass(plan) {
+        const ctx = this.ctx;
+        const facing = plan.site?.facing || 'East';
+        const cx = this.viewportWidth - 50;
+        const cy = 50;
+
+        ctx.save();
+        ctx.strokeStyle = '#0F172A';
+        ctx.fillStyle = '#EF4444';
+        ctx.lineWidth = 1.5;
+
+        // Compass Ring
+        ctx.beginPath();
+        ctx.arc(cx, cy, 20, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // North Arrow
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 18);
+        ctx.lineTo(cx - 5, cy + 6);
+        ctx.lineTo(cx, cy);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = '#0F172A';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 18);
+        ctx.lineTo(cx + 5, cy + 6);
+        ctx.lineTo(cx, cy);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.font = '700 10px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('N', cx, cy - 22);
+        ctx.font = '600 9px Inter, sans-serif';
+        ctx.fillStyle = '#64748B';
+        ctx.fillText(facing.toUpperCase(), cx, cy + 32);
+
+        ctx.restore();
+    }
+
+    resize(width, height) {
+        this.viewportWidth = width;
+        this.viewportHeight = height;
+    }
+
+    /**
+     * Render Interactive Overview Minimap
+     */
     renderMinimap(minimapCanvas, plan) {
         if (!minimapCanvas || !plan || !plan.site) return;
         const mCtx = minimapCanvas.getContext('2d');
-        const mW = minimapCanvas.width;
-        const mH = minimapCanvas.height;
+        if (!mCtx) return;
 
-        mCtx.fillStyle = '#FFFFFF';
+        const mW = minimapCanvas.width || 180;
+        const mH = minimapCanvas.height || 140;
+
+        mCtx.fillStyle = '#0F172A';
         mCtx.fillRect(0, 0, mW, mH);
 
-        const siteW = plan.site.width || 540;
-        const siteL = plan.site.length || 840;
+        const siteW = plan.site.width || 360;
+        const siteL = plan.site.length || 480;
 
-        const mScale = Math.min((mW - 16) / siteW, (mH - 16) / siteL);
-        const mPanX = (mW - siteW * mScale) / 2;
-        const mPanY = (mH - siteL * mScale) / 2;
+        const mScale = Math.min((mW - 20) / siteW, (mH - 20) / siteL);
+        const mOffX = (mW - siteW * mScale) / 2;
+        const mOffY = (mH - siteL * mScale) / 2;
 
-        // Draw site boundary
-        mCtx.strokeStyle = '#CBD5E1';
+        // Draw Site Box
+        mCtx.strokeStyle = '#475569';
         mCtx.lineWidth = 1;
-        mCtx.setLineDash([2, 2]);
-        mCtx.strokeRect(mPanX, mPanY, siteW * mScale, siteL * mScale);
-        mCtx.setLineDash([]);
+        mCtx.strokeRect(mOffX, mOffY, siteW * mScale, siteL * mScale);
 
-        // Draw rooms
+        // Draw Rooms
         (plan.rooms || []).forEach(r => {
-            mCtx.fillStyle = '#F8FAFC';
-            mCtx.fillRect(mPanX + r.x * mScale, mPanY + r.y * mScale, r.w * mScale, r.h * mScale);
-            mCtx.strokeStyle = '#E2E8F0';
-            mCtx.lineWidth = 0.8;
-            mCtx.strokeRect(mPanX + r.x * mScale, mPanY + r.y * mScale, r.w * mScale, r.h * mScale);
+            const rx = mOffX + r.x * mScale;
+            const ry = mOffY + r.y * mScale;
+            const rw = r.w * mScale;
+            const rh = r.h * mScale;
+
+            mCtx.fillStyle = r.color || '#334155';
+            mCtx.fillRect(rx, ry, rw, rh);
+            mCtx.strokeStyle = '#64748B';
+            mCtx.strokeRect(rx, ry, rw, rh);
         });
 
-        // Draw walls
-        (plan.walls || []).forEach(w => {
-            mCtx.strokeStyle = '#334155';
-            mCtx.lineWidth = Math.max(1, (w.thickness || 9) * mScale);
-            mCtx.beginPath();
-            mCtx.moveTo(mPanX + w.start.x * mScale, mPanY + w.start.y * mScale);
-            mCtx.lineTo(mPanX + w.end.x * mScale, mPanY + w.end.y * mScale);
-            mCtx.stroke();
-        });
+        // Draw Current Viewport Frustum Window
+        const viewWorldX = -this.pan.x / this.scale;
+        const viewWorldY = -this.pan.y / this.scale;
+        const viewWorldW = this.viewportWidth / this.scale;
+        const viewWorldH = this.viewportHeight / this.scale;
 
-        // Draw Viewport Camera Frustum Frame
-        const viewWorldLeft = (0 - this.pan.x) / this.scale;
-        const viewWorldTop = (0 - this.pan.y) / this.scale;
-        const viewWorldRight = (this.viewportWidth - this.pan.x) / this.scale;
-        const viewWorldBottom = (this.viewportHeight - this.pan.y) / this.scale;
+        const vx = mOffX + viewWorldX * mScale;
+        const vy = mOffY + viewWorldY * mScale;
+        const vw = viewWorldW * mScale;
+        const vh = viewWorldH * mScale;
 
-        const vfX = mPanX + viewWorldLeft * mScale;
-        const vfY = mPanY + viewWorldTop * mScale;
-        const vfW = (viewWorldRight - viewWorldLeft) * mScale;
-        const vfH = (viewWorldBottom - viewWorldTop) * mScale;
-
-        mCtx.strokeStyle = '#2563EB';
+        mCtx.strokeStyle = '#38BDF8';
         mCtx.lineWidth = 1.5;
-        mCtx.fillStyle = 'rgba(37, 99, 235, 0.08)';
-        mCtx.fillRect(vfX, vfY, vfW, vfH);
-        mCtx.strokeRect(vfX, vfY, vfW, vfH);
+        mCtx.strokeRect(vx, vy, vw, vh);
+        mCtx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+        mCtx.fillRect(vx, vy, vw, vh);
+    }
+
+    /**
+     * Export plan as high-resolution PNG data URL
+     */
+    exportPNG(plan, scaleMultiplier = 2) {
+        if (!plan) return null;
+        const offscreen = document.createElement('canvas');
+        const siteW = (plan.site?.width || 360) + 120;
+        const siteL = (plan.site?.length || 480) + 120;
+
+        const targetW = siteW * 2 * scaleMultiplier;
+        const targetH = siteL * 2 * scaleMultiplier;
+
+        offscreen.width = targetW;
+        offscreen.height = targetH;
+
+        const renderer = new CADRenderer2D(offscreen, {
+            scale: 2 * scaleMultiplier,
+            pan: { x: 60 * 2 * scaleMultiplier, y: 60 * 2 * scaleMultiplier },
+            viewportWidth: targetW,
+            viewportHeight: targetH,
+            showGrid: this.showGrid,
+            showDimensions: true,
+            showFurniture: true,
+            showVastuGrid: this.showVastuGrid
+        });
+
+        renderer.render(plan);
+        return offscreen.toDataURL('image/png');
+    }
+
+    /**
+     * Export plan as clean, high-precision SVG vector document
+     */
+    exportSVG(plan) {
+        if (!plan || !plan.site) return '';
+        const siteW = plan.site.width || 360;
+        const siteL = plan.site.length || 480;
+        const pad = 60;
+        const vbW = siteW + pad * 2;
+        const vbH = siteL + pad * 2;
+
+        let svg = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+        svg += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vbW} ${vbH}" width="${vbW * 3}" height="${vbH * 3}">\n`;
+        svg += `  <rect width="${vbW}" height="${vbH}" fill="#FFFFFF" />\n`;
+        svg += `  <g transform="translate(${pad}, ${pad})">\n`;
+
+        // Site
+        svg += `    <!-- Site Boundary -->\n`;
+        svg += `    <rect x="0" y="0" width="${siteW}" height="${siteL}" fill="none" stroke="#94A3B8" stroke-width="2" />\n`;
+
+        // Rooms
+        svg += `    <!-- Rooms -->\n`;
+        (plan.rooms || []).forEach(r => {
+            svg += `    <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${r.color || '#F8FAFC'}" stroke="#CBD5E1" stroke-width="1" />\n`;
+            svg += `    <text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 - 8}" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" text-anchor="middle">${r.name.toUpperCase()}</text>\n`;
+            svg += `    <text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + 8}" font-family="sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">${r.dimensionLabel || `${formatFeetInches(r.w, false)} × ${formatFeetInches(r.h, false)}`}</text>\n`;
+            if (r.areaSqFt) {
+                svg += `    <text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + 22}" font-family="sans-serif" font-size="9" fill="#64748B" text-anchor="middle">${r.areaSqFt} Sq.Ft</text>\n`;
+            }
+        });
+
+        // Walls
+        svg += `    <!-- Walls -->\n`;
+        (plan.walls || []).forEach(w => {
+            const strokeColor = w.type === 'exterior' ? '#0F172A' : '#334155';
+            svg += `    <line x1="${w.start.x}" y1="${w.start.y}" x2="${w.end.x}" y2="${w.end.y}" stroke="${strokeColor}" stroke-width="${w.thickness || 9}" stroke-linecap="square" />\n`;
+        });
+
+        // Dimensions
+        svg += `    <!-- Dimensions -->\n`;
+        svg += `    <line x1="0" y1="-18" x2="${siteW}" y2="-18" stroke="#475569" stroke-width="1" />\n`;
+        svg += `    <text x="${siteW / 2}" y="-24" font-family="sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="middle">${formatFeetInches(siteW, false)}</text>\n`;
+
+        svg += `    <line x1="${siteW + 18}" y1="0" x2="${siteW + 18}" y2="${siteL}" stroke="#475569" stroke-width="1" />\n`;
+        svg += `    <text x="${siteW + 28}" y="${siteL / 2}" font-family="sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="middle" transform="rotate(90, ${siteW + 28}, ${siteL / 2})">${formatFeetInches(siteL, false)}</text>\n`;
+
+        svg += `  </g>\n`;
+        svg += `</svg>`;
+        return svg;
     }
 }
+
+export default CADRenderer2D;

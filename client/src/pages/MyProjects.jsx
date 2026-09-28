@@ -288,7 +288,23 @@ export default function MyProjects() {
             </div>
 
             {/* 4. PROJECTS DISPLAY (LIST OR GRID VIEW) */}
-            {sortedProjects.length === 0 ? (
+            {(!projects || projects.length === 0) ? (
+                <div className="mp-empty-card">
+                    <div className="mp-empty-icon">
+                        <Folder size={28} />
+                    </div>
+                    <h3 style={{ fontSize: 18, fontWeight: 700, color: '#0F172A', margin: '0 0 6px 0' }}>No Projects Yet</h3>
+                    <p style={{ color: '#64748B', fontSize: 13.5, margin: '0 0 20px 0' }}>Create your first project to start designing architectural floor plans and 3D models.</p>
+                    <button 
+                        type="button" 
+                        className="mp-btn-new" 
+                        onClick={() => navigate('/new-project')}
+                    >
+                        <Plus size={16} strokeWidth={2.5} />
+                        <span>Create First Project</span>
+                    </button>
+                </div>
+            ) : sortedProjects.length === 0 ? (
                 <div className="mp-empty-card">
                     <div className="mp-empty-icon">
                         <Folder size={28} />

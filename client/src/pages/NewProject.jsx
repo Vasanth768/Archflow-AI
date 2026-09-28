@@ -33,7 +33,8 @@ const CounterControl = ({ value, onChange, min = 0, max = 10 }) => (
 
 export default function NewProject() {
     const navigate = useNavigate();
-    const { createProject, showToast, IMAGES } = useArchFlow();
+    const { createProject, showToast, IMAGES, user } = useArchFlow();
+    const userKey = user?.email || user?.id || 'guest';
 
     useEffect(() => {
         if (window.location.search.includes('mode=ai')) {
@@ -45,19 +46,20 @@ export default function NewProject() {
     const [currentStep, setCurrentStep] = useState(1);
     const [completedSteps, setCompletedSteps] = useState([]);
     const [errors, setErrors] = useState({});
+    const [isGenerating, setIsGenerating] = useState(false);
 
-    // Existing form fields & states preserved
-    const [name, setName] = useState('30x40 East Facing House');
-    const [client, setClient] = useState('Ramesh C');
+    // Form fields & states initialized clean
+    const [name, setName] = useState('');
+    const [client, setClient] = useState(user?.fullName || '');
     const [width, setWidth] = useState(30);
     const [length, setLength] = useState(40);
     const [facing, setFacing] = useState('East');
     const [corner, setCorner] = useState(false);
     const [road, setRoad] = useState('30 ft Road');
-    const [floors, setFloors] = useState(2);
-    const [bedrooms, setBedrooms] = useState(3);
-    const [bathrooms, setBathrooms] = useState(3);
-    const [pooja, setPooja] = useState(true);
+    const [floors, setFloors] = useState(1);
+    const [bedrooms, setBedrooms] = useState(2);
+    const [bathrooms, setBathrooms] = useState(2);
+    const [pooja, setPooja] = useState(false);
     const [parking, setParking] = useState(true);
     const [balcony, setBalcony] = useState(false);
     const [style, setStyle] = useState('Standard Modern');
@@ -66,7 +68,7 @@ export default function NewProject() {
 
     // Additional UI states matching reference card & wizard expansion
     const [projectType, setProjectType] = useState('Residential');
-    const [location, setLocation] = useState('Coimbatore, Tamil Nadu');
+    const [location, setLocation] = useState(user?.location || '');
     const [description, setDescription] = useState('');
     const [units, setUnits] = useState('ft');
     const [roadWidth, setRoadWidth] = useState('30 ft');
@@ -75,8 +77,8 @@ export default function NewProject() {
     const [hall, setHall] = useState(1);
     const [kitchen, setKitchen] = useState(1);
     const [dining, setDining] = useState(1);
-    const [poojaCount, setPoojaCount] = useState(1);
-    const [balconyCount, setBalconyCount] = useState(2);
+    const [poojaCount, setPoojaCount] = useState(0);
+    const [balconyCount, setBalconyCount] = useState(0);
     const [parkingStr, setParkingStr] = useState('1 Car');
     
     // Additional SaaS Building Requirement Counters
@@ -140,7 +142,7 @@ export default function NewProject() {
     // Restore Saved Draft from localStorage on mount
     useEffect(() => {
         try {
-            const savedDraft = localStorage.getItem('archflow_wizard_draft');
+            const savedDraft = localStorage.getItem(`archflow_wizard_draft_${userKey}`);
             if (savedDraft) {
                 const d = JSON.parse(savedDraft);
                 if (d.currentStep) setCurrentStep(d.currentStep);
@@ -183,7 +185,7 @@ export default function NewProject() {
         } catch (e) {
             console.error("Failed to restore draft", e);
         }
-    }, []);
+    }, [userKey]);
 
     const handleRegeneratePrompt = () => {
         setPrompt(generateAutoPrompt());
@@ -199,7 +201,7 @@ export default function NewProject() {
                 study, storeRoom, utility, office, staircasePref, staircaseType, livingType,
                 style, budget, priorities, prompt
             };
-            localStorage.setItem('archflow_wizard_draft', JSON.stringify(draft));
+            localStorage.setItem(`archflow_wizard_draft_${userKey}`, JSON.stringify(draft));
             showToast("Project draft & wizard progress saved successfully!", "success");
         } catch (e) {
             showToast("Failed to save draft", "error");
@@ -250,49 +252,58 @@ export default function NewProject() {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isGenerating) return;
+
         if (!validateStep(1) || !validateStep(2)) {
             showToast("Please verify mandatory fields before generating.", "error");
             return;
         }
 
-        const project = createProject({
-            name,
-            client,
-            width: Number(width),
-            length: Number(length),
-            facing,
-            corner,
-            road,
-            floors: Number(floors),
-            bedrooms: Number(bedrooms),
-            bathrooms: Number(bathrooms),
-            pooja: poojaCount > 0,
-            parking: parkingStr !== 'None',
-            balcony: balconyCount > 0,
-            style,
-            budget,
-            prompt,
-            type: projectType,
-            location,
-            description,
-            units,
-            roadWidth,
-            roadPosition,
-            study: Number(study),
-            storeRoom: Number(storeRoom),
-            utility: Number(utility),
-            office: Number(office),
-            staircasePref,
-            staircaseType,
-            livingType,
-            priorities
-        });
+        setIsGenerating(true);
+        try {
+            const project = createProject({
+                name,
+                client,
+                width: Number(width),
+                length: Number(length),
+                facing,
+                corner,
+                road,
+                floors: Number(floors),
+                bedrooms: Number(bedrooms),
+                bathrooms: Number(bathrooms),
+                pooja: poojaCount > 0,
+                parking: parkingStr !== 'None',
+                balcony: balconyCount > 0,
+                style,
+                budget,
+                prompt,
+                type: projectType,
+                location,
+                description,
+                units,
+                roadWidth,
+                roadPosition,
+                study: Number(study),
+                storeRoom: Number(storeRoom),
+                utility: Number(utility),
+                office: Number(office),
+                staircasePref,
+                staircaseType,
+                livingType,
+                priorities
+            });
 
-        localStorage.removeItem('archflow_wizard_draft');
-        showToast("Project layout created successfully!", "success");
-        navigate("/editor");
+            localStorage.removeItem(`archflow_wizard_draft_${userKey}`);
+            showToast("Project layout created successfully!", "success");
+            navigate("/editor");
+        } catch (err) {
+            console.error("Failed to generate project floor plan:", err);
+            showToast("Failed to generate plan. Please try again.", "error");
+            setIsGenerating(false);
+        }
     };
 
     const currentStyleImg = styleOptions.find(s => s.name === style)?.img || getImg('standard', '/assets/standard.png');
@@ -828,9 +839,9 @@ export default function NewProject() {
                                             Save Draft
                                         </button>
                                         <div className="np-generate-wrap">
-                                            <button type="submit" className="np-btn-generate">
-                                                <Sparkles size={18} />
-                                                <span>Generate Plan</span>
+                                            <button type="submit" className="np-btn-generate" disabled={isGenerating}>
+                                                {isGenerating ? <RefreshCw size={18} className="spin" /> : <Sparkles size={18} />}
+                                                <span>{isGenerating ? 'Generating...' : 'Generate Plan'}</span>
                                             </button>
                                             <span className="np-credits-text">This will use 10 AI credits</span>
                                         </div>

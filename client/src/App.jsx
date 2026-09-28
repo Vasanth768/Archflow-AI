@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ArchFlowProvider } from './context/ArchFlowContext';
 import MarketingLayout from './components/MarketingLayout';
 import DashboardLayout from './components/DashboardLayout';
+import ProtectedRoute from './components/ProtectedRoute';
+import PublicRoute from './components/PublicRoute';
 
 // Pages
 import Home from './pages/Home';
@@ -46,24 +48,28 @@ export default function App() {
                     </Route>
 
                     {/* Auth Routes */}
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
+                    <Route element={<PublicRoute restricted={true} />}>
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/signup" element={<Signup />} />
+                    </Route>
 
-                    {/* Dashboard Routes */}
-                    <Route element={<DashboardLayout />}>
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/my-projects" element={<MyProjects />} />
-                        <Route path="/new-project" element={<NewProject />} />
-                        <Route path="/ai-generator" element={<AiGenerator />} />
-                        <Route path="/project-details" element={<ProjectDetails />} />
-                        <Route path="/editor" element={<Editor />} />
-                        <Route path="/viewer" element={<Viewer />} />
-                        <Route path="/style-variations" element={<StyleVariations />} />
-                        <Route path="/export" element={<Export />} />
-                        <Route path="/templates" element={<Templates />} />
-                        <Route path="/team" element={<Team />} />
-                        <Route path="/settings" element={<Settings />} />
-                        <Route path="/docs" element={<Docs />} />
+                    {/* Protected Dashboard Routes */}
+                    <Route element={<ProtectedRoute />}>
+                        <Route element={<DashboardLayout />}>
+                            <Route path="/dashboard" element={<Dashboard />} />
+                            <Route path="/my-projects" element={<MyProjects />} />
+                            <Route path="/new-project" element={<NewProject />} />
+                            <Route path="/ai-generator" element={<AiGenerator />} />
+                            <Route path="/project-details" element={<ProjectDetails />} />
+                            <Route path="/editor" element={<Editor />} />
+                            <Route path="/viewer" element={<Viewer />} />
+                            <Route path="/style-variations" element={<StyleVariations />} />
+                            <Route path="/export" element={<Export />} />
+                            <Route path="/templates" element={<Templates />} />
+                            <Route path="/team" element={<Team />} />
+                            <Route path="/settings" element={<Settings />} />
+                            <Route path="/docs" element={<Docs />} />
+                        </Route>
                     </Route>
                 </Routes>
             </Router>

@@ -6,43 +6,40 @@ export default function DashboardLayout() {
     const { logout, user } = useArchFlow();
     const navigate = useNavigate();
     const location = useLocation();
-    const [userName, setUserName] = useState("Ramesh C");
-    const [credits, setCredits] = useState(632);
+    const [userName, setUserName] = useState(user?.fullName || user?.name || localStorage.getItem("archflow_profile_name") || "Demo User");
+    const [credits, setCredits] = useState(user?.credits || 632);
 
     const isStudioPage = location.pathname.includes('/editor') || location.pathname.includes('/ai-generator') || location.pathname.includes('/viewer');
 
     useEffect(() => {
-        const isLoggedIn = localStorage.getItem("archflow_logged_in");
-        if (isLoggedIn !== "true" && !user) {
-            navigate('/login');
-            return;
+        if (user) {
+            setUserName(user.fullName || user.name || "Demo User");
+            if (user.credits !== undefined) {
+                setCredits(user.credits);
+            }
+        } else {
+            const savedProfile = localStorage.getItem("archflow_profile_name");
+            if (savedProfile) {
+                setUserName(savedProfile);
+            }
         }
-
-        const savedProfile = localStorage.getItem("archflow_profile_name");
-        if (savedProfile) {
-            setUserName(savedProfile);
-        } else if (user && user.name) {
-            setUserName(user.name);
-        }
-        
-        const savedCredits = localStorage.getItem("archflow_credits");
-        if (savedCredits) {
-            setCredits(parseInt(savedCredits, 10));
-        }
-    }, [user, navigate]);
+    }, [user]);
 
     const handleLogout = () => {
         logout();
-        navigate('/');
+        navigate('/login');
     };
 
     const getInitials = (name) => {
-        if (!name) return 'RC';
-        const parts = name.trim().split(' ');
+        if (!name || typeof name !== 'string') return 'AF';
+        const parts = name.trim().split(/\s+/).filter(Boolean);
         if (parts.length >= 2) {
-            return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+            return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
         }
-        return name.slice(0, 2).toUpperCase();
+        if (parts.length === 1 && parts[0].length >= 2) {
+            return parts[0].slice(0, 2).toUpperCase();
+        }
+        return (name || 'AF').slice(0, 2).toUpperCase();
     };
 
     return (
@@ -75,7 +72,6 @@ export default function DashboardLayout() {
                     <NavLink to="/new-project" className={({ isActive }) => `ref-nav-item ${isActive ? 'active' : ''}`} id="menu-new-project">
                         <svg className="ref-nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4"/></svg>
                         New Project
-                        <span className="ref-nav-badge">New</span>
                     </NavLink>
 
                     {/* 3. My Projects */}
