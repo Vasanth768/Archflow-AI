@@ -5,21 +5,24 @@ import RenameProjectModal from '../components/RenameProjectModal';
 import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function Dashboard() {
-    const { projects, duplicateProject, deleteProject, renameProject, archiveProject } = useArchFlow();
+    const { projects, duplicateProject, deleteProject, renameProject, archiveProject, setActiveProject, user } = useArchFlow();
     const navigate = useNavigate();
-    const [userName, setUserName] = useState("Ramesh");
+    const [userName, setUserName] = useState(user?.fullName || user?.name || localStorage.getItem("archflow_profile_name") || "User");
     const [activeMenuId, setActiveMenuId] = useState(null);
     const [renameModalProject, setRenameModalProject] = useState(null);
     const [deleteModalProject, setDeleteModalProject] = useState(null);
     const [archiveModalProject, setArchiveModalProject] = useState(null);
 
     useEffect(() => {
-        const savedProfile = localStorage.getItem("archflow_profile_name");
-        if (savedProfile) {
-            const first = savedProfile.split(" ")[0];
-            setUserName(first);
+        if (user && (user.fullName || user.name)) {
+            setUserName(user.fullName || user.name);
+        } else {
+            const savedProfile = localStorage.getItem("archflow_profile_name");
+            if (savedProfile) {
+                setUserName(savedProfile);
+            }
         }
-    }, []);
+    }, [user]);
 
     // Dismiss 3-dot dropdown on outside click or Escape key
     useEffect(() => {
@@ -41,36 +44,10 @@ export default function Dashboard() {
         };
     }, [activeMenuId]);
 
-    // Ensure exactly 4 project items matching the reference UI presentation
-    const fallbackProjects = [
-        { id: 'f1', name: '30x40 East Facing House', client: 'Ramesh C', width: 30, length: 40, floors: 2, status: 'In Progress', time: '2 hours ago', badge: 'ref-badge-blue' },
-        { id: 'f2', name: 'Duplex Villa - 40x60', client: 'Suresh Builders', width: 40, length: 60, floors: 2, status: 'AI Generated', time: '1 day ago', badge: 'ref-badge-green' },
-        { id: 'f3', name: 'Modern House - 20x30', client: 'Kumar Family', width: 20, length: 30, floors: 1, status: 'Completed', time: '2 days ago', badge: 'ref-badge-teal' },
-        { id: 'f4', name: 'Premium Villa - 50x80', client: 'Greenfield Developers', width: 50, length: 80, floors: 2, status: 'In Progress', time: '3 days ago', badge: 'ref-badge-blue' }
-    ];
-
-    const existingIds = new Set((projects || []).map(p => p.id));
-    const displayProjects = (projects || []).slice(0, 4).map((p, idx) => {
-        const fb = fallbackProjects[idx % 4] || {};
-        return {
-            id: p.id || `p-${idx}`,
-            name: p.name || fb.name || "Untitled Project",
-            client: p.client || fb.client || "Self",
-            width: p.width || fb.width || 30,
-            length: p.length || fb.length || 40,
-            floors: p.floors || fb.floors || 1,
-            status: p.status === 'Finalized' ? 'Completed' : (p.status || fb.status || "In Progress"),
-            time: p.time || fb.time || "Just now",
-            badge: p.status === 'Finalized' ? 'ref-badge-teal' : (p.badge || fb.badge || "ref-badge-blue")
-        };
-    });
-
-    for (const fb of fallbackProjects) {
-        if (displayProjects.length < 4 && !existingIds.has(fb.id)) {
-            displayProjects.push(fb);
-            existingIds.add(fb.id);
-        }
-    }
+    const displayProjects = projects || [];
+    const totalProjectsCount = displayProjects.length;
+    const plansGeneratedCount = displayProjects.filter(p => p.plan && p.plan.rooms && p.plan.rooms.length > 0).length;
+    const designsCount = displayProjects.filter(p => (p.variations && p.variations.length > 0) || (p.generatedDesigns && p.generatedDesigns.length > 0) || p.status === 'AI Generated').length;
 
     const toggleMenu = (e, id) => {
         e.stopPropagation();
@@ -118,10 +95,9 @@ export default function Dashboard() {
                                     <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z"/></svg>
                                 </div>
                             </div>
-                            <div className="ref-stat-val" id="stat-total-projects">{projects && projects.length ? projects.length : 24}</div>
+                            <div className="ref-stat-val" id="stat-total-projects">{totalProjectsCount}</div>
                             <div className="ref-stat-trend">
-                                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
-                                <span>↑ 12% this month</span>
+                                <span>{totalProjectsCount > 0 ? `${totalProjectsCount} active in workspace` : 'No projects yet'}</span>
                             </div>
                         </div>
 
@@ -133,10 +109,9 @@ export default function Dashboard() {
                                     <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 </div>
                             </div>
-                            <div className="ref-stat-val">48</div>
+                            <div className="ref-stat-val">{plansGeneratedCount}</div>
                             <div className="ref-stat-trend">
-                                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
-                                <span>↑ 18% this month</span>
+                                <span>{plansGeneratedCount > 0 ? 'Floor plans drafted' : '0 floor plans'}</span>
                             </div>
                         </div>
 
@@ -148,10 +123,9 @@ export default function Dashboard() {
                                     <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                                 </div>
                             </div>
-                            <div className="ref-stat-val">36</div>
+                            <div className="ref-stat-val">{designsCount}</div>
                             <div className="ref-stat-trend">
-                                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
-                                <span>↑ 16% this month</span>
+                                <span>{designsCount > 0 ? 'Concepts generated' : '0 3D designs'}</span>
                             </div>
                         </div>
                     </div>
@@ -163,8 +137,20 @@ export default function Dashboard() {
                             <Link to="/my-projects" className="ref-card-link">View All Projects -&gt;</Link>
                         </div>
 
-                        <div className="ref-project-list">
-                            {displayProjects.map((p, idx) => (
+                        {totalProjectsCount === 0 ? (
+                            <div style={{ padding: '40px 20px', textAlign: 'center', background: '#F8FAFC', borderRadius: '12px', border: '1px dashed #CBD5E1', margin: '16px 0' }}>
+                                <div style={{ width: 44, height: 44, borderRadius: 10, background: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px auto' }}>
+                                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2z"/></svg>
+                                </div>
+                                <h3 style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', margin: '0 0 4px 0' }}>No projects yet</h3>
+                                <p style={{ color: '#64748B', fontSize: 13, maxWidth: 380, margin: '0 auto 16px auto' }}>Create your first architectural project to start designing 2D floor plans and 3D concepts with AI.</p>
+                                <Link to="/new-project" className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 18px', fontSize: 13, textDecoration: 'none', fontWeight: 600 }}>
+                                    <span>+ Create Project</span>
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="ref-project-list">
+                                {displayProjects.slice(0, 4).map((p, idx) => (
                                 <div className="ref-project-row" key={p.id || idx}>
                                     <div className="ref-proj-thumbs">
                                         {/* House Preview Thumbnail */}
@@ -240,7 +226,8 @@ export default function Dashboard() {
                                     </div>
                                 </div>
                             ))}
-                        </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* QUICK ACTIONS SECTION */}
@@ -402,42 +389,28 @@ export default function Dashboard() {
                     <div className="ref-card">
                         <div className="ref-card-head">
                             <h2 className="ref-card-title">Recent Activity</h2>
-                            <Link to="/my-projects?tab=activity" className="ref-card-link">View All</Link>
+                            <Link to="/my-projects" className="ref-card-link">View All</Link>
                         </div>
 
                         <div className="ref-activity-list">
-                            <div className="ref-activity-item">
-                                <div className="ref-activity-icon" style={{ backgroundColor: '#DCFCE7', color: '#16A34A' }}>
-                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            {displayProjects.length === 0 ? (
+                                <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94A3B8', fontSize: 13 }}>
+                                    No recent activity yet. Create a project to start designing.
                                 </div>
-                                <div className="ref-activity-text">
-                                    <div className="ref-activity-title">30x40 East Facing House</div>
-                                    <div className="ref-activity-sub">Floor plan updated</div>
-                                </div>
-                                <span className="ref-activity-time">2 hours ago</span>
-                            </div>
-
-                            <div className="ref-activity-item">
-                                <div className="ref-activity-icon" style={{ backgroundColor: '#FEF3C7', color: '#D97706' }}>
-                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                                </div>
-                                <div className="ref-activity-text">
-                                    <div className="ref-activity-title">Duplex Villa - 40x60</div>
-                                    <div className="ref-activity-sub">3D design generated</div>
-                                </div>
-                                <span className="ref-activity-time">1 day ago</span>
-                            </div>
-
-                            <div className="ref-activity-item">
-                                <div className="ref-activity-icon" style={{ backgroundColor: '#EFF6FF', color: '#2563EB' }}>
-                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                </div>
-                                <div className="ref-activity-text">
-                                    <div className="ref-activity-title">Modern House - 20x30</div>
-                                    <div className="ref-activity-sub">Project exported</div>
-                                </div>
-                                <span className="ref-activity-time">2 days ago</span>
-                            </div>
+                            ) : (
+                                displayProjects.slice(0, 3).map((p, idx) => (
+                                    <div key={p.id || idx} className="ref-activity-item" onClick={() => { setActiveProject && setActiveProject(p.id); navigate('/editor'); }} style={{ cursor: 'pointer' }}>
+                                        <div className="ref-activity-icon" style={{ backgroundColor: '#EFF6FF', color: '#2563EB' }}>
+                                            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        </div>
+                                        <div className="ref-activity-text">
+                                            <div className="ref-activity-title">{p.name || 'Untitled Project'}</div>
+                                            <div className="ref-activity-sub">{p.floors ? `${p.floors} Floor(s) • ${p.facing || 'East'} Facing` : 'Project active'}</div>
+                                        </div>
+                                        <span className="ref-activity-time">{p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : 'Active'}</span>
+                                    </div>
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>

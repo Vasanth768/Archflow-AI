@@ -1,40 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useArchFlow } from '../context/ArchFlowContext';
 
 export default function Login() {
     const navigate = useNavigate();
-    const { showToast } = useArchFlow();
+    const { showToast, login } = useArchFlow();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-
-    useEffect(() => {
-        const loggedIn = localStorage.getItem("archflow_logged_in");
-        if (loggedIn === "true") {
-            navigate("/dashboard");
-        }
-    }, [navigate]);
 
     const handleLogin = (e) => {
         e.preventDefault();
         
-        // Mock authorization checks
         if (email.trim() === '' || password.trim() === '') {
             showToast("Please fill in all details", "error");
             return;
         }
 
-        localStorage.setItem("archflow_logged_in", "true");
-        // Save default profile if none exists
-        if (!localStorage.getItem("archflow_profile_name")) {
-            localStorage.setItem("archflow_profile_name", "Demo User");
+        const result = login({ email, password });
+        if (result && result.success) {
+            showToast("Logged in successfully!", "success");
+            navigate("/dashboard");
+        } else {
+            showToast((result && result.error) || "Invalid credentials", "error");
         }
-        if (!localStorage.getItem("archflow_company_name")) {
-            localStorage.setItem("archflow_company_name", "Apex Builders");
-        }
-        
-        showToast("Logged in successfully!", "success");
-        navigate("/dashboard");
     };
 
     return (

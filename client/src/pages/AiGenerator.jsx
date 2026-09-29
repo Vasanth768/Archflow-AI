@@ -5,6 +5,8 @@ import {
     Sparkles, Wand2, PlayCircle, ChevronDown, ChevronUp, 
     CheckCircle2, MoreVertical, Plus, Minus, ArrowRight 
 } from 'lucide-react';
+import geminiClient from '../engine/ai/GeminiClient.js';
+
 import '../css/aiGenerator.css';
 
 const STYLE_OPTIONS = [
@@ -47,21 +49,12 @@ const EXAMPLE_PROMPTS = [
     }
 ];
 
-const RECENT_GENERATIONS = [
-    { id: 'gen-1', title: '30x40 East Facing House', sub: '2 Floors • 3BHK • Standard Modern', time: 'Generated 2 mins ago', status: 'Completed', imgKey: 'standard' },
-    { id: 'gen-2', title: 'Duplex Villa - 40x60', sub: '2 Floors • 4BHK • Premium Luxury', time: 'Generated 1 hour ago', status: 'Completed', imgKey: 'luxury' },
-    { id: 'gen-3', title: 'Modern House - 20x30', sub: '1 Floor • 2BHK • Budget Friendly', time: 'Generated 3 hours ago', status: 'Completed', imgKey: 'budget' },
-    { id: 'gen-4', title: 'Villa - 45x70', sub: '2 Floors • 4BHK • Traditional Modern', time: 'Generated 5 hours ago', status: 'Completed', imgKey: 'traditional' }
-];
-
 export default function AiGenerator() {
     const navigate = useNavigate();
-    const { showToast, IMAGES, createProject } = useArchFlow();
+    const { showToast, IMAGES, createProject, projects, setActiveProject } = useArchFlow();
 
     // Form State
-    const [prompt, setPrompt] = useState(
-        'Design a 30x40 east facing 2-floor residential house with 3 bedrooms, living hall, kitchen, dining, pooja room, 3 bathrooms, staircase inside, parking for 1 car and balcony.\nStyle: Standard modern. Budget: Mid range.'
-    );
+    const [prompt, setPrompt] = useState('');
     const [projectType, setProjectType] = useState('Residential');
     const [plotWidth, setPlotWidth] = useState(30);
     const [plotLength, setPlotLength] = useState(40);
@@ -76,21 +69,43 @@ export default function AiGenerator() {
         'More Ventilation', 'More Natural Light', 'Bigger Hall', 'Bigger Kitchen', 'Vastu Focus'
     ]);
     const [isAdvOpen, setIsAdvOpen] = useState(false);
+    const [isAILoading, setIsAILoading] = useState(false);
 
-    // Prompt Actions
-    const handleEnhancePrompt = () => {
-        const enhanced = `Design a premium architectural ${plotWidth}x${plotLength} ft ${facing.toLowerCase()} facing residential structure featuring ${floors.toLowerCase()} with ${bedrooms} spacious bedrooms, double-height living hall, open dining area, dedicated pooja room, ${bathrooms} attached bathrooms, ${staircase.toLowerCase()} staircase access, and covered parking for ${parking.toLowerCase()}.\nArchitectural Style: ${selectedStyle}. Priority focus on ${priorities.slice(0, 3).join(', ')} with sustainable energy efficiency and natural daylight optimization.`;
-        setPrompt(enhanced);
-        showToast("Prompt enhanced with professional architectural terms!", "success");
+    // Prompt Actions - Real Gemini Integration
+    const handleEnhancePrompt = async () => {
+        const base = prompt.trim() || `${plotWidth}x${plotLength} ft ${facing} facing ${floors} house with ${bedrooms} bedrooms and ${selectedStyle} style.`;
+        showToast("Gemini AI: Enhancing architectural prompt...", "info");
+        try {
+            const enhanced = await geminiClient.enhancePrompt(base, {
+                width: plotWidth,
+                length: plotLength,
+                facing,
+                floors,
+                bedrooms,
+                bathrooms,
+                style: selectedStyle,
+                priorities: priorities.join(', ')
+            });
+            setPrompt(enhanced);
+            showToast("Prompt enhanced by Gemini AI with professional architectural specifications!", "success");
+        } catch (err) {
+            showToast("Failed to enhance prompt: " + err.message, "error");
+        }
     };
 
-    const handleSuggestImprovements = () => {
-        const note = `\n[AI Optimization Suggestion: Integrate a central skylight atrium over the dining area for natural cross-ventilation and Vastu alignment.]`;
-        if (!prompt.includes('AI Optimization Suggestion')) {
+    const handleSuggestImprovements = async () => {
+        showToast("Gemini AI: Generating Vastu & ventilation suggestions...", "info");
+        try {
+            const current = prompt.trim() || `${plotWidth}x${plotLength} ft ${facing} facing house`;
+            const enhanced = await geminiClient.enhancePrompt(current, {
+                request: 'Add specific Tamil Nadu Vastu and natural daylight atrium recommendations'
+            });
+            setPrompt(enhanced);
+            showToast("Gemini AI added architectural optimization suggestions!", "success");
+        } catch (err) {
+            const note = `\n[AI Optimization Suggestion: Integrate a central skylight atrium over dining area for natural cross-ventilation and Vastu alignment.]`;
             setPrompt(prev => prev.trim() + note);
-            showToast("Added architectural improvement suggestions!", "info");
-        } else {
-            showToast("Suggestions already included in prompt.", "info");
+            showToast("Added architectural suggestions!", "info");
         }
     };
 
@@ -119,33 +134,58 @@ export default function AiGenerator() {
         }
     };
 
-    const handleGenerate = () => {
+    const handleGenerate = async () => {
         if (!prompt.trim()) {
             showToast("Please enter a project description prompt first.", "error");
             return;
         }
 
-        showToast("AI Architecture Engine: Generating 2D Floor Plans & 3D Renderings...", "success");
+        setIsAILoading(true);
+        showToast("Gemini AI: Parsing architectural requirements & generating CAD plan...", "info");
 
-        setTimeout(() => {
+        try {
+            // Call real Gemini requirement parser
+            const aiPlan = await geminiClient.parsePlanRequirements(prompt, {
+                width: plotWidth,
+                length: plotLength,
+                facing,
+                floors: Number(floors.replace(/\D/g, '')) || 1,
+                style: selectedStyle
+            });
+
+            const finalWidth = aiPlan?.plot?.width || Number(plotWidth) || 30;
+            const finalLength = aiPlan?.plot?.length || Number(plotLength) || 40;
+            const finalFacing = aiPlan?.plot?.facing || facing;
+            const finalFloors = aiPlan?.floors || Number(floors.replace(/\D/g, '')) || 1;
+            const finalBedrooms = aiPlan?.requirements?.bedrooms || bedrooms;
+            const finalBathrooms = aiPlan?.requirements?.bathrooms || bathrooms;
+            const finalStyle = aiPlan?.style || selectedStyle;
+
             const newProj = createProject({
-                name: `${plotWidth}×${plotLength} ${facing} Facing AI House`,
-                client: 'AI Client Deliverable',
+                name: `${finalWidth}×${finalLength} ${finalFacing} Facing AI House`,
+                client: 'AI Architectural Deliverable',
                 type: projectType,
-                width: Number(plotWidth) || 30,
-                length: Number(plotLength) || 40,
-                facing: facing,
-                floors: Number(floors.replace(/\D/g, '')) || 2,
-                bedrooms: bedrooms,
-                bathrooms: bathrooms,
+                width: finalWidth,
+                length: finalLength,
+                facing: finalFacing,
+                floors: finalFloors,
+                bedrooms: finalBedrooms,
+                bathrooms: finalBathrooms,
                 parking: parking,
                 staircase: staircase,
-                style: selectedStyle,
+                style: finalStyle,
                 description: prompt,
                 status: 'Completed'
             });
+
+            showToast("CAD floor plan generated successfully from Gemini specifications!", "success");
             navigate(`/project-details`);
-        }, 1200);
+        } catch (err) {
+            console.error("AI Generation failed:", err);
+            showToast("Failed to generate plan with AI: " + err.message, "error");
+        } finally {
+            setIsAILoading(false);
+        }
     };
 
     return (
@@ -514,27 +554,33 @@ export default function AiGenerator() {
                         </div>
 
                         <div className="aig-prompts-list">
-                            {RECENT_GENERATIONS.map((gen) => {
-                                const imgSrc = IMAGES ? IMAGES[gen.imgKey] : `/assets/${gen.imgKey}.png`;
-                                return (
-                                    <div key={gen.id} className="aig-recent-item">
-                                        <div className="aig-item-left">
-                                            <img src={imgSrc} alt={gen.title} className="aig-item-thumb" />
-                                            <div className="aig-item-info">
-                                                <span className="aig-item-title" title={gen.title}>{gen.title}</span>
-                                                <span className="aig-item-sub" title={gen.sub}>{gen.sub}</span>
-                                                <span style={{ fontSize: '10.5px', color: '#94A3B8', marginTop: '1px' }}>{gen.time}</span>
+                            {(!projects || projects.length === 0) ? (
+                                <div style={{ padding: '20px 12px', textAlign: 'center', color: '#94A3B8', fontSize: 12 }}>
+                                    No generations yet. Use the prompt generator on the left to create your first design.
+                                </div>
+                            ) : (
+                                projects.slice(0, 4).map((p) => {
+                                    const imgSrc = IMAGES ? IMAGES[p.style?.toLowerCase() || 'standard'] || IMAGES['standard'] : `/assets/standard.png`;
+                                    return (
+                                        <div key={p.id} className="aig-recent-item" onClick={() => { setActiveProject && setActiveProject(p.id); navigate('/editor'); }} style={{ cursor: 'pointer' }}>
+                                            <div className="aig-item-left">
+                                                <img src={imgSrc} alt={p.name} className="aig-item-thumb" />
+                                                <div className="aig-item-info">
+                                                    <span className="aig-item-title" title={p.name}>{p.name}</span>
+                                                    <span className="aig-item-sub" title={p.facing}>{p.floors ? `${p.floors} Floors • ${p.facing || 'East'}` : 'Project Plan'}</span>
+                                                    <span style={{ fontSize: '10.5px', color: '#94A3B8', marginTop: '1px' }}>{p.updatedAt ? new Date(p.updatedAt).toLocaleDateString() : 'Active'}</span>
+                                                </div>
+                                            </div>
+                                            <div className="aig-recent-right">
+                                                <span className="aig-badge-completed">Completed</span>
+                                                <button type="button" className="aig-more-btn" title="Open Editor" onClick={(e) => { e.stopPropagation(); setActiveProject && setActiveProject(p.id); navigate('/editor'); }}>
+                                                    <ArrowRight size={14} />
+                                                </button>
                                             </div>
                                         </div>
-                                        <div className="aig-recent-right">
-                                            <span className="aig-badge-completed">{gen.status}</span>
-                                            <button type="button" className="aig-more-btn" title="More actions" onClick={() => showToast(`Actions for ${gen.title}`, "info")}>
-                                                <MoreVertical size={16} />
-                                            </button>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })
+                            )}
                         </div>
 
                         <button type="button" className="aig-history-btn" onClick={() => navigate('/my-projects')}>

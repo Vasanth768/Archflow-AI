@@ -104,9 +104,12 @@ services:
       - FALLBACK_IMAGE_PROVIDER=${FALLBACK_IMAGE_PROVIDER:-local}
       - LOCAL_IMAGE_API_URL=${LOCAL_IMAGE_API_URL:-http://archflow-ai:8000/generate}
       - HUGGINGFACE_INFERENCE_ENABLED=${HUGGINGFACE_INFERENCE_ENABLED:-false}
-      - HF_IMAGE_MODEL=${HF_IMAGE_MODEL:-black-forest-labs/FLUX.1-schnell}
+      - HF_IMAGE_MODEL=${HF_IMAGE_MODEL:-Qwen/Qwen-Image}
+      - QWEN_IMAGE_MODEL=${QWEN_IMAGE_MODEL:-Qwen/Qwen-Image}
       - QWEN_IMAGE_ENDPOINT=${QWEN_IMAGE_ENDPOINT:-https://router.huggingface.co/nscale/v1/images/generations}
       - QWEN_IMAGE_API_KEY=${QWEN_IMAGE_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-1.5-flash}
       - IMAGE_GENERATION_CACHE_ENABLED=${IMAGE_GENERATION_CACHE_ENABLED:-false}
     volumes:
       - ./server/data:/app/data

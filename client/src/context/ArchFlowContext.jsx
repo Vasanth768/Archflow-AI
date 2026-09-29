@@ -4,6 +4,7 @@ import { CanonicalOption04 } from '../engine/cad/CanonicalOption04.js';
 import { createEmptyPlan } from '../engine/cad/CanonicalSchema.js';
 import { ArchitectureAIProvider } from '../engine/cad/ArchitectureAIProvider.js';
 import { ConstraintValidator } from '../engine/cad/ConstraintValidator.js';
+import { generateDefaultFloorPlan } from '../engine/cad/PlanGenerator.js';
 
 const ArchFlowContext = createContext(null);
 
@@ -20,182 +21,253 @@ const ARCH_IMAGES = {
 const aiProvider = new ArchitectureAIProvider();
 const validator = new ConstraintValidator();
 
-const DEFAULT_PROJECTS = [
-    {
-        id: 'f1',
-        name: 'GF Scheme Plan - Option 04',
-        client: 'KS Infra',
-        width: 45,
-        length: 70,
-        floors: 1,
-        status: 'Completed',
-        time: '2 hours ago',
-        badge: 'ref-badge-blue',
-        area: 1405,
-        facing: 'East',
-        bedrooms: 2,
-        bathrooms: 4,
-        plan: CanonicalOption04,
-        rooms: CanonicalOption04.rooms,
-        walls: CanonicalOption04.walls,
-        doors: CanonicalOption04.doors,
-        windows: CanonicalOption04.windows,
-        stairs: CanonicalOption04.stairs,
-        columns: CanonicalOption04.columns,
-        furniture: CanonicalOption04.furniture,
-        generatedDesigns: [],
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString()
-    },
-    {
-        id: 'f2',
-        name: 'Duplex Villa - 40x60',
-        client: 'Suresh Builders',
-        width: 40,
-        length: 60,
-        floors: 2,
-        status: 'AI Generated',
-        time: '1 day ago',
-        badge: 'ref-badge-green',
-        area: 2400,
-        facing: 'North',
-        bedrooms: 4,
-        bathrooms: 4,
-        generatedDesigns: [],
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString()
-    },
-    {
-        id: 'f3',
-        name: 'Modern House - 20x30',
-        client: 'Kumar Family',
-        width: 20,
-        length: 30,
-        floors: 1,
-        status: 'Completed',
-        time: '2 days ago',
-        badge: 'ref-badge-teal',
-        area: 600,
-        facing: 'West',
-        bedrooms: 2,
-        bathrooms: 2,
-        generatedDesigns: [],
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString()
-    },
-    {
-        id: 'f4',
-        name: 'Premium Villa - 50x80',
-        client: 'Greenfield Developers',
-        width: 50,
-        length: 80,
-        floors: 2,
-        status: 'In Progress',
-        time: '3 days ago',
-        badge: 'ref-badge-blue',
-        area: 4000,
-        facing: 'South',
-        bedrooms: 5,
-        bathrooms: 5,
-        generatedDesigns: [],
-        createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString()
-    }
-];
-
 export const ArchFlowProvider = ({ children }) => {
-    const [projects, setProjects] = useState(DEFAULT_PROJECTS);
-    const [activeProjectId, setActiveProjectId] = useState('f1');
+    const [projects, setProjects] = useState([]);
+    const [activeProjectId, setActiveProjectId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState(null);
 
+    // Authentication State Management
+    const [authLoading, setAuthLoading] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [user, setUser] = useState(null);
+
     const API_URL = import.meta.env.VITE_API_URL || '';
 
+    // Helper: getUserKey for isolated storage
+    const getUserKey = (currentUser) => {
+        return currentUser?.email || localStorage.getItem("archflow_email") || "guest_user";
+    };
+
     const normalizeProject = (p) => {
-        if (p.id === 'f1' || (p.width === 45 && p.length === 70)) {
-            return {
-                ...p,
-                plan: CanonicalOption04,
-                walls: CanonicalOption04.walls,
-                rooms: CanonicalOption04.rooms,
-                doors: CanonicalOption04.doors,
-                windows: CanonicalOption04.windows,
-                furniture: CanonicalOption04.furniture,
-                stairs: CanonicalOption04.stairs,
-                columns: CanonicalOption04.columns
-            };
-        }
-        if (!p.plan) {
-            const blank = createEmptyPlan({
+        if (!p) return null;
+        if (!p.plan || !p.plan.rooms || p.plan.rooms.length === 0) {
+            const defaultPlan = generateDefaultFloorPlan({
                 id: p.id,
                 name: p.name,
                 client: p.client,
-                width: p.width || 30,
-                length: p.length || 40,
+                width: p.width || 40,
+                length: p.length || 30,
                 facing: p.facing || 'East',
                 floors: p.floors || 1
             });
             return {
                 ...p,
-                plan: blank,
-                walls: blank.walls,
-                rooms: p.rooms || blank.rooms,
-                doors: blank.doors,
-                windows: blank.windows,
-                furniture: blank.furniture
+                plan: defaultPlan,
+                walls: defaultPlan.walls,
+                rooms: defaultPlan.rooms,
+                doors: defaultPlan.doors,
+                windows: defaultPlan.windows,
+                furniture: defaultPlan.furniture,
+                stairs: defaultPlan.stairs,
+                columns: defaultPlan.columns
             };
         }
         return p;
     };
 
-    // Fetch projects from API on mount
-    useEffect(() => {
-        const fetchProjects = async () => {
-            try {
-                const res = await fetch(`${API_URL}/api/projects`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.length > 0) {
-                        const normalized = data.map(normalizeProject);
-                        setProjects(normalized);
-                        localStorage.setItem("archflow_projects", JSON.stringify(normalized));
+    // Load projects for a specific user
+    const loadUserProjects = (currentUser) => {
+        const uKey = getUserKey(currentUser);
+        try {
+            const localData = localStorage.getItem("archflow_projects_" + uKey);
+            if (localData) {
+                const parsed = JSON.parse(localData);
+                if (Array.isArray(parsed)) {
+                    const normalized = parsed.map(normalizeProject).filter(Boolean);
+                    setProjects(normalized);
+                    const savedActiveId = localStorage.getItem("archflow_active_project_id_" + uKey);
+                    if (savedActiveId && normalized.some(p => p.id === savedActiveId)) {
+                        setActiveProjectId(savedActiveId);
+                    } else if (normalized.length > 0) {
                         setActiveProjectId(normalized[0].id);
-                        localStorage.setItem("archflow_active_project_id", normalized[0].id);
+                    } else {
+                        setActiveProjectId(null);
                     }
-                } else {
-                    throw new Error("HTTP " + res.status);
+                    return;
                 }
-            } catch (e) {
-                console.warn("Loading from localStorage fallback:", e);
-                const localData = localStorage.getItem("archflow_projects");
-                if (localData) {
-                    try {
-                        const parsed = JSON.parse(localData);
-                        if (Array.isArray(parsed) && parsed.length > 0) {
-                            const normalized = parsed.map(normalizeProject);
-                            setProjects(normalized);
-                            setActiveProjectId(normalized[0].id);
-                        } else {
-                            setProjects(DEFAULT_PROJECTS);
-                            localStorage.setItem("archflow_projects", JSON.stringify(DEFAULT_PROJECTS));
-                            setActiveProjectId('f1');
-                        }
-                    } catch (err) {
-                        setProjects(DEFAULT_PROJECTS);
-                        localStorage.setItem("archflow_projects", JSON.stringify(DEFAULT_PROJECTS));
-                        setActiveProjectId('f1');
-                    }
+            }
+            // If no user projects exist, initialize strictly as empty
+            setProjects([]);
+            setActiveProjectId(null);
+        } catch (err) {
+            console.error("Failed to load user projects:", err);
+            setProjects([]);
+            setActiveProjectId(null);
+        }
+    };
+
+    // Initialize/Restore Auth Session
+    useEffect(() => {
+        const restoreSession = () => {
+            try {
+                const loggedIn = localStorage.getItem("archflow_logged_in");
+                const firstName = localStorage.getItem("archflow_first_name") || "";
+                const lastName = localStorage.getItem("archflow_last_name") || "";
+                const profileName = localStorage.getItem("archflow_profile_name") || (firstName && lastName ? `${firstName} ${lastName}` : firstName || "Demo User");
+                const companyName = localStorage.getItem("archflow_company_name") || "Personal Studio";
+                const mobileNumber = localStorage.getItem("archflow_mobile") || "";
+                const location = localStorage.getItem("archflow_location") || "";
+                const email = localStorage.getItem("archflow_email") || "";
+                const credits = localStorage.getItem("archflow_credits");
+
+                if (loggedIn === "true") {
+                    const fullName = profileName || (firstName && lastName ? `${firstName} ${lastName}` : "Demo User");
+                    const restoredUser = {
+                        firstName: firstName || fullName.split(" ")[0] || "Demo",
+                        lastName: lastName || fullName.split(" ").slice(1).join(" ") || "User",
+                        name: fullName,
+                        fullName: fullName,
+                        company: companyName,
+                        companyName: companyName,
+                        mobileNumber: mobileNumber,
+                        location: location,
+                        email: email || "architect@company.com",
+                        credits: credits ? parseInt(credits, 10) : 100
+                    };
+                    setUser(restoredUser);
+                    setIsAuthenticated(true);
+                    loadUserProjects(restoredUser);
                 } else {
-                    setProjects(DEFAULT_PROJECTS);
-                    localStorage.setItem("archflow_projects", JSON.stringify(DEFAULT_PROJECTS));
-                    setActiveProjectId('f1');
+                    setUser(null);
+                    setIsAuthenticated(false);
+                    setProjects([]);
+                    setActiveProjectId(null);
                 }
+            } catch (err) {
+                console.error("Failed to restore session:", err);
+                setUser(null);
+                setIsAuthenticated(false);
+                setProjects([]);
+                setActiveProjectId(null);
             } finally {
+                setAuthLoading(false);
                 setLoading(false);
             }
         };
-        fetchProjects();
-    }, [API_URL]);
+
+        restoreSession();
+    }, []);
+
+    const login = ({ email, password }) => {
+        if (!email || !email.trim() || !password || !password.trim()) {
+            return { success: false, error: "Please enter both email and password" };
+        }
+
+        try {
+            const trimmedEmail = email.trim();
+            const firstName = localStorage.getItem("archflow_first_name") || "";
+            const lastName = localStorage.getItem("archflow_last_name") || "";
+            const savedProfile = localStorage.getItem("archflow_profile_name") || (firstName && lastName ? `${firstName} ${lastName}` : firstName || "Demo User");
+            const savedCompany = localStorage.getItem("archflow_company_name") || "Apex Builders";
+            const savedCredits = localStorage.getItem("archflow_credits") || "632";
+            const savedMobile = localStorage.getItem("archflow_mobile") || "";
+            const savedLocation = localStorage.getItem("archflow_location") || "";
+
+            localStorage.setItem("archflow_logged_in", "true");
+            localStorage.setItem("archflow_profile_name", savedProfile);
+            localStorage.setItem("archflow_company_name", savedCompany);
+            localStorage.setItem("archflow_email", trimmedEmail);
+            localStorage.setItem("archflow_credits", savedCredits);
+
+            const fullName = savedProfile || (firstName && lastName ? `${firstName} ${lastName}` : "Demo User");
+            const newUser = {
+                firstName: firstName || fullName.split(" ")[0] || "Demo",
+                lastName: lastName || fullName.split(" ").slice(1).join(" ") || "User",
+                name: fullName,
+                fullName: fullName,
+                company: savedCompany,
+                companyName: savedCompany,
+                mobileNumber: savedMobile,
+                location: savedLocation,
+                email: trimmedEmail,
+                credits: parseInt(savedCredits, 10)
+            };
+
+            setUser(newUser);
+            setIsAuthenticated(true);
+            setAuthLoading(false);
+            loadUserProjects(newUser);
+
+            return { success: true, user: newUser };
+        } catch (err) {
+            console.error("Login error:", err);
+            return { success: false, error: "Failed to login. Please try again." };
+        }
+    };
+
+    const signup = ({ firstName, lastName, mobileNumber, email, password, companyName, location }) => {
+        if (!firstName?.trim() || !lastName?.trim() || !mobileNumber?.trim() || !email?.trim() || !password?.trim() || !companyName?.trim() || !location?.trim()) {
+            return { success: false, error: "Please fill in all required fields" };
+        }
+
+        try {
+            const trimmedFirst = firstName.trim();
+            const trimmedLast = lastName.trim();
+            const full = `${trimmedFirst} ${trimmedLast}`;
+            const trimmedMobile = mobileNumber.trim();
+            const trimmedEmail = email.trim();
+            const trimmedCompany = companyName.trim();
+            const trimmedLocation = location.trim();
+
+            localStorage.setItem("archflow_logged_in", "true");
+            localStorage.setItem("archflow_first_name", trimmedFirst);
+            localStorage.setItem("archflow_last_name", trimmedLast);
+            localStorage.setItem("archflow_profile_name", full);
+            localStorage.setItem("archflow_company_name", trimmedCompany);
+            localStorage.setItem("archflow_mobile", trimmedMobile);
+            localStorage.setItem("archflow_location", trimmedLocation);
+            localStorage.setItem("archflow_email", trimmedEmail);
+            localStorage.setItem("archflow_credits", "100");
+
+            // Initialize brand-new user with strictly EMPTY projects collection
+            localStorage.setItem("archflow_projects_" + trimmedEmail, JSON.stringify([]));
+            localStorage.removeItem("archflow_active_project_id_" + trimmedEmail);
+
+            const newUser = {
+                firstName: trimmedFirst,
+                lastName: trimmedLast,
+                name: full,
+                fullName: full,
+                company: trimmedCompany,
+                companyName: trimmedCompany,
+                mobileNumber: trimmedMobile,
+                location: trimmedLocation,
+                email: trimmedEmail,
+                credits: 100
+            };
+
+            setUser(newUser);
+            setIsAuthenticated(true);
+            setAuthLoading(false);
+            setProjects([]);
+            setActiveProjectId(null);
+
+            return { success: true, user: newUser };
+        } catch (err) {
+            console.error("Signup error:", err);
+            return { success: false, error: "Failed to create account. Please try again." };
+        }
+    };
+
+    const logout = () => {
+        try {
+            localStorage.removeItem("archflow_logged_in");
+            setUser(null);
+            setIsAuthenticated(false);
+            setAuthLoading(false);
+            setProjects([]);
+            setActiveProjectId(null);
+            return { success: true };
+        } catch (err) {
+            console.error("Logout error:", err);
+            setUser(null);
+            setIsAuthenticated(false);
+            setProjects([]);
+            setActiveProjectId(null);
+            return { success: true };
+        }
+    };
 
     const showToast = (message, type = "success") => {
         setToast({ message, type });
@@ -204,39 +276,36 @@ export const ArchFlowProvider = ({ children }) => {
         }, 3000);
     };
 
-    const saveProjectsList = async (updatedProjects) => {
+    const saveProjectsList = (updatedProjects) => {
+        const uKey = getUserKey(user);
         setProjects(updatedProjects);
-        localStorage.setItem("archflow_projects", JSON.stringify(updatedProjects));
-        
-        try {
-            await fetch(`${API_URL}/api/projects`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedProjects)
-            });
-        } catch (e) {
-            console.error("Failed to sync projects list with server:", e);
-        }
+        localStorage.setItem("archflow_projects_" + uKey, JSON.stringify(updatedProjects));
     };
 
     const getActiveProject = () => {
+        if (!projects || projects.length === 0) return null;
         return projects.find(p => p.id === activeProjectId) || projects[0] || null;
     };
 
     const selectProject = (id) => {
+        const uKey = getUserKey(user);
         setActiveProjectId(id);
-        localStorage.setItem("archflow_active_project_id", id);
+        if (id) {
+            localStorage.setItem("archflow_active_project_id_" + uKey, id);
+        } else {
+            localStorage.removeItem("archflow_active_project_id_" + uKey);
+        }
     };
 
     const createProject = (data) => {
-        const width = parseInt(data.width) || 30;
-        const length = parseInt(data.length) || 40;
+        const width = parseInt(data.width) || 40;
+        const length = parseInt(data.length) || 30;
         const area = width * length;
 
-        const newPlan = createEmptyPlan({
+        const newPlan = generateDefaultFloorPlan({
             id: "project_" + Date.now(),
-            name: data.name || `House Plan - ${width}x${length}`,
-            client: data.client || "Self",
+            name: data.name || `${width}x${length} ${data.facing || 'East'} Facing House`,
+            client: data.client || user?.fullName || "Self",
             type: data.type || "Residential",
             width: width,
             length: length,
@@ -250,7 +319,7 @@ export const ArchFlowProvider = ({ children }) => {
             name: newPlan.project.name,
             client: newPlan.project.client,
             type: newPlan.project.type,
-            location: data.location || "Default Site Location",
+            location: data.location || user?.location || "Site Location",
             width: width,
             length: length,
             area: area,
@@ -259,7 +328,7 @@ export const ArchFlowProvider = ({ children }) => {
             road: data.road || "Main Access Road",
             floors: parseInt(data.floors) || 1,
             bedrooms: parseInt(data.bedrooms) || 2,
-            bathrooms: parseInt(data.bathrooms) || 2,
+            bathrooms: parseInt(data.bathrooms) || 1,
             kitchen: 1,
             pooja: data.pooja === "true" || data.pooja === true,
             parking: data.parking === "true" || data.parking === true,
@@ -269,7 +338,7 @@ export const ArchFlowProvider = ({ children }) => {
             prompt: data.prompt || `Design a ${width}x${length} house facing ${data.facing}.`,
             createdAt: new Date().toISOString(),
             lastUpdated: new Date().toISOString(),
-            status: "Draft",
+            status: "Saved",
             selectedStyle: data.style || "Standard Modern",
             materials: newPlan.materials,
             plan: newPlan,
@@ -278,6 +347,8 @@ export const ArchFlowProvider = ({ children }) => {
             doors: newPlan.doors,
             windows: newPlan.windows,
             furniture: newPlan.furniture,
+            stairs: newPlan.stairs,
+            columns: newPlan.columns,
             variations: [
                 { name: "Budget Friendly", img: ARCH_IMAGES.budget, desc: "Cost-optimized concrete structure, local standard materials, compact structural spans.", tag: "Low Cost" },
                 { name: "Standard Modern", img: ARCH_IMAGES.standard, desc: "Clean geometric elevations, wooden accents, double glazing, Vastu compliance.", tag: "Best Choice" },
@@ -387,8 +458,109 @@ export const ArchFlowProvider = ({ children }) => {
         saveProjectsList(updated);
     };
 
+    const executeDesignGeneration = async (projectId, options = {}) => {
+        const proj = projects.find(p => p.id === projectId);
+        if (!proj) throw new Error("Project not found");
+
+        const reqBody = {
+            requirements: {
+                projectId: proj.id,
+                width: proj.width || 30,
+                length: proj.length || 40,
+                facing: proj.facing || 'East',
+                context: options.context || 'City',
+                buildingType: options.buildingType || 'single_floor',
+                styleDirection: options.styleDirection || proj.style || 'Standard Modern',
+                roofStyle: options.roofStyle || 'Auto',
+                budget: options.budget || proj.budget || 'Standard'
+            },
+            count: options.count || 6
+        };
+
+        const res = await fetch('/api/designs/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(reqBody)
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            if (err.code === "AI_PROVIDER_NOT_CONFIGURED") {
+                throw new Error("AI_PROVIDER_NOT_CONFIGURED");
+            }
+            throw new Error(err.error || `HTTP ${res.status}`);
+        }
+
+        const variations = await res.json();
+        const updated = projects.map(p => {
+            if (p.id === projectId) {
+                return {
+                    ...p,
+                    generatedVariations: variations,
+                    lastUpdated: new Date().toISOString()
+                };
+            }
+            return p;
+        });
+        saveProjectsList(updated);
+        return variations;
+    };
+
+    const executeSingleRegeneration = async (projectId, designId, prompt = null) => {
+        const proj = projects.find(p => p.id === projectId);
+        if (!proj) throw new Error("Project not found");
+
+        const existingDesign = (proj.generatedVariations || []).find(d => d.id === designId) || {};
+
+        const res = await fetch('/api/designs/regenerate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ design: existingDesign, prompt })
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || `HTTP ${res.status}`);
+        }
+
+        const updatedDesign = await res.json();
+        const updated = projects.map(p => {
+            if (p.id === projectId) {
+                const list = (p.generatedVariations || []).map(d => d.id === designId ? updatedDesign : d);
+                return { ...p, generatedVariations: list, lastUpdated: new Date().toISOString() };
+            }
+            return p;
+        });
+        saveProjectsList(updated);
+        return updatedDesign;
+    };
+
+    const toggleFavoriteDesign = (projectId, designId) => {
+        const updated = projects.map(p => {
+            if (p.id === projectId) {
+                const list = (p.generatedVariations || []).map(d => {
+                    if (d.id === designId) {
+                        return { ...d, isFavorite: !d.isFavorite };
+                    }
+                    return d;
+                });
+                return { ...p, generatedVariations: list, lastUpdated: new Date().toISOString() };
+            }
+            return p;
+        });
+        saveProjectsList(updated);
+    };
+
     return (
         <ArchFlowContext.Provider value={{
+            // Auth State & Actions
+            authLoading,
+            isAuthenticated,
+            user,
+            login,
+            signup,
+            logout,
+            // Projects & Engine
             projects,
             activeProjectId,
             loading,
@@ -402,6 +574,9 @@ export const ArchFlowProvider = ({ children }) => {
             updateProjectRoomLayout,
             updateProjectStyleSelection,
             updateProjectMaterials,
+            executeDesignGeneration,
+            executeSingleRegeneration,
+            toggleFavoriteDesign,
             showToast,
             aiProvider,
             validator,

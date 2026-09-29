@@ -8,15 +8,18 @@ export default function Export() {
     const proj = getActiveProject();
     const [downloading, setDownloading] = useState(false);
 
-    const plan = proj?.plan || CanonicalOption04;
+    const plan = proj?.plan || null;
 
-    if (!proj) {
+    if (!proj || !plan) {
         return (
             <div style={{ textAlign: 'center', padding: 48 }}>
-                <span style={{ fontSize: 40 }}>⚠️</span>
+                <span style={{ fontSize: 40 }}>📁</span>
                 <h3 style={{ marginTop: 16, color: 'white' }}>No Active Project</h3>
-                <p style={{ color: 'var(--text-secondary)' }}>Select a project to configure exports.</p>
-                <Link to="/my-projects" className="btn btn-primary" style={{ marginTop: 16, display: 'inline-block', textDecoration: 'none' }}>View Projects</Link>
+                <p style={{ color: 'var(--text-secondary)' }}>Select or create a project to configure exports.</p>
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 16 }}>
+                    <Link to="/new-project" className="btn btn-primary" style={{ textDecoration: 'none' }}>Create Project</Link>
+                    <Link to="/my-projects" className="btn btn-secondary" style={{ textDecoration: 'none' }}>View Projects</Link>
+                </div>
             </div>
         );
     }

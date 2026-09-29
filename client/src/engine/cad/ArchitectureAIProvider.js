@@ -1,15 +1,18 @@
 /**
- * ArchFlow Architecture Intelligence Engine - AI Provider Abstraction
+ * ArchitectureAIProvider.js - Production AI & Deterministic CAD Bridge
  * 
- * Modular architectural intelligence layer decoupled from any single LLM or image generator.
- * Produces strictly structured, unit-normalized architectural intent that is passed
- * to the deterministic geometry solver and constraint validator.
+ * Strict Architectural Contract:
+ * - Gemini / NLP parses natural language requests into structured architectural JSON commands.
+ * - Deterministic PlanGenerator / ConstraintValidator constructs all CAD geometry.
+ * - Exact requested dimensions (e.g. Master Bedroom 12x14 -> 144" x 168") are preserved.
+ * - Vastu analysis is computed from actual final room coordinates.
  */
 
-import { createEmptyPlan, RoomType } from './CanonicalSchema.js';
-import { parseArchitecturalDimension, formatFeetInches } from './UnitEngine.js';
 import { ConstraintValidator } from './ConstraintValidator.js';
-import { CanonicalOption04 } from './CanonicalOption04.js';
+import { geminiClient } from '../ai/GeminiClient.js';
+import { generateDefaultFloorPlan } from './PlanGenerator.js';
+import { ArchitecturalIntentParser } from '../../architecture/ai/ArchitecturalIntentParser.js';
+import { formatFeetInches, parseArchitecturalDimension } from './UnitEngine.js';
 
 export class ArchitectureAIProvider {
     constructor(adapter = null) {
@@ -18,181 +21,157 @@ export class ArchitectureAIProvider {
     }
 
     /**
-     * Text -> Structured Canonical Floor Plan
+     * Text -> Structured Canonical Floor Plan via Deterministic CAD Solver
      */
     async generatePlanFromText(prompt, options = {}) {
-        // Extract site parameters from prompt or options
-        const widthFt = options.width || this.extractDimension(prompt, 'width') || 30;
-        const lengthFt = options.length || this.extractDimension(prompt, 'length') || 40;
-        const facing = options.facing || this.extractFacing(prompt) || 'East';
-        const bedrooms = options.bedrooms || this.extractCount(prompt, 'bed') || 2;
-
-        const widthInches = widthFt * 12;
-        const lengthInches = lengthFt * 12;
-
-        // If matching Option 04 bounds, start from authoritative Option 04 benchmark
-        if (widthFt === 45 && lengthFt === 70) {
-            const plan = JSON.parse(JSON.stringify(CanonicalOption04));
-            plan.project.name = options.name || `45x70 ${facing} Facing Residence`;
-            plan.project.facing = facing;
-            return plan;
+        let parsed = null;
+        try {
+            parsed = await geminiClient.parsePlanRequirements(prompt, options);
+        } catch (e) {
+            console.warn('[ArchitectureAIProvider] Gemini parse fallback to regex:', e);
         }
 
-        const plan = createEmptyPlan({
-            name: options.name || `${widthFt}x${lengthFt} ${facing} Facing ${bedrooms}BHK Residence`,
+        const widthFt = parsed?.plot?.width || options.width || this.extractDimension(prompt, 'width') || 30;
+        const lengthFt = parsed?.plot?.length || options.length || this.extractDimension(prompt, 'length') || 40;
+        const facing = parsed?.plot?.facing || options.facing || this.extractFacing(prompt) || 'East';
+        const floors = parsed?.floors || options.floors || 1;
+        const style = parsed?.style || options.style || 'Standard Modern';
+        const buildingType = parsed?.buildingType || options.type || 'Residential';
+
+        // Extract any specific room dimension requests from prompt if not in parsed
+        const requirements = parsed?.requirements || {};
+        
+        // Check for specific room dimensions in prompt (e.g. "master bedroom 12x14")
+        const mbMatch = prompt.match(/master\s*(?:bedroom|bed)?\s*(\d+)\s*(?:x|by|×)\s*(\d+)/i);
+        if (mbMatch) {
+            requirements.masterBedroom = {
+                width: parseInt(mbMatch[1], 10),
+                length: parseInt(mbMatch[2], 10)
+            };
+        }
+
+        const kitMatch = prompt.match(/kitchen\s*(\d+)\s*(?:x|by|×)\s*(\d+)/i);
+        if (kitMatch) {
+            requirements.kitchen = {
+                width: parseInt(kitMatch[1], 10),
+                length: parseInt(kitMatch[2], 10)
+            };
+        }
+
+        // Generate complete architectural CAD plan using deterministic PlanGenerator
+        const plan = generateDefaultFloorPlan({
+            name: options.name || `${widthFt}×${lengthFt} ${facing} Facing Residence`,
             width: widthFt,
             length: lengthFt,
             facing: facing,
-            style: options.style || 'Standard Modern'
+            floors: floors,
+            style: style,
+            type: buildingType,
+            requirements: requirements
         });
 
-        // Generate WallNetwork layout
-        const extThick = 9;
-        const intThick = 4.5;
-        const walls = [];
-        const rooms = [];
-        const doors = [];
-        const windows = [];
-
-        // 1. Exterior Walls
-        walls.push({ id: 'w_ext_top', start: { x: extThick, y: extThick }, end: { x: widthInches - extThick, y: extThick }, thickness: extThick, height: 120, type: 'exterior' });
-        walls.push({ id: 'w_ext_bot', start: { x: extThick, y: lengthInches - extThick }, end: { x: widthInches - extThick, y: lengthInches - extThick }, thickness: extThick, height: 120, type: 'exterior' });
-        walls.push({ id: 'w_ext_left', start: { x: extThick, y: extThick }, end: { x: extThick, y: lengthInches - extThick }, thickness: extThick, height: 120, type: 'exterior' });
-        walls.push({ id: 'w_ext_right', start: { x: widthInches - extThick, y: extThick }, end: { x: widthInches - extThick, y: lengthInches - extThick }, thickness: extThick, height: 120, type: 'exterior' });
-
-        // 2. Interior Dividers
-        const splitY1 = Math.round(lengthInches * 0.4);
-        const splitY2 = Math.round(lengthInches * 0.75);
-        const splitX1 = Math.round(widthInches * 0.55);
-
-        walls.push({ id: 'w_int_h1', start: { x: extThick, y: splitY1 }, end: { x: widthInches - extThick, y: splitY1 }, thickness: intThick, height: 120, type: 'interior' });
-        walls.push({ id: 'w_int_v1', start: { x: splitX1, y: extThick }, end: { x: splitX1, y: splitY1 }, thickness: intThick, height: 120, type: 'interior' });
-        walls.push({ id: 'w_int_h2', start: { x: extThick, y: splitY2 }, end: { x: widthInches - extThick, y: splitY2 }, thickness: intThick, height: 120, type: 'interior' });
-
-        // 3. Define Enclosed Rooms
-        rooms.push({
-            id: 'r_living',
-            name: 'LIVING ROOM',
-            type: RoomType.LIVING,
-            x: extThick, y: extThick,
-            w: splitX1 - extThick, h: splitY1 - extThick,
-            clearDimensions: { width: splitX1 - extThick, length: splitY1 - extThick },
-            dimensionLabel: `${formatFeetInches(splitX1 - extThick, false)} × ${formatFeetInches(splitY1 - extThick, false)}`,
-            areaSqFt: Math.round(((splitX1 - extThick) * (splitY1 - extThick) / 144) * 10) / 10
-        });
-
-        rooms.push({
-            id: 'r_kitchen',
-            name: 'KITCHEN',
-            type: RoomType.KITCHEN,
-            x: splitX1, y: extThick,
-            w: widthInches - splitX1 - extThick, h: splitY1 - extThick,
-            clearDimensions: { width: widthInches - splitX1 - extThick, length: splitY1 - extThick },
-            dimensionLabel: `${formatFeetInches(widthInches - splitX1 - extThick, false)} × ${formatFeetInches(splitY1 - extThick, false)}`,
-            areaSqFt: Math.round(((widthInches - splitX1 - extThick) * (splitY1 - extThick) / 144) * 10) / 10
-        });
-
-        rooms.push({
-            id: 'r_bed1',
-            name: 'MASTER BEDROOM',
-            type: RoomType.MASTER_BEDROOM,
-            x: extThick, y: splitY1,
-            w: widthInches - extThick * 2, h: splitY2 - splitY1,
-            clearDimensions: { width: widthInches - extThick * 2, length: splitY2 - splitY1 },
-            dimensionLabel: `${formatFeetInches(widthInches - extThick * 2, false)} × ${formatFeetInches(splitY2 - splitY1, false)}`,
-            areaSqFt: Math.round(((widthInches - extThick * 2) * (splitY2 - splitY1) / 144) * 10) / 10
-        });
-
-        rooms.push({
-            id: 'r_portico',
-            name: 'PARKING / PORTICO',
-            type: RoomType.PORTICO,
-            x: extThick, y: splitY2,
-            w: widthInches - extThick * 2, h: lengthInches - splitY2 - extThick,
-            clearDimensions: { width: widthInches - extThick * 2, length: lengthInches - splitY2 - extThick },
-            dimensionLabel: `${formatFeetInches(widthInches - extThick * 2, false)} × ${formatFeetInches(lengthInches - splitY2 - extThick, false)}`,
-            areaSqFt: Math.round(((widthInches - extThick * 2) * (lengthInches - splitY2 - extThick) / 144) * 10) / 10
-        });
-
-        // 4. Doors & Windows
-        doors.push({ id: 'd_main', wallId: 'w_ext_left', positionAlongWall: 36, width: 42, height: 84, type: 'single_door', swingDirection: 'right', isMain: true });
-        doors.push({ id: 'd_kitch', wallId: 'w_int_v1', positionAlongWall: 24, width: 36, height: 84, type: 'arch_opening', swingDirection: 'none' });
-        doors.push({ id: 'd_bed1', wallId: 'w_int_h1', positionAlongWall: 36, width: 36, height: 84, type: 'single_door', swingDirection: 'left' });
-
-        windows.push({ id: 'w_living', wallId: 'w_ext_top', positionAlongWall: 36, width: 48, height: 48, sillHeight: 36, type: 'standard_window' });
-        windows.push({ id: 'w_kitch', wallId: 'w_ext_top', positionAlongWall: splitX1 + 24, width: 48, height: 48, sillHeight: 36, type: 'standard_window' });
-
-        plan.walls = walls;
-        plan.rooms = rooms;
-        plan.doors = doors;
-        plan.windows = windows;
-
-        // Run validation
+        // Run deterministic CAD constraint validation
         const valRes = this.validator.validatePlan(plan);
+        plan.metadata = plan.metadata || {};
         plan.metadata.validation = valRes;
+        plan.metadata.aiSummary = parsed?.summary || `Generated ${widthFt}x${lengthFt} ${facing} plan.`;
 
         return plan;
     }
 
     /**
-     * Natural Language Plan Modification
+     * Natural Language Plan Modification via Deterministic Geometry Updates
      */
     async modifyPlan(currentPlan, instruction) {
         if (!currentPlan) return currentPlan;
         const modified = JSON.parse(JSON.stringify(currentPlan));
-        const lower = instruction.toLowerCase();
 
+        modified.metadata = modified.metadata || {};
         modified.metadata.versionHistory = modified.metadata.versionHistory || [];
         modified.metadata.versionHistory.push({
             timestamp: new Date().toISOString(),
             instruction: instruction,
-            previousVersion: modified.project.name
+            previousVersion: modified.project?.name || 'Previous Plan'
         });
 
-        if (lower.includes('kitchen') && (lower.includes('north-east') || lower.includes('northeast') || lower.includes('move'))) {
-            // Relocate kitchen to top-right quadrant
-            const kitch = modified.rooms.find(r => r.type === RoomType.KITCHEN);
-            if (kitch) {
-                kitch.name = 'KITCHEN (NE Optimized)';
-                modified.project.name = `${modified.project.name} - Kitchen Optimized`;
-            }
-        } else if (lower.includes('bedroom') && lower.includes('12')) {
-            const bed = modified.rooms.find(r => r.type === RoomType.BEDROOM || r.type === RoomType.MASTER_BEDROOM);
-            if (bed) {
-                bed.w = 144; // 12'-0" in inches
-                bed.clearDimensions.width = 144;
-                bed.dimensionLabel = `${formatFeetInches(144, false)} × ${formatFeetInches(bed.h, false)}`;
-                modified.project.name = `${modified.project.name} - Bed 12ft`;
-            }
-        } else if (lower.includes('attached toilet') || lower.includes('add toilet')) {
-            modified.rooms.push({
-                id: `r_toilet_${Date.now()}`,
-                name: 'ATTACHED TOILET',
-                type: RoomType.ATTACHED_TOILET,
-                x: 180, y: 180, w: 72, h: 48,
-                clearDimensions: { width: 72, length: 48 },
-                dimensionLabel: `6'-0" × 4'-0"`,
-                areaSqFt: 24.0
-            });
-            modified.project.name = `${modified.project.name} + Attached Toilet`;
+        // 1. Try Gemini NLP Command Extraction
+        let geminiCmd = null;
+        try {
+            geminiCmd = await geminiClient.parseCommand(instruction, currentPlan);
+        } catch (e) {
+            console.warn('[ArchitectureAIProvider] Gemini command parse fallback:', e);
         }
 
-        // Validate modified plan
+        // 2. Fallback to Local Deterministic Regex Parser
+        const cmd = (geminiCmd && geminiCmd.success !== false && geminiCmd.action !== 'UNKNOWN')
+            ? geminiCmd
+            : ArchitecturalIntentParser.parse(instruction);
+
+        const action = (cmd?.action || '').toUpperCase();
+        const targetRoomStr = (cmd?.targetRoom || cmd?.query || '').toLowerCase();
+        const lower = instruction.toLowerCase();
+
+        if (action === 'RESIZE_ROOM' || action === 'RESIZE_SINGLE_DIM') {
+            const target = (modified.rooms || []).find(r => 
+                r.name.toLowerCase().includes(targetRoomStr) || 
+                r.type.toLowerCase().includes(targetRoomStr)
+            ) || modified.rooms[0];
+
+            if (target) {
+                const wInches = cmd.widthInches || (cmd.dimensions?.width ? cmd.dimensions.width * 12 : null);
+                const lInches = cmd.lengthInches || (cmd.dimensions?.length ? cmd.dimensions.length * 12 : null);
+
+                if (wInches) {
+                    target.w = wInches;
+                    if (target.clearDimensions) target.clearDimensions.width = wInches;
+                }
+                if (lInches) {
+                    target.h = lInches;
+                    if (target.clearDimensions) target.clearDimensions.length = lInches;
+                }
+                target.dimensionLabel = `${formatFeetInches(target.w, false)} × ${formatFeetInches(target.h, false)}`;
+                target.areaSqFt = Math.round((target.w * target.h / 144) * 10) / 10;
+                modified.project.name = `${modified.project.name} (${target.name} Resized)`;
+            }
+        } else if (action === 'ADD_ROOM' || lower.includes('add room') || lower.includes('add bedroom') || lower.includes('add toilet')) {
+            const isToilet = targetRoomStr.includes('toilet') || lower.includes('toilet');
+            const roomName = isToilet ? 'ATTACHED TOILET' : 'BEDROOM 3';
+            const widthInches = cmd.widthInches || (isToilet ? 72 : 132);
+            const lengthInches = cmd.lengthInches || (isToilet ? 60 : 120);
+
+            modified.rooms.push({
+                id: `r_${Date.now()}`,
+                name: roomName,
+                type: isToilet ? 'attached_toilet' : 'bedroom',
+                x: 60,
+                y: 60,
+                w: widthInches,
+                h: lengthInches,
+                clearDimensions: { width: widthInches, length: lengthInches },
+                dimensionLabel: `${formatFeetInches(widthInches, false)} × ${formatFeetInches(lengthInches, false)}`,
+                areaSqFt: Math.round((widthInches * lengthInches / 144) * 10) / 10,
+                color: isToilet ? '#F0FDF4' : '#F1F5F9'
+            });
+            modified.project.name = `${modified.project.name} (+ ${roomName})`;
+        } else if (action === 'RELOCATE_ROOM' || action === 'CHANGE_STYLE') {
+            if (cmd.targetZone && targetRoomStr.includes('kitchen')) {
+                const kitch = modified.rooms.find(r => r.type === 'kitchen');
+                if (kitch) {
+                    kitch.zone = cmd.targetZone;
+                    kitch.name = `KITCHEN (${cmd.targetZone})`;
+                }
+            }
+            if (cmd.style) {
+                if (modified.project) modified.project.style = cmd.style;
+                if (modified.materials) modified.materials.facadeStyle = cmd.style;
+            }
+        }
+
+        // Validate modified plan with deterministic CAD constraints
         const valRes = this.validator.validatePlan(modified);
         modified.metadata.validation = valRes;
 
         return modified;
-    }
-
-    /**
-     * Image/PDF -> Structured Floor Plan CAD Geometry
-     */
-    async analyzePlanImage(imageB64, options = {}) {
-        // Return structured canonical Option 04 CAD representation detected from blueprint
-        const plan = JSON.parse(JSON.stringify(CanonicalOption04));
-        plan.project.name = options.name || 'Blueprint Vision CAD Reconstruction';
-        plan.metadata.generator = 'Vision CAD Pipeline';
-        return plan;
     }
 
     extractDimension(text, type) {
@@ -214,10 +193,6 @@ export class ArchitectureAIProvider {
         if (/west/i.test(text)) return 'West';
         return 'East';
     }
-
-    extractCount(text, keyword) {
-        const regex = new RegExp(`(\\d+)\\s*(?:bhk|${keyword})`, 'i');
-        const match = text.match(regex);
-        return match ? parseInt(match[1], 10) : 2;
-    }
 }
+
+export default ArchitectureAIProvider;
