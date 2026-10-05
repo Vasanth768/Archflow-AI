@@ -53,7 +53,7 @@ public class ProjectController {
             map.put("status", p.getStatus());
             map.put("selectedStyle", p.getSelectedStyle());
 
-            // Deserialize CLOB JSON strings back into objects/arrays
+            // Deserialize JSON strings back into objects/arrays
             try {
                 if (p.getMaterials() != null) {
                     map.put("materials", objectMapper.readValue(p.getMaterials(), Map.class));

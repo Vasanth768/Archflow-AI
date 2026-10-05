@@ -93,13 +93,16 @@ services:
 
   archflow-server:
     build:
-      context: ./server
+      context: ./backend
       dockerfile: Dockerfile
     container_name: archflow-server
     restart: unless-stopped
     ports:
       - "${SERVER_PORT:-8081}:8081"
     environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://archflow-postgres:5432/${POSTGRES_DB:-archflow}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-archflow}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-StrongPassword123}
       - PRIMARY_IMAGE_PROVIDER=${PRIMARY_IMAGE_PROVIDER:-qwen}
       - FALLBACK_IMAGE_PROVIDER=${FALLBACK_IMAGE_PROVIDER:-local}
       - LOCAL_IMAGE_API_URL=${LOCAL_IMAGE_API_URL:-http://archflow-ai:8000/generate}
@@ -109,9 +112,12 @@ services:
       - QWEN_IMAGE_API_KEY=${QWEN_IMAGE_API_KEY:-}
       - IMAGE_GENERATION_CACHE_ENABLED=${IMAGE_GENERATION_CACHE_ENABLED:-false}
     volumes:
-      - ./server/data:/app/data
+      - ./backend/data:/app/data
     networks:
       - archflow-network
+    depends_on:
+      archflow-postgres:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8081/api/designs/generate/health || exit 1"]
       interval: 10s
