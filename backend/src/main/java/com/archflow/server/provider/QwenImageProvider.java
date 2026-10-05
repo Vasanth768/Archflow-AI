@@ -21,7 +21,10 @@ public class QwenImageProvider implements ImageGenerationProvider {
     @Value("${QWEN_IMAGE_ENDPOINT:https://router.huggingface.co/nscale/v1/images/generations}")
     private String endpoint;
 
-    @Value("${QWEN_IMAGE_API_KEY:${DASHSCOPE_API_KEY:}}")
+    @Value("${QWEN_IMAGE_MODEL:${HF_IMAGE_MODEL:Qwen/Qwen-Image}}")
+    private String modelName;
+
+    @Value("${QWEN_IMAGE_API_KEY:${DASHSCOPE_API_KEY:${HF_API_TOKEN:}}}")
     private String apiKey;
 
     private final RestTemplate restTemplate = new RestTemplate();
@@ -30,6 +33,7 @@ public class QwenImageProvider implements ImageGenerationProvider {
     public void init() {
         System.out.println("[QwenImageProvider] Qwen image provider configured: " + isConfigured());
         System.out.println("[QwenImageProvider] Endpoint: " + endpoint);
+        System.out.println("[QwenImageProvider] Model: " + modelName);
     }
 
     @Override
@@ -57,7 +61,7 @@ public class QwenImageProvider implements ImageGenerationProvider {
                 Map<String, Object> requestBody = new HashMap<>();
                 requestBody.put("inputs", prompt); // Fallback for raw hf-inference
                 requestBody.put("prompt", prompt); // OpenAI format
-                requestBody.put("model", "black-forest-labs/FLUX.1-schnell"); // OpenAI format
+                requestBody.put("model", modelName); // Configured model name
                 
                 String buildingType = "";
                 if (options != null && options.containsKey("architecturalConstraint")) {

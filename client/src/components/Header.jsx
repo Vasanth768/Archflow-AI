@@ -1,12 +1,13 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useArchFlow } from '../context/ArchFlowContext';
 
 export default function Header() {
     const navigate = useNavigate();
-    const isLoggedIn = localStorage.getItem("archflow_logged_in") === "true";
+    const { isAuthenticated, logout } = useArchFlow();
 
     const handleLogout = () => {
-        localStorage.removeItem("archflow_logged_in");
+        logout();
         navigate("/login");
     };
 
@@ -37,7 +38,7 @@ export default function Header() {
                     <Link to="/contact">Contact</Link>
                 </nav>
                 <div className="marketing-header-actions">
-                    {isLoggedIn ? (
+                    {isAuthenticated ? (
                         <>
                             <Link to="/dashboard" className="btn btn-ghost">Dashboard</Link>
                             <button onClick={handleLogout} className="btn btn-secondary">Logout</button>

@@ -22,11 +22,9 @@ export default function Viewer() {
         lighting: "warm-led",
         roof: "flat"
     });
-
     const [activeTab, setActiveTab] = useState("materials");
     const [isPanelOpen, setIsPanelOpen] = useState(true);
-
-    const plan = proj?.plan || CanonicalOption04;
+    const plan = proj?.plan || null;
 
     // Initialize 3D Engine
     useEffect(() => {
@@ -96,13 +94,49 @@ export default function Viewer() {
         }
     };
 
+    if (!proj || !plan) {
+        return (
+            <div className="fade-in" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', padding: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <Link to="/my-projects" style={{ textDecoration: 'none', color: '#64748B', fontWeight: 600, fontSize: 14 }}>
+                            &laquo; Back to Projects
+                        </Link>
+                        <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-1)', margin: 0 }}>
+                            3D WebGL CAD Viewer
+                        </h2>
+                    </div>
+                </div>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div className="glass-card" style={{ padding: '48px 32px', textAlign: 'center', maxWidth: 480, borderRadius: 16 }}>
+                        <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(99,102,241,0.1)', color: '#6366F1', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                        </div>
+                        <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-1)', marginBottom: 8 }}>No 3D Model Available</h2>
+                        <p style={{ fontSize: 14, color: '#94A3B8', lineHeight: 1.6, marginBottom: 24 }}>
+                            You need an active project with a floor plan to view the 3D model. Create a project or select an existing one to render the 3D scene.
+                        </p>
+                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                            <button onClick={() => navigate('/new-project')} className="btn btn-primary">
+                                Create New Project
+                            </button>
+                            <button onClick={() => navigate('/my-projects')} className="btn btn-secondary">
+                                View Projects
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="fade-in" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', padding: isFullscreen ? 0 : 20 }}>
             {/* Topbar Nav */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, padding: isFullscreen ? 16 : 0, background: isFullscreen ? 'var(--bg-dark)' : 'transparent', zIndex: 10, flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-1)', margin: 0 }}>
-                        {plan.project?.name || '3D WebGL CAD Engine'}
+                        {plan?.project?.name || proj?.name || '3D WebGL CAD Engine'}
                     </h2>
                     <span className="badge badge-indigo">Synchronized Parametric 3D</span>
                     <span className="badge badge-teal">Authoritative Model</span>

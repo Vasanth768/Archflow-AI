@@ -10,10 +10,13 @@ export default function ProjectDetails() {
     if (!proj) {
         return (
             <div style={{ textAlign: 'center', padding: 48 }} className="fade-in">
-                <span style={{ fontSize: 40 }}>⚠️</span>
+                <span style={{ fontSize: 40 }}>📁</span>
                 <h3 style={{ marginTop: 16, color: 'white' }}>No Active Project</h3>
                 <p style={{ color: 'var(--text-secondary)', marginTop: 8 }}>Please select or create a project first.</p>
-                <Link to="/my-projects" className="btn btn-primary" style={{ marginTop: 16, display: 'inline-block', textDecoration: 'none' }}>View My Projects</Link>
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 16 }}>
+                    <Link to="/new-project" className="btn btn-primary" style={{ textDecoration: 'none' }}>Create New Project</Link>
+                    <Link to="/my-projects" className="btn btn-secondary" style={{ textDecoration: 'none' }}>View My Projects</Link>
+                </div>
             </div>
         );
     }
