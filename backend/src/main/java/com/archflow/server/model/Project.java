@@ -32,7 +32,7 @@ public class Project {
     private String style;
     private String budget;
     
-    @Column(columnDefinition = "CLOB")
+    @Column(columnDefinition = "TEXT")
     private String prompt;
     
     private String createdAt;
@@ -40,13 +40,13 @@ public class Project {
     private String status;
     private String selectedStyle;
     
-    @Column(columnDefinition = "CLOB")
+    @Column(columnDefinition = "TEXT")
     private String materials; // Serialized JSON string
     
-    @Column(columnDefinition = "CLOB")
+    @Column(columnDefinition = "TEXT")
     private String rooms; // Serialized JSON string
     
-    @Column(columnDefinition = "CLOB")
+    @Column(columnDefinition = "TEXT")
     private String variations; // Serialized JSON string
 
     // Constructors

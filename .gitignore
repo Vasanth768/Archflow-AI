@@ -39,6 +39,9 @@ test_*.js
 test_*.txt
 *.bak
 
-# Generated candidate images in server/data
-server/data/*.jpg
+# Generated candidate images and leftover H2 files
+backend/data/*.jpg
+*.mv.db
+*.trace.db
+*.lock.db
 
