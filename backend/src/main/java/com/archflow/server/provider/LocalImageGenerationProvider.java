@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -19,11 +20,19 @@ public class LocalImageGenerationProvider implements ImageGenerationProvider {
     @Value("${LOCAL_IMAGE_API_URL:http://archflow-ai:8000/generate}")
     private String endpoint;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = createRestTemplate();
+
+    private static RestTemplate createRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(30000);
+        factory.setReadTimeout(120000);
+        return new RestTemplate(factory);
+    }
 
     @Override
     public boolean isConfigured() {
-        return true;
+        // Local AI service is a 2D CAD floor plan engine, not a configured 3D architectural exterior elevation provider.
+        return false;
     }
 
     @Override
@@ -34,6 +43,9 @@ public class LocalImageGenerationProvider implements ImageGenerationProvider {
     @Override
     public CompletableFuture<String> generateDesign(String prompt, Map<String, Object> options) {
         return CompletableFuture.supplyAsync(() -> {
+            if (!isConfigured()) {
+                throw new IllegalStateException("Local image provider is not configured as a 3D architectural exterior provider.");
+            }
             try {
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
@@ -65,13 +77,24 @@ public class LocalImageGenerationProvider implements ImageGenerationProvider {
             } catch (org.springframework.web.client.HttpStatusCodeException e) {
                 String errorBody = e.getResponseBodyAsString();
                 System.err.println("[LOCAL-AI] HTTP Error: " + e.getStatusCode() + " Body: " + errorBody);
-                if (e.getStatusCode().value() == 503) {
-                    throw new RuntimeException("Local AI model is currently loading or not ready.", e);
+                if (e.getStatusCode().value() == 401 || e.getStatusCode().value() == 403) {
+                    throw new RuntimeException("FALLBACK_AUTH_ERROR: Local fallback authentication failed.", e);
                 }
-                throw new RuntimeException("Local AI Error " + e.getStatusCode() + ": " + errorBody, e);
+                if (e.getStatusCode().value() == 429) {
+                    throw new RuntimeException("FALLBACK_RATE_LIMITED: Local fallback rate limited.", e);
+                }
+                if (e.getStatusCode().value() == 503) {
+                    throw new RuntimeException("FALLBACK_TEMPORARILY_UNAVAILABLE: Local AI model is currently loading or not ready.", e);
+                }
+                throw new RuntimeException("FALLBACK_PROVIDER_ERROR: Local AI Error " + e.getStatusCode() + ": " + errorBody, e);
+            } catch (org.springframework.web.client.ResourceAccessException e) {
+                if (e.getCause() instanceof java.net.SocketTimeoutException || e.getMessage() != null && e.getMessage().contains("timed out")) {
+                    throw new RuntimeException("FALLBACK_TIMEOUT: Local fallback timed out.", e);
+                }
+                throw new RuntimeException("FALLBACK_ERROR: Local Image generation failed: Is the ai-service running? " + e.getMessage(), e);
             } catch (Exception e) {
                 System.err.println("[LOCAL-AI] Internal I/O Error calling local API: " + e.getMessage());
-                throw new RuntimeException("Local Image generation failed: Is the ai-service running? " + e.getMessage(), e);
+                throw new RuntimeException("FALLBACK_ERROR: Local Image generation failed: Is the ai-service running? " + e.getMessage(), e);
             }
         });
     }

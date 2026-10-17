@@ -39,21 +39,43 @@ export const ArchFlowProvider = ({ children }) => {
         return currentUser?.email || localStorage.getItem("archflow_email") || "guest_user";
     };
 
+    const getCanonicalDesignList = (project) => {
+        if (!project) return [];
+
+        const generatedDesigns = Array.isArray(project.generatedDesigns) ? project.generatedDesigns : [];
+        const generatedVariations = Array.isArray(project.generatedVariations) ? project.generatedVariations : [];
+        const fallbackList = generatedDesigns.length > 0 ? generatedDesigns : generatedVariations;
+
+        return fallbackList.length > 0 ? fallbackList : [];
+    };
+
     const normalizeProject = (p) => {
         if (!p) return null;
-        if (!p.plan || !p.plan.rooms || p.plan.rooms.length === 0) {
+
+        const canonicalDesigns = getCanonicalDesignList(p);
+        const normalizedProject = {
+            ...p,
+            generatedDesigns: canonicalDesigns,
+            generatedVariations: canonicalDesigns
+        };
+
+        if (!normalizedProject.plan || !normalizedProject.plan.rooms || normalizedProject.plan.rooms.length === 0) {
             const defaultPlan = generateDefaultFloorPlan({
-                id: p.id,
-                name: p.name,
-                client: p.client,
-                width: p.width || 40,
-                length: p.length || 30,
-                facing: p.facing || 'East',
-                floors: p.floors || 1
+                id: normalizedProject.id,
+                name: normalizedProject.name,
+                client: normalizedProject.client,
+                width: normalizedProject.width || 40,
+                length: normalizedProject.length || 30,
+                facing: normalizedProject.facing || 'East',
+                floors: normalizedProject.floors || 1,
+                units: normalizedProject.units || 'ft',
+                unitSystem: normalizedProject.units === 'm' ? 'metric' : 'imperial',
+                roomRequirements: normalizedProject.roomRequirements
             });
             return {
-                ...p,
+                ...normalizedProject,
                 plan: defaultPlan,
+                roomRequirements: normalizedProject.roomRequirements || defaultPlan.roomRequirements,
                 walls: defaultPlan.walls,
                 rooms: defaultPlan.rooms,
                 doors: defaultPlan.doors,
@@ -63,7 +85,7 @@ export const ArchFlowProvider = ({ children }) => {
                 columns: defaultPlan.columns
             };
         }
-        return p;
+        return normalizedProject;
     };
 
     // Load projects for a specific user
@@ -278,8 +300,15 @@ export const ArchFlowProvider = ({ children }) => {
 
     const saveProjectsList = (updatedProjects) => {
         const uKey = getUserKey(user);
-        setProjects(updatedProjects);
-        localStorage.setItem("archflow_projects_" + uKey, JSON.stringify(updatedProjects));
+        const normalizedProjects = Array.isArray(updatedProjects)
+            ? updatedProjects.map(project => {
+                const designList = getCanonicalDesignList(project);
+                return { ...project, generatedDesigns: designList, generatedVariations: designList };
+            })
+            : [];
+
+        setProjects(normalizedProjects);
+        localStorage.setItem("archflow_projects_" + uKey, JSON.stringify(normalizedProjects));
     };
 
     const getActiveProject = () => {
@@ -311,7 +340,19 @@ export const ArchFlowProvider = ({ children }) => {
             length: length,
             facing: data.facing || "East",
             floors: parseInt(data.floors) || 1,
-            style: data.style || "Standard Modern"
+            style: data.style || "Standard Modern",
+            units: data.units || "ft",
+            unitSystem: data.units === 'm' ? 'metric' : 'imperial',
+            roomRequirements: data.roomRequirements,
+            requirements: data.requirements,
+            bedrooms: parseInt(data.bedrooms) || 2,
+            bathrooms: parseInt(data.bathrooms) || 1,
+            pooja: data.pooja,
+            parking: data.parking,
+            dining: data.dining,
+            study: data.study,
+            storeRoom: data.storeRoom,
+            utility: data.utility
         });
 
         const newProj = {
@@ -340,6 +381,8 @@ export const ArchFlowProvider = ({ children }) => {
             lastUpdated: new Date().toISOString(),
             status: "Saved",
             selectedStyle: data.style || "Standard Modern",
+            units: data.units || "ft",
+            roomRequirements: data.roomRequirements || newPlan.roomRequirements,
             materials: newPlan.materials,
             plan: newPlan,
             rooms: newPlan.rooms,
@@ -494,9 +537,11 @@ export const ArchFlowProvider = ({ children }) => {
         const variations = await res.json();
         const updated = projects.map(p => {
             if (p.id === projectId) {
+                const designList = Array.isArray(variations) ? variations : [];
                 return {
                     ...p,
-                    generatedVariations: variations,
+                    generatedDesigns: designList,
+                    generatedVariations: designList,
                     lastUpdated: new Date().toISOString()
                 };
             }
@@ -510,7 +555,7 @@ export const ArchFlowProvider = ({ children }) => {
         const proj = projects.find(p => p.id === projectId);
         if (!proj) throw new Error("Project not found");
 
-        const existingDesign = (proj.generatedVariations || []).find(d => d.id === designId) || {};
+        const existingDesign = getCanonicalDesignList(proj).find(d => d.id === designId) || {};
 
         const res = await fetch('/api/designs/regenerate', {
             method: 'POST',
@@ -526,8 +571,8 @@ export const ArchFlowProvider = ({ children }) => {
         const updatedDesign = await res.json();
         const updated = projects.map(p => {
             if (p.id === projectId) {
-                const list = (p.generatedVariations || []).map(d => d.id === designId ? updatedDesign : d);
-                return { ...p, generatedVariations: list, lastUpdated: new Date().toISOString() };
+                const list = getCanonicalDesignList(p).map(d => d.id === designId ? updatedDesign : d);
+                return { ...p, generatedDesigns: list, generatedVariations: list, lastUpdated: new Date().toISOString() };
             }
             return p;
         });
@@ -538,13 +583,13 @@ export const ArchFlowProvider = ({ children }) => {
     const toggleFavoriteDesign = (projectId, designId) => {
         const updated = projects.map(p => {
             if (p.id === projectId) {
-                const list = (p.generatedVariations || []).map(d => {
+                const list = getCanonicalDesignList(p).map(d => {
                     if (d.id === designId) {
                         return { ...d, isFavorite: !d.isFavorite };
                     }
                     return d;
                 });
-                return { ...p, generatedVariations: list, lastUpdated: new Date().toISOString() };
+                return { ...p, generatedDesigns: list, generatedVariations: list, lastUpdated: new Date().toISOString() };
             }
             return p;
         });

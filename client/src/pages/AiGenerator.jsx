@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useArchFlow } from '../context/ArchFlowContext';
 import { 
@@ -6,6 +6,8 @@ import {
     CheckCircle2, MoreVertical, Plus, Minus, ArrowRight 
 } from 'lucide-react';
 import geminiClient from '../engine/ai/GeminiClient.js';
+import feasibilityAdvisorClient from '../engine/ai/FeasibilityAdvisorClient.js';
+import FeasibilityAdviceBanner from '../components/FeasibilityAdviceBanner.jsx';
 
 import '../css/aiGenerator.css';
 
@@ -70,6 +72,44 @@ export default function AiGenerator() {
     ]);
     const [isAdvOpen, setIsAdvOpen] = useState(false);
     const [isAILoading, setIsAILoading] = useState(false);
+
+    // Optional Feasibility Advisor Integration (Stage 8E-A)
+    const [feasibilityAdvice, setFeasibilityAdvice] = useState(null);
+    const [adviceDismissed, setAdviceDismissed] = useState(false);
+
+    // Debounced layout feasibility evaluation (only executes when feature flag is explicitly ON)
+    useEffect(() => {
+        let timer = null;
+
+        if (!feasibilityAdvisorClient.isEnabled()) {
+            setFeasibilityAdvice(null);
+        } else {
+            timer = setTimeout(async () => {
+                const advice = await feasibilityAdvisorClient.checkFeasibility({
+                    plot: {
+                        widthFt: Number(plotWidth) || 30,
+                        lengthFt: Number(plotLength) || 40,
+                        facing: facing || 'East'
+                    },
+                    requirements: {
+                        bedrooms: Number(bedrooms) || 2
+                    }
+                });
+
+                if (advice && (advice.status === 'CONSTRAINED_WARNING' || advice.is_feasible === false)) {
+                    setFeasibilityAdvice(advice);
+                    setAdviceDismissed(false);
+                } else {
+                    setFeasibilityAdvice(null);
+                }
+            }, 200);
+        }
+
+        return () => {
+            if (timer) clearTimeout(timer);
+            feasibilityAdvisorClient.cancelPendingRequest();
+        };
+    }, [plotWidth, plotLength, facing, bedrooms]);
 
     // Prompt Actions - Real Gemini Integration
     const handleEnhancePrompt = async () => {
@@ -491,6 +531,22 @@ export default function AiGenerator() {
                                 </div>
                             </div>
                         </div>
+                    )}
+
+                    {/* OPT-IN EXPERIMENTAL FEASIBILITY ADVICE BANNER (STAGE 8E-A) */}
+                    {!adviceDismissed && feasibilityAdvice && (
+                        <FeasibilityAdviceBanner 
+                            advice={feasibilityAdvice}
+                            onDismiss={() => setAdviceDismissed(true)}
+                            onSelectAlternative={(alt) => {
+                                if (alt?.recommendation) {
+                                    const match = alt.recommendation.match(/(\d+)\s*BHK/i);
+                                    if (match) {
+                                        setBedrooms(parseInt(match[1], 10));
+                                    }
+                                }
+                            }}
+                        />
                     )}
 
                     {/* GENERATION FOOTER */}

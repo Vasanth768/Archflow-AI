@@ -1,0 +1,32 @@
+{
+  "generator": "ArchFlow Synthetic CAD Dataset Builder",
+  "version": "1.0.0",
+  "seed": 42,
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-10-14T13:44:47.897Z",
+  "targetCount": 1000,
+  "totalExamined": 1002,
+  "totalAccepted": 1000,
+  "totalRejected": 2,
+  "acceptanceRate": "99.80%",
+  "rejectionBreakdown": {
+    "ROOM_OVERLAP": 0,
+    "DOOR_ORPHANED_OR_EXCEEDED": 0,
+    "WINDOW_ORPHANED_OR_EXCEEDED": 0,
+    "WALL_TOO_SHORT_OR_OUTSIDE": 0,
+    "UNCONTAINED_ROOM": 0,
+    "TOO_FEW_ROOMS": 0,
+    "DUPLICATE_LAYOUT": 2,
+    "VALIDATION_ERROR": 0
+  },
+  "splits": {
+    "trainCount": 700,
+    "valCount": 150,
+    "testCount": 150,
+    "trainRatio": "70.0%",
+    "valRatio": "15.0%",
+    "testRatio": "15.0%"
+  },
+  "totalSizeBytes": 9356013,
+  "totalSizeMB": 8.92
+}

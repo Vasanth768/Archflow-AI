@@ -45,3 +45,12 @@ backend/data/*.jpg
 *.trace.db
 *.lock.db
 
+# Temporary process dumps & debug files
+containers.txt
+docker_status.txt
+images.txt
+ps*.txt
+tasklist*.txt
+wsl_*.txt
+testAcceptanceSuite.js
+testImagePipelineSuite.js

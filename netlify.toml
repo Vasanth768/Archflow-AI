@@ -1,0 +1,15 @@
+# Netlify Configuration for ArchFlow AI
+
+[build]
+  base = "client"
+  publish = "dist"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA Fallback for React Router (ensures /new-project, /editor, /ai-generator reload properly)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

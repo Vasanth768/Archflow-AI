@@ -151,7 +151,7 @@ export class ConstraintValidator {
             const areaSqInches = clearW * clearL;
             totalPlottedAreaSqInches += areaSqInches;
 
-            if (clearW < this.minStandardRoomWidth && clearL < this.minStandardRoomWidth && !['toilet', 'attached_toilet', 'bathroom', 'store', 'pooja'].includes(r.type)) {
+            if (clearW < this.minStandardRoomWidth && clearL < this.minStandardRoomWidth && !['toilet', 'attached_toilet', 'common_bathroom', 'bathroom', 'store', 'pooja', 'utility', 'laundry', 'parking', 'balcony'].includes(r.type)) {
                 issues.push({
                     level: 'WARNING',
                     code: 'ROOM_TOO_NARROW',

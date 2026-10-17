@@ -31,15 +31,15 @@ export class CanonicalVastuEngine {
         const cellL = siteL / 3;
 
         const zones = {
-            NW: { name: 'North-West (Vayavya)', x1: 0, y1: 0, x2: cellW, y2: cellL, element: 'Air' },
-            N:  { name: 'North (Kubera)', x1: cellW, y1: 0, x2: cellW * 2, y2: cellL, element: 'Water' },
-            NE: { name: 'North-East (Ishanya)', x1: cellW * 2, y1: 0, x2: siteW, y2: cellL, element: 'Water/Spirit' },
+            SW: { name: 'South-West (Nairutya)', x1: 0, y1: 0, x2: cellW, y2: cellL, element: 'Earth' },
+            S:  { name: 'South (Yama)', x1: cellW, y1: 0, x2: cellW * 2, y2: cellL, element: 'Fire' },
+            SE: { name: 'South-East (Agneya)', x1: cellW * 2, y1: 0, x2: siteW, y2: cellL, element: 'Fire' },
             W:  { name: 'West (Varuna)', x1: 0, y1: cellL, x2: cellW, y2: cellL * 2, element: 'Space' },
             C:  { name: 'Center (Brahmasthan)', x1: cellW, y1: cellL, x2: cellW * 2, y2: cellL * 2, element: 'Ether' },
             E:  { name: 'East (Indra)', x1: cellW * 2, y1: cellL, x2: siteW, y2: cellL * 2, element: 'Fire/Sun' },
-            SW: { name: 'South-West (Nairutya)', x1: 0, y1: cellL * 2, x2: cellW, y2: siteL, element: 'Earth' },
-            S:  { name: 'South (Yama)', x1: cellW, y1: cellL * 2, x2: cellW * 2, y2: siteL, element: 'Fire' },
-            SE: { name: 'South-East (Agneya)', x1: cellW * 2, y1: cellL * 2, x2: siteW, y2: siteL, element: 'Fire' }
+            NW: { name: 'North-West (Vayavya)', x1: 0, y1: cellL * 2, x2: cellW, y2: siteL, element: 'Air' },
+            N:  { name: 'North (Kubera)', x1: cellW, y1: cellL * 2, x2: cellW * 2, y2: siteL, element: 'Water' },
+            NE: { name: 'North-East (Ishanya)', x1: cellW * 2, y1: cellL * 2, x2: siteW, y2: siteL, element: 'Water/Spirit' }
         };
 
         const rules = [];

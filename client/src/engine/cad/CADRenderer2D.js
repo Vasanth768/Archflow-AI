@@ -1,16 +1,14 @@
 /**
  * CADRenderer2D.js - Professional Architectural 2D Canvas Engine
  * 
- * Replicates the high-precision CAD aesthetic of professional architectural blueprints:
- * - Crisp white canvas with subtle adaptive architectural grid
- * - Solid structural double-line walls with clean corner miter/butt joins
- * - 90-degree door swing arcs and double-line window frames with sill extensions
- * - Architectural staircase with treads, handrail, and UP arrow
- * - Vector 2D CAD furniture symbols (Beds with pillows, Dining sets, Sofas, Kitchen Counters with sinks, Sanitary ware, Car, Plants)
- * - Collision-free typography formatted in feet and inches (e.g. 12'-0" × 14'-0")
- * - Outer and inner architectural dimension lines with 45° tick marks
- * - Fixed matrix viewport transform: screen = world * zoom + pan
- * - Interactive zoom around cursor, pan, and 1-click Fit-to-Screen
+ * Replicates the clean, black-and-white 2D CAD floor plan reference style:
+ * - Pure white background (#FFFFFF) with crisp black CAD stroke lines (#000000)
+ * - Thick, clearly defined exterior walls and thinner interior partition walls
+ * - Clearly separated rooms with centered room titles and readable dimensions
+ * - Outer and segment dimension lines with extension lines and tick marks
+ * - 90-degree door swing arcs and double-line window openings
+ * - Simple 2D vector CAD furniture symbols (Beds, Sofas, Kitchen Counters, Sinks, Toilets, Washbasins)
+ * - Automatic canvas fit-to-screen transform
  */
 
 import { formatFeetInches } from './UnitEngine.js';
@@ -19,22 +17,17 @@ export class CADRenderer2D {
     constructor(canvas, options = {}) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.scale = options.scale || 0.8; // pixels per inch
-        this.pan = options.pan || { x: 60, y: 60 };
+        this.scale = options.scale || 0.8;
+        this.pan = options.pan || { x: 80, y: 80 };
         this.viewportWidth = options.viewportWidth || (canvas.clientWidth || 800);
         this.viewportHeight = options.viewportHeight || (canvas.clientHeight || 600);
-        this.gridSizeInches = options.gridSizeInches || 12; // 1-foot grid
-        this.showGrid = options.showGrid !== false;
+        this.showGrid = Boolean(options.showGrid);
         this.showDimensions = options.showDimensions !== false;
         this.showFurniture = options.showFurniture !== false;
         this.showVastuGrid = Boolean(options.showVastuGrid);
         this.selectedEntityId = options.selectedEntityId || null;
-        this.theme = options.theme || 'light';
     }
 
-    /**
-     * Convert world inches coordinates to canvas screen pixels
-     */
     worldToScreen(x, y) {
         return {
             x: this.pan.x + x * this.scale,
@@ -42,9 +35,6 @@ export class CADRenderer2D {
         };
     }
 
-    /**
-     * Convert canvas screen pixels to world inches
-     */
     screenToWorld(screenX, screenY) {
         return {
             x: (screenX - this.pan.x) / this.scale,
@@ -52,9 +42,6 @@ export class CADRenderer2D {
         };
     }
 
-    /**
-     * Zoom centered around a specific screen coordinate (e.g. mouse cursor)
-     */
     zoomAt(screenX, screenY, factor) {
         const worldBefore = this.screenToWorld(screenX, screenY);
         const newScale = Math.max(0.1, Math.min(5.0, this.scale * factor));
@@ -64,16 +51,15 @@ export class CADRenderer2D {
     }
 
     /**
-     * Fit entire CAD plan into canvas viewport with 15% margin
+     * Automatically fits the complete floor plan to the available canvas with neat margins
      */
     fitToScreen(plan) {
         if (!plan || !plan.site) return;
         const siteW = plan.site.width || 360;
         const siteL = plan.site.length || 480;
 
-        // Total content envelope including dimensions (+ 60 inches margins)
-        const totalW = siteW + 80;
-        const totalL = siteL + 80;
+        const totalW = siteW + 140;
+        const totalL = siteL + 140;
 
         const scaleX = (this.viewportWidth * 0.82) / totalW;
         const scaleY = (this.viewportHeight * 0.82) / totalL;
@@ -84,7 +70,7 @@ export class CADRenderer2D {
     }
 
     /**
-     * Render full canonical Architectural CAD Plan
+     * Render complete 2D Architectural CAD Floor Plan
      */
     render(plan, options = {}) {
         if (!plan || !this.ctx) return;
@@ -95,162 +81,69 @@ export class CADRenderer2D {
         this.selectedEntityId = options.selectedEntityId ?? this.selectedEntityId;
         this.showVastuGrid = options.showVastuGrid !== undefined ? options.showVastuGrid : this.showVastuGrid;
 
-        // 1. Clear background with crisp architectural white
+        if (options.autoFit || options.fitToScreen) {
+            this.fitToScreen(plan);
+        }
+
+        // 1. Clear background to crisp pure white (#FFFFFF)
         ctx.fillStyle = '#FFFFFF';
         ctx.fillRect(0, 0, width, height);
 
-        // 2. Draw Architectural Grid
+        // 2. Draw Subtle Architectural Grid (if enabled)
         if (this.showGrid) {
-            this.drawGrid(plan);
+            this.drawGrid();
         }
 
-        // 3. Draw Site Boundaries & Setbacks
-        this.drawSite(plan);
-
-        // 4. Draw Optional 9-Quadrant Vastu Mandala Overlay
-        if (this.showVastuGrid) {
-            this.drawVastuMandala(plan);
-        }
-
-        // 5. Draw Room Fills & Selection Highlights
+        // 3. Draw Room Boundaries (Pure White Fills)
         this.drawRooms(plan);
 
-        // 6. Draw Structural Columns
+        // 4. Draw Structural Columns
         this.drawColumns(plan);
 
-        // 7. Draw Architectural Stairs
+        // 5. Draw Architectural Stairs
         this.drawStairs(plan);
 
-        // 8. Draw Vector Furniture Symbols
+        // 6. Draw 2D Vector CAD Furniture Symbols (Clean Black Outlines)
         if (this.showFurniture) {
             this.drawFurniture(plan);
         }
 
-        // 9. Draw Double-Line Structural Walls with Openings & Door Swing Arcs
+        // 7. Draw Double-Line Structural Walls, Openings & Door Arcs
         this.drawWallsAndOpenings(plan);
 
-        // 10. Draw Room Labels (Bold title, dimensions, area)
+        // 8. Draw Room Labels (Uppercase Title & Dimensions)
         this.drawRoomLabels(plan);
 
-        // 11. Draw Outer & Inner Architectural Dimensions
+        // 9. Draw Outer & Segment Dimension Lines with Extension Lines & Ticks
         if (this.showDimensions) {
             this.drawDimensions(plan);
         }
 
-        // 12. Draw North Compass
+        // 10. Draw North Compass
         this.drawCompass(plan);
     }
 
-    drawGrid(plan) {
+    drawGrid() {
         const ctx = this.ctx;
-        const step1Ft = 12 * this.scale;
-        const step5Ft = 60 * this.scale;
+        const step = 60 * this.scale;
+        if (step < 15) return;
 
-        if (step1Ft < 4) return;
-
-        // Minor grid (1 foot)
         ctx.strokeStyle = '#F1F5F9';
         ctx.lineWidth = 1;
 
-        const startX = this.pan.x % step1Ft;
-        const startY = this.pan.y % step1Ft;
+        const startX = this.pan.x % step;
+        const startY = this.pan.y % step;
 
         ctx.beginPath();
-        for (let x = startX; x < this.viewportWidth; x += step1Ft) {
+        for (let x = startX; x < this.viewportWidth; x += step) {
             ctx.moveTo(x, 0);
             ctx.lineTo(x, this.viewportHeight);
         }
-        for (let y = startY; y < this.viewportHeight; y += step1Ft) {
+        for (let y = startY; y < this.viewportHeight; y += step) {
             ctx.moveTo(0, y);
             ctx.lineTo(this.viewportWidth, y);
         }
         ctx.stroke();
-
-        // Major grid (5 feet)
-        if (step5Ft >= 20) {
-            ctx.strokeStyle = '#E2E8F0';
-            ctx.lineWidth = 1;
-
-            const start5X = this.pan.x % step5Ft;
-            const start5Y = this.pan.y % step5Ft;
-
-            ctx.beginPath();
-            for (let x = start5X; x < this.viewportWidth; x += step5Ft) {
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, this.viewportHeight);
-            }
-            for (let y = start5Y; y < this.viewportHeight; y += step5Ft) {
-                ctx.moveTo(0, y);
-                ctx.lineTo(this.viewportWidth, y);
-            }
-            ctx.stroke();
-        }
-    }
-
-    drawSite(plan) {
-        if (!plan.site) return;
-        const ctx = this.ctx;
-        const p = this.worldToScreen(0, 0);
-        const w = plan.site.width * this.scale;
-        const h = plan.site.length * this.scale;
-
-        // Site Outer Boundary
-        ctx.strokeStyle = '#94A3B8';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(p.x, p.y, w, h);
-
-        // Dashed Setback Boundary
-        if (plan.site.setbacks) {
-            const sb = plan.site.setbacks;
-            const sp = this.worldToScreen(sb.left || 24, sb.rear || 24);
-            const sw = (plan.site.width - (sb.left || 24) - (sb.right || 24)) * this.scale;
-            const sh = (plan.site.length - (sb.rear || 24) - (sb.front || 36)) * this.scale;
-
-            ctx.save();
-            ctx.setLineDash([4, 4]);
-            ctx.strokeStyle = '#CBD5E1';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(sp.x, sp.y, sw, sh);
-            ctx.restore();
-        }
-    }
-
-    drawVastuMandala(plan) {
-        if (!plan.site) return;
-        const ctx = this.ctx;
-        const p = this.worldToScreen(0, 0);
-        const w = plan.site.width * this.scale;
-        const h = plan.site.length * this.scale;
-
-        const cellW = w / 3;
-        const cellH = h / 3;
-
-        const zoneLabels = [
-            ['NW (Air)', 'N (Water)', 'NE (Spirit)'],
-            ['W (Space)', 'Center (Brahma)', 'E (Sun)'],
-            ['SW (Earth)', 'S (Fire)', 'SE (Agni)']
-        ];
-
-        ctx.save();
-        ctx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
-        ctx.fillStyle = 'rgba(245, 158, 11, 0.03)';
-        ctx.setLineDash([3, 3]);
-        ctx.lineWidth = 1;
-
-        for (let row = 0; row < 3; row++) {
-            for (let col = 0; col < 3; col++) {
-                const zx = p.x + col * cellW;
-                const zy = p.y + row * cellH;
-                ctx.fillRect(zx, zy, cellW, cellH);
-                ctx.strokeRect(zx, zy, cellW, cellH);
-
-                ctx.fillStyle = 'rgba(180, 83, 9, 0.7)';
-                ctx.font = '700 10px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(zoneLabels[row][col], zx + cellW / 2, zy + 16);
-            }
-        }
-        ctx.restore();
     }
 
     drawRooms(plan) {
@@ -260,17 +153,15 @@ export class CADRenderer2D {
             const w = r.w * this.scale;
             const h = r.h * this.scale;
 
-            // Room Background Fill
-            ctx.fillStyle = r.color || '#F8FAFC';
+            ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(p.x, p.y, w, h);
 
-            // Selection Highlight
             if (this.selectedEntityId === r.id) {
                 ctx.save();
-                ctx.strokeStyle = '#3B82F6';
-                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#2563EB';
+                ctx.lineWidth = 2.5;
                 ctx.strokeRect(p.x, p.y, w, h);
-                ctx.fillStyle = 'rgba(59, 130, 246, 0.08)';
+                ctx.fillStyle = 'rgba(37, 99, 235, 0.05)';
                 ctx.fillRect(p.x, p.y, w, h);
                 ctx.restore();
             }
@@ -284,18 +175,8 @@ export class CADRenderer2D {
             const w = (c.width || 9) * this.scale;
             const l = (c.length || 9) * this.scale;
 
-            ctx.fillStyle = '#0F172A';
+            ctx.fillStyle = '#000000';
             ctx.fillRect(p.x, p.y, w, l);
-
-            // Column Hatch
-            ctx.strokeStyle = '#FFFFFF';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p.x + w, p.y + l);
-            ctx.moveTo(p.x + w, p.y);
-            ctx.lineTo(p.x, p.y + l);
-            ctx.stroke();
         });
     }
 
@@ -307,16 +188,13 @@ export class CADRenderer2D {
             const h = s.length * this.scale;
             const treads = s.treads || 12;
 
-            // Stair outline
-            ctx.fillStyle = '#F8FAFC';
+            ctx.fillStyle = '#FFFFFF';
             ctx.fillRect(p.x, p.y, w, h);
-            ctx.strokeStyle = '#475569';
+            ctx.strokeStyle = '#000000';
             ctx.lineWidth = 1.5;
             ctx.strokeRect(p.x, p.y, w, h);
 
-            // Treads
             const stepH = h / treads;
-            ctx.strokeStyle = '#64748B';
             ctx.lineWidth = 1;
             for (let i = 1; i < treads; i++) {
                 ctx.beginPath();
@@ -325,26 +203,24 @@ export class CADRenderer2D {
                 ctx.stroke();
             }
 
-            // Directional UP Arrow
-            ctx.save();
-            ctx.strokeStyle = '#3B82F6';
-            ctx.fillStyle = '#3B82F6';
-            ctx.lineWidth = 2;
             const midX = p.x + w / 2;
+            ctx.save();
+            ctx.strokeStyle = '#000000';
+            ctx.fillStyle = '#000000';
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.moveTo(midX, p.y + h - 10);
             ctx.lineTo(midX, p.y + 15);
             ctx.stroke();
 
-            // Arrow head
             ctx.beginPath();
             ctx.moveTo(midX, p.y + 10);
-            ctx.lineTo(midX - 5, p.y + 20);
-            ctx.lineTo(midX + 5, p.y + 20);
+            ctx.lineTo(midX - 4, p.y + 18);
+            ctx.lineTo(midX + 4, p.y + 18);
             ctx.closePath();
             ctx.fill();
 
-            ctx.font = '700 10px sans-serif';
+            ctx.font = '700 9px monospace';
             ctx.textAlign = 'center';
             ctx.fillText('UP', midX, p.y + h - 14);
             ctx.restore();
@@ -353,6 +229,7 @@ export class CADRenderer2D {
 
     drawFurniture(plan) {
         const ctx = this.ctx;
+
         (plan.furniture || []).forEach(f => {
             const p = this.worldToScreen(f.x, f.y);
             const w = f.width * this.scale;
@@ -362,78 +239,58 @@ export class CADRenderer2D {
             ctx.translate(p.x + w / 2, p.y + l / 2);
             ctx.rotate(((f.rotation || 0) * Math.PI) / 180);
 
+            ctx.strokeStyle = '#000000';
+            ctx.fillStyle = '#FFFFFF';
+            ctx.lineWidth = 1.2;
+
             if (f.type === 'bed') {
-                // Bed Frame
-                ctx.fillStyle = '#F1F5F9';
                 ctx.fillRect(-w / 2, -l / 2, w, l);
-                ctx.strokeStyle = '#64748B';
-                ctx.lineWidth = 1.2;
                 ctx.strokeRect(-w / 2, -l / 2, w, l);
+                ctx.fillRect(-w / 2, -l / 2, w, 5 * this.scale);
 
-                // Headboard
-                ctx.fillStyle = '#334155';
-                ctx.fillRect(-w / 2, -l / 2, w, 6 * this.scale);
-
-                // Pillows
-                ctx.fillStyle = '#E2E8F0';
-                const pilW = (w - 12 * this.scale) / 2;
+                const pilW = (w - 10 * this.scale) / 2;
                 const pilH = 14 * this.scale;
-                ctx.strokeRect(-w / 2 + 4 * this.scale, -l / 2 + 8 * this.scale, pilW, pilH);
-                ctx.strokeRect(4 * this.scale, -l / 2 + 8 * this.scale, pilW, pilH);
+                ctx.strokeRect(-w / 2 + 3 * this.scale, -l / 2 + 7 * this.scale, pilW, pilH);
+                ctx.strokeRect(3 * this.scale, -l / 2 + 7 * this.scale, pilW, pilH);
 
-                // Blanket Fold Line
                 ctx.beginPath();
                 ctx.moveTo(-w / 2, 0);
                 ctx.lineTo(w / 2, 0);
                 ctx.stroke();
+
+                ctx.strokeRect(-w / 2 - 14 * this.scale, -l / 2, 12 * this.scale, 14 * this.scale);
+                ctx.strokeRect(w / 2 + 2 * this.scale, -l / 2, 12 * this.scale, 14 * this.scale);
             } else if (f.type === 'sofa') {
-                // Sofa Main Body
-                ctx.fillStyle = '#E2E8F0';
                 ctx.fillRect(-w / 2, -l / 2, w, l);
-                ctx.strokeStyle = '#475569';
-                ctx.lineWidth = 1.2;
                 ctx.strokeRect(-w / 2, -l / 2, w, l);
-
-                // Armrests
-                ctx.fillStyle = '#94A3B8';
-                ctx.fillRect(-w / 2, -l / 2, 8 * this.scale, l);
-                ctx.fillRect(w / 2 - 8 * this.scale, -l / 2, 8 * this.scale, l);
-            } else if (f.type === 'dining_table') {
-                // Table
-                ctx.fillStyle = '#F8FAFC';
-                ctx.fillRect(-w / 2, -l / 2, w, l);
-                ctx.strokeStyle = '#475569';
-                ctx.lineWidth = 1.5;
-                ctx.strokeRect(-w / 2, -l / 2, w, l);
-
-                // Chairs
-                ctx.fillStyle = '#CBD5E1';
-                const chairW = 14 * this.scale;
-                const chairD = 10 * this.scale;
-                ctx.strokeRect(-w / 2 + 8 * this.scale, -l / 2 - chairD, chairW, chairD);
-                ctx.strokeRect(w / 2 - 8 * this.scale - chairW, -l / 2 - chairD, chairW, chairD);
-                ctx.strokeRect(-w / 2 + 8 * this.scale, l / 2, chairW, chairD);
-                ctx.strokeRect(w / 2 - 8 * this.scale - chairW, l / 2, chairW, chairD);
-            } else if (f.type === 'kitchen_counter') {
-                // Granite Counter
-                ctx.fillStyle = '#334155';
-                ctx.fillRect(-w / 2, -l / 2, w, l);
-
-                // Sink & Burners
-                ctx.strokeStyle = '#FFFFFF';
-                ctx.lineWidth = 1.2;
-                ctx.strokeRect(-w / 2 + 6 * this.scale, -l / 2 + 4 * this.scale, 20 * this.scale, l - 8 * this.scale);
-
-                // Stove
+                ctx.strokeRect(-w / 2, -l / 2, 8 * this.scale, l);
+                ctx.strokeRect(w / 2 - 8 * this.scale, -l / 2, 8 * this.scale, l);
                 ctx.beginPath();
-                ctx.arc(w / 2 - 20 * this.scale, 0, 6 * this.scale, 0, Math.PI * 2);
-                ctx.arc(w / 2 - 36 * this.scale, 0, 5 * this.scale, 0, Math.PI * 2);
+                ctx.moveTo(-w / 2 + 8 * this.scale, 0);
+                ctx.lineTo(w / 2 - 8 * this.scale, 0);
+                ctx.stroke();
+            } else if (f.type === 'kitchen_counter') {
+                ctx.fillRect(-w / 2, -l / 2, w, l);
+                ctx.strokeRect(-w / 2, -l / 2, w, l);
+
+                const sinkW = 20 * this.scale;
+                const sinkH = 16 * this.scale;
+                ctx.strokeRect(-w / 2 + 6 * this.scale, -l / 2 + 4 * this.scale, sinkW, sinkH);
+                ctx.beginPath();
+                ctx.arc(-w / 2 + 6 * this.scale + sinkW / 2, -l / 2 + 4 * this.scale + sinkH / 2, 3 * this.scale, 0, Math.PI * 2);
+                ctx.stroke();
+
+                const cx = w / 2 - 20 * this.scale;
+                const cy = 0;
+                ctx.strokeRect(cx - 14 * this.scale, cy - 10 * this.scale, 28 * this.scale, 20 * this.scale);
+                ctx.beginPath();
+                ctx.arc(cx - 7 * this.scale, cy - 5 * this.scale, 3.5 * this.scale, 0, Math.PI * 2);
+                ctx.arc(cx + 7 * this.scale, cy - 5 * this.scale, 3.5 * this.scale, 0, Math.PI * 2);
+                ctx.arc(cx - 7 * this.scale, cy + 5 * this.scale, 3.5 * this.scale, 0, Math.PI * 2);
+                ctx.arc(cx + 7 * this.scale, cy + 5 * this.scale, 3.5 * this.scale, 0, Math.PI * 2);
                 ctx.stroke();
             } else {
-                ctx.fillStyle = '#E2E8F0';
                 ctx.fillRect(-w / 2, -l / 2, w, l);
-                ctx.strokeStyle = '#94A3B8';
-                ctx.lineWidth = 1;
                 ctx.strokeRect(-w / 2, -l / 2, w, l);
             }
 
@@ -445,24 +302,28 @@ export class CADRenderer2D {
         const ctx = this.ctx;
         const walls = plan.walls || [];
 
-        // 1. Draw Double-Line Structural Wall Blocks
         walls.forEach(w => {
             const p1 = this.worldToScreen(w.start.x, w.start.y);
             const p2 = this.worldToScreen(w.end.x, w.end.y);
             const thick = (w.thickness || 9) * this.scale;
 
             ctx.save();
-            ctx.strokeStyle = w.type === 'exterior' ? '#0F172A' : '#334155';
+            ctx.strokeStyle = '#000000';
             ctx.lineWidth = thick;
             ctx.lineCap = 'square';
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
             ctx.stroke();
+
+            if (w.type === 'interior' && thick >= 4) {
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = Math.max(1, thick - 3);
+                ctx.stroke();
+            }
             ctx.restore();
         });
 
-        // 2. Draw Windows on Exterior Walls
         (plan.windows || []).forEach(win => {
             const hostWall = walls.find(w => w.id === win.wallId);
             if (!hostWall) return;
@@ -486,7 +347,6 @@ export class CADRenderer2D {
             const sp2 = this.worldToScreen(endX, endY);
             const thick = (hostWall.thickness || 9) * this.scale;
 
-            // Clear wall segment for window
             ctx.save();
             ctx.strokeStyle = '#FFFFFF';
             ctx.lineWidth = thick + 2;
@@ -496,22 +356,15 @@ export class CADRenderer2D {
             ctx.lineTo(sp2.x, sp2.y);
             ctx.stroke();
 
-            // Draw Window Architectural Symbol (Frame + Glass Line)
-            ctx.strokeStyle = '#0F172A';
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.moveTo(sp1.x, sp1.y);
             ctx.lineTo(sp2.x, sp2.y);
             ctx.stroke();
-
-            // Translucent Glass Center Line
-            ctx.strokeStyle = '#38BDF8';
-            ctx.lineWidth = 2;
-            ctx.stroke();
             ctx.restore();
         });
 
-        // 3. Draw Doors and 90-Degree Swing Arcs
         (plan.doors || []).forEach(d => {
             const hostWall = walls.find(w => w.id === d.wallId);
             if (!hostWall) return;
@@ -536,7 +389,6 @@ export class CADRenderer2D {
             const thick = (hostWall.thickness || 9) * this.scale;
             const screenDoorW = doorW * this.scale;
 
-            // Clear wall opening
             ctx.save();
             ctx.strokeStyle = '#FFFFFF';
             ctx.lineWidth = thick + 2;
@@ -547,23 +399,19 @@ export class CADRenderer2D {
             ctx.stroke();
 
             const angle = Math.atan2(dy, dx);
-
-            // Door leaf line (perpendicular opening)
             const leafAngle = angle + (d.swing === 'left' ? -Math.PI / 2 : Math.PI / 2);
             const leafX = hp.x + Math.cos(leafAngle) * screenDoorW;
             const leafY = hp.y + Math.sin(leafAngle) * screenDoorW;
 
-            ctx.strokeStyle = '#D97706';
-            ctx.lineWidth = 2.5;
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(hp.x, hp.y);
             ctx.lineTo(leafX, leafY);
             ctx.stroke();
 
-            // Quarter-circle Door Swing Arc
-            ctx.strokeStyle = '#94A3B8';
+            ctx.strokeStyle = '#000000';
             ctx.lineWidth = 1;
-            ctx.setLineDash([3, 3]);
             ctx.beginPath();
             if (d.swing === 'left') {
                 ctx.arc(hp.x, hp.y, screenDoorW, angle - Math.PI / 2, angle);
@@ -577,6 +425,8 @@ export class CADRenderer2D {
 
     drawRoomLabels(plan) {
         const ctx = this.ctx;
+        const isMetric = plan.project?.unitSystem === 'metric';
+
         (plan.rooms || []).forEach(r => {
             const p = this.worldToScreen(r.x, r.y);
             const w = r.w * this.scale;
@@ -586,26 +436,24 @@ export class CADRenderer2D {
             const midY = p.y + h / 2;
 
             ctx.save();
-            ctx.fillStyle = '#0F172A';
+            ctx.fillStyle = '#000000';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // Room Title
-            ctx.font = '700 13px Inter, -apple-system, sans-serif';
-            ctx.fillText(r.name.toUpperCase(), midX, midY - 10);
+            ctx.font = '700 13px Inter, sans-serif';
+            ctx.fillText(r.name.toUpperCase(), midX, midY - 8);
 
-            // Dimension Label (e.g. 12'-0" × 14'-0")
-            ctx.fillStyle = '#475569';
-            ctx.font = '600 11px Inter, -apple-system, sans-serif';
-            ctx.fillText(r.dimensionLabel || `${formatFeetInches(r.w, false)} × ${formatFeetInches(r.h, false)}`, midX, midY + 6);
-
-            // Area Badge
-            if (r.areaSqFt) {
-                ctx.fillStyle = '#64748B';
-                ctx.font = '500 10px Inter, -apple-system, sans-serif';
-                ctx.fillText(`${r.areaSqFt} Sq.Ft`, midX, midY + 20);
+            ctx.font = '500 11px Inter, sans-serif';
+            let dimText = r.dimensionLabel;
+            if (isMetric) {
+                const mmW = Math.round(r.w * 25.4);
+                const mmH = Math.round(r.h * 25.4);
+                dimText = `${mmW} x ${mmH}`;
+            } else if (!dimText) {
+                dimText = `${formatFeetInches(r.w, false)} × ${formatFeetInches(r.h, false)}`;
             }
 
+            ctx.fillText(dimText, midX, midY + 8);
             ctx.restore();
         });
     }
@@ -614,49 +462,64 @@ export class CADRenderer2D {
         const ctx = this.ctx;
         const siteW = plan.site?.width || 360;
         const siteL = plan.site?.length || 480;
+        const isMetric = plan.project?.unitSystem === 'metric';
 
         ctx.save();
-        ctx.strokeStyle = '#475569';
-        ctx.fillStyle = '#0F172A';
+        ctx.strokeStyle = '#000000';
+        ctx.fillStyle = '#000000';
         ctx.lineWidth = 1;
 
-        // Top Horizontal Plot Dimension
-        const topStart = this.worldToScreen(0, -18);
-        const topEnd = this.worldToScreen(siteW, -18);
-        const topMid = (topStart.x + topEnd.x) / 2;
+        // TOP OUTER DIMENSION LINE
+        const pTopLeft = this.worldToScreen(0, 0);
+        const pTopRight = this.worldToScreen(siteW, 0);
+        const dimYTop = pTopLeft.y - 45;
 
         ctx.beginPath();
-        ctx.moveTo(topStart.x, topStart.y);
-        ctx.lineTo(topEnd.x, topEnd.y);
+        ctx.moveTo(pTopLeft.x, pTopLeft.y - 5);
+        ctx.lineTo(pTopLeft.x, dimYTop - 10);
+        ctx.moveTo(pTopRight.x, pTopRight.y - 5);
+        ctx.lineTo(pTopRight.x, dimYTop - 10);
         ctx.stroke();
 
-        // 45° Tick Marks
-        this.drawTick(ctx, topStart.x, topStart.y);
-        this.drawTick(ctx, topEnd.x, topEnd.y);
+        ctx.beginPath();
+        ctx.moveTo(pTopLeft.x, dimYTop);
+        ctx.lineTo(pTopRight.x, dimYTop);
+        ctx.stroke();
 
+        this.drawTick(ctx, pTopLeft.x, dimYTop);
+        this.drawTick(ctx, pTopRight.x, dimYTop);
+
+        const topVal = isMetric ? Math.round(siteW * 25.4) : formatFeetInches(siteW, false);
         ctx.font = '700 12px Inter, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`${formatFeetInches(siteW, false)} [WIDTH]`, topMid, topStart.y - 8);
+        ctx.fillText(`${topVal}`, (pTopLeft.x + pTopRight.x) / 2, dimYTop - 6);
 
-        // Right Vertical Plot Dimension
-        const rightStart = this.worldToScreen(siteW + 18, 0);
-        const rightEnd = this.worldToScreen(siteW + 18, siteL);
-        const rightMid = (rightStart.y + rightEnd.y) / 2;
+        // RIGHT OUTER DIMENSION LINE
+        const pRightBottom = this.worldToScreen(siteW, siteL);
+        const dimXRight = pTopRight.x + 45;
 
         ctx.beginPath();
-        ctx.moveTo(rightStart.x, rightStart.y);
-        ctx.lineTo(rightEnd.x, rightEnd.y);
+        ctx.moveTo(pTopRight.x + 5, pTopRight.y);
+        ctx.lineTo(dimXRight + 10, pTopRight.y);
+        ctx.moveTo(pRightBottom.x + 5, pRightBottom.y);
+        ctx.lineTo(dimXRight + 10, pRightBottom.y);
         ctx.stroke();
 
-        this.drawTick(ctx, rightStart.x, rightStart.y);
-        this.drawTick(ctx, rightEnd.x, rightEnd.y);
+        ctx.beginPath();
+        ctx.moveTo(dimXRight, pTopRight.y);
+        ctx.lineTo(dimXRight, pRightBottom.y);
+        ctx.stroke();
 
+        this.drawTick(ctx, dimXRight, pTopRight.y);
+        this.drawTick(ctx, dimXRight, pRightBottom.y);
+
+        const rightVal = isMetric ? Math.round(siteL * 25.4) : formatFeetInches(siteL, false);
         ctx.save();
-        ctx.translate(rightStart.x + 14, rightMid);
+        ctx.translate(dimXRight + 16, (pTopRight.y + pRightBottom.y) / 2);
         ctx.rotate(Math.PI / 2);
         ctx.font = '700 12px Inter, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(`${formatFeetInches(siteL, false)} [LENGTH]`, 0, 0);
+        ctx.fillText(`${rightVal}`, 0, 0);
         ctx.restore();
 
         ctx.restore();
@@ -672,62 +535,40 @@ export class CADRenderer2D {
     drawCompass(plan) {
         const ctx = this.ctx;
         const facing = plan.site?.facing || 'East';
-        const cx = this.viewportWidth - 50;
-        const cy = 50;
+        const cx = this.viewportWidth - 40;
+        const cy = 40;
 
         ctx.save();
-        ctx.strokeStyle = '#0F172A';
-        ctx.fillStyle = '#EF4444';
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = '#000000';
+        ctx.fillStyle = '#000000';
+        ctx.lineWidth = 1;
 
-        // Compass Ring
         ctx.beginPath();
-        ctx.arc(cx, cy, 20, 0, Math.PI * 2);
+        ctx.arc(cx, cy, 16, 0, Math.PI * 2);
         ctx.stroke();
 
-        // North Arrow
         ctx.beginPath();
-        ctx.moveTo(cx, cy - 18);
-        ctx.lineTo(cx - 5, cy + 6);
+        ctx.moveTo(cx, cy - 14);
+        ctx.lineTo(cx - 4, cy + 4);
         ctx.lineTo(cx, cy);
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = '#0F172A';
-        ctx.beginPath();
-        ctx.moveTo(cx, cy - 18);
-        ctx.lineTo(cx + 5, cy + 6);
-        ctx.lineTo(cx, cy);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.font = '700 10px Inter, sans-serif';
+        ctx.font = '700 9px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('N', cx, cy - 22);
-        ctx.font = '600 9px Inter, sans-serif';
-        ctx.fillStyle = '#64748B';
-        ctx.fillText(facing.toUpperCase(), cx, cy + 32);
-
+        ctx.fillText('N', cx, cy - 18);
         ctx.restore();
     }
 
-    resize(width, height) {
-        this.viewportWidth = width;
-        this.viewportHeight = height;
-    }
-
-    /**
-     * Render Interactive Overview Minimap
-     */
     renderMinimap(minimapCanvas, plan) {
         if (!minimapCanvas || !plan || !plan.site) return;
         const mCtx = minimapCanvas.getContext('2d');
         if (!mCtx) return;
 
-        const mW = minimapCanvas.width || 180;
-        const mH = minimapCanvas.height || 140;
+        const mW = minimapCanvas.width || 160;
+        const mH = minimapCanvas.height || 120;
 
-        mCtx.fillStyle = '#0F172A';
+        mCtx.fillStyle = '#FFFFFF';
         mCtx.fillRect(0, 0, mW, mH);
 
         const siteW = plan.site.width || 360;
@@ -737,45 +578,21 @@ export class CADRenderer2D {
         const mOffX = (mW - siteW * mScale) / 2;
         const mOffY = (mH - siteL * mScale) / 2;
 
-        // Draw Site Box
-        mCtx.strokeStyle = '#475569';
+        mCtx.strokeStyle = '#000000';
         mCtx.lineWidth = 1;
         mCtx.strokeRect(mOffX, mOffY, siteW * mScale, siteL * mScale);
 
-        // Draw Rooms
         (plan.rooms || []).forEach(r => {
             const rx = mOffX + r.x * mScale;
             const ry = mOffY + r.y * mScale;
             const rw = r.w * mScale;
             const rh = r.h * mScale;
 
-            mCtx.fillStyle = r.color || '#334155';
-            mCtx.fillRect(rx, ry, rw, rh);
-            mCtx.strokeStyle = '#64748B';
+            mCtx.strokeStyle = '#000000';
             mCtx.strokeRect(rx, ry, rw, rh);
         });
-
-        // Draw Current Viewport Frustum Window
-        const viewWorldX = -this.pan.x / this.scale;
-        const viewWorldY = -this.pan.y / this.scale;
-        const viewWorldW = this.viewportWidth / this.scale;
-        const viewWorldH = this.viewportHeight / this.scale;
-
-        const vx = mOffX + viewWorldX * mScale;
-        const vy = mOffY + viewWorldY * mScale;
-        const vw = viewWorldW * mScale;
-        const vh = viewWorldH * mScale;
-
-        mCtx.strokeStyle = '#38BDF8';
-        mCtx.lineWidth = 1.5;
-        mCtx.strokeRect(vx, vy, vw, vh);
-        mCtx.fillStyle = 'rgba(56, 189, 248, 0.15)';
-        mCtx.fillRect(vx, vy, vw, vh);
     }
 
-    /**
-     * Export plan as high-resolution PNG data URL
-     */
     exportPNG(plan, scaleMultiplier = 2) {
         if (!plan) return null;
         const offscreen = document.createElement('canvas');
@@ -803,9 +620,6 @@ export class CADRenderer2D {
         return offscreen.toDataURL('image/png');
     }
 
-    /**
-     * Export plan as clean, high-precision SVG vector document
-     */
     exportSVG(plan) {
         if (!plan || !plan.site) return '';
         const siteW = plan.site.width || 360;
@@ -819,39 +633,31 @@ export class CADRenderer2D {
         svg += `  <rect width="${vbW}" height="${vbH}" fill="#FFFFFF" />\n`;
         svg += `  <g transform="translate(${pad}, ${pad})">\n`;
 
-        // Site
-        svg += `    <!-- Site Boundary -->\n`;
-        svg += `    <rect x="0" y="0" width="${siteW}" height="${siteL}" fill="none" stroke="#94A3B8" stroke-width="2" />\n`;
+        svg += `    <rect x="0" y="0" width="${siteW}" height="${siteL}" fill="none" stroke="#000000" stroke-width="2" />\n`;
 
-        // Rooms
-        svg += `    <!-- Rooms -->\n`;
         (plan.rooms || []).forEach(r => {
-            svg += `    <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${r.color || '#F8FAFC'}" stroke="#CBD5E1" stroke-width="1" />\n`;
-            svg += `    <text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 - 8}" font-family="sans-serif" font-size="12" font-weight="700" fill="#0F172A" text-anchor="middle">${r.name.toUpperCase()}</text>\n`;
-            svg += `    <text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + 8}" font-family="sans-serif" font-size="10" font-weight="600" fill="#475569" text-anchor="middle">${r.dimensionLabel || `${formatFeetInches(r.w, false)} × ${formatFeetInches(r.h, false)}`}</text>\n`;
-            if (r.areaSqFt) {
-                svg += `    <text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + 22}" font-family="sans-serif" font-size="9" fill="#64748B" text-anchor="middle">${r.areaSqFt} Sq.Ft</text>\n`;
-            }
+            svg += `    <rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="#FFFFFF" stroke="#000000" stroke-width="1" />\n`;
+            svg += `    <text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 - 8}" font-family="sans-serif" font-size="12" font-weight="700" fill="#000000" text-anchor="middle">${r.name.toUpperCase()}</text>\n`;
+            svg += `    <text x="${r.x + r.w / 2}" y="${r.y + r.h / 2 + 8}" font-family="sans-serif" font-size="10" font-weight="500" fill="#000000" text-anchor="middle">${r.dimensionLabel || `${formatFeetInches(r.w, false)} × ${formatFeetInches(r.h, false)}`}</text>\n`;
         });
 
-        // Walls
-        svg += `    <!-- Walls -->\n`;
         (plan.walls || []).forEach(w => {
-            const strokeColor = w.type === 'exterior' ? '#0F172A' : '#334155';
-            svg += `    <line x1="${w.start.x}" y1="${w.start.y}" x2="${w.end.x}" y2="${w.end.y}" stroke="${strokeColor}" stroke-width="${w.thickness || 9}" stroke-linecap="square" />\n`;
+            svg += `    <line x1="${w.start.x}" y1="${w.start.y}" x2="${w.end.x}" y2="${w.end.y}" stroke="#000000" stroke-width="${w.thickness || 9}" stroke-linecap="square" />\n`;
         });
 
-        // Dimensions
-        svg += `    <!-- Dimensions -->\n`;
-        svg += `    <line x1="0" y1="-18" x2="${siteW}" y2="-18" stroke="#475569" stroke-width="1" />\n`;
-        svg += `    <text x="${siteW / 2}" y="-24" font-family="sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="middle">${formatFeetInches(siteW, false)}</text>\n`;
+        svg += `    <line x1="0" y1="-18" x2="${siteW}" y2="-18" stroke="#000000" stroke-width="1" />\n`;
+        svg += `    <text x="${siteW / 2}" y="-24" font-family="sans-serif" font-size="11" font-weight="700" fill="#000000" text-anchor="middle">${formatFeetInches(siteW, false)}</text>\n`;
 
-        svg += `    <line x1="${siteW + 18}" y1="0" x2="${siteW + 18}" y2="${siteL}" stroke="#475569" stroke-width="1" />\n`;
-        svg += `    <text x="${siteW + 28}" y="${siteL / 2}" font-family="sans-serif" font-size="11" font-weight="700" fill="#0F172A" text-anchor="middle" transform="rotate(90, ${siteW + 28}, ${siteL / 2})">${formatFeetInches(siteL, false)}</text>\n`;
+        svg += `    <line x1="${siteW + 18}" y1="0" x2="${siteW + 18}" y2="${siteL}" stroke="#000000" stroke-width="1" />\n`;
+        svg += `    <text x="${siteW + 28}" y="${siteL / 2}" font-family="sans-serif" font-size="11" font-weight="700" fill="#000000" text-anchor="middle" transform="rotate(90, ${siteW + 28}, ${siteL / 2})">${formatFeetInches(siteL, false)}</text>\n`;
 
-        svg += `  </g>\n`;
-        svg += `</svg>`;
+        svg += `  </g>\n</svg>`;
         return svg;
+    }
+
+    resize(width, height) {
+        this.viewportWidth = width;
+        this.viewportHeight = height;
     }
 }
 
