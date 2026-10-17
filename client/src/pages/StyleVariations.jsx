@@ -211,7 +211,7 @@ export default function StyleVariations() {
     );
 
     const renderGallery = () => {
-        const designs = proj.generatedDesigns || [];
+        const designs = proj.generatedDesigns?.length ? proj.generatedDesigns : (proj.generatedVariations || []);
         
         const hasAuthError = designs.some(d => d.code === "PROVIDER_AUTH_ERROR" || (d.error && d.error.includes("authentication failed")));
 

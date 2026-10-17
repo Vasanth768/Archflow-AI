@@ -1,0 +1,205 @@
+{
+  "metadata": {
+    "model_checkpoint": "C:\\New arch flow ai\\ai-service\\checkpoints\\spatial_layout_mlp_v1.pt",
+    "architecture": "SpatialLayoutMLP",
+    "parameter_count": 84617,
+    "test_set_path": "C:\\New arch flow ai\\datasets\\synthetic_cad_dataset\\test.json",
+    "test_sample_count": 150,
+    "device": "CPU"
+  },
+  "latency_ms": {
+    "model_only_median": 0.44,
+    "model_only_p95": 0.89,
+    "repair_median": 0.45,
+    "repair_p95": 1.18,
+    "total_pipeline_median": 0.94,
+    "total_pipeline_p95": 1.85
+  },
+  "accuracy_metrics": {
+    "coordinate_mae_inches": {
+      "overall": 32.02,
+      "x_mae": 48.19,
+      "y_mae": 44.84,
+      "width_mae": 18.25,
+      "height_mae": 16.79
+    },
+    "slot_classification": {
+      "precision": 0.9717,
+      "recall": 0.994,
+      "f1_score": 0.9827,
+      "accuracy": 0.9758
+    },
+    "feasibility_classification": {
+      "accuracy": 0.9267,
+      "precision": 0.9466,
+      "recall": 0.9688,
+      "f1_score": 0.9575,
+      "confusion_matrix": {
+        "tp": 124,
+        "fp": 7,
+        "fn": 4,
+        "tn": 15
+      }
+    },
+    "requirement_satisfaction_rate": {
+      "bhk": 86.7,
+      "kitchen": 100.0,
+      "pooja": 100.0,
+      "toilet": 100.0
+    }
+  },
+  "per_room_metrics": {
+    "living": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mae_inches": 29.4,
+      "support": 150
+    },
+    "kitchen": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mae_inches": 21.7,
+      "support": 150
+    },
+    "master_bedroom": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mae_inches": 16.3,
+      "support": 150
+    },
+    "bedroom_1": {
+      "precision": 0.9818,
+      "recall": 0.9908,
+      "f1": 0.9863,
+      "mae_inches": 36.0,
+      "support": 109
+    },
+    "bedroom_2": {
+      "precision": 0.8421,
+      "recall": 1.0,
+      "f1": 0.9143,
+      "mae_inches": 31.1,
+      "support": 64
+    },
+    "bedroom_3": {
+      "precision": 0.88,
+      "recall": 0.8462,
+      "f1": 0.8627,
+      "mae_inches": 49.7,
+      "support": 26
+    },
+    "attached_toilet": {
+      "precision": 0.9391,
+      "recall": 1.0,
+      "f1": 0.9686,
+      "mae_inches": 53.8,
+      "support": 108
+    },
+    "pooja": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "mae_inches": 47.4,
+      "support": 72
+    }
+  },
+  "geometric_validity_comparison": {
+    "raw_neural": {
+      "plans_zero_overlap": "0/150 (0.0%)",
+      "plans_fully_contained": "150/150 (100.0%)",
+      "room_containment_rate": "100.0%",
+      "total_overlapping_pairs": 897,
+      "avg_overlap_area_sqft": 12.9
+    },
+    "repaired_neural": {
+      "plans_zero_overlap": "99/150 (66.0%)",
+      "plans_fully_valid": "99/150 (66.0%)",
+      "room_containment_rate": "100.0%",
+      "total_overlapping_pairs": 63,
+      "avg_overlap_area_sqft": 21.0
+    },
+    "deterministic_solver_baseline": {
+      "plans_zero_overlap": "150/150 (100.0%)",
+      "plans_fully_valid": "150/150 (100.0%)",
+      "room_containment_rate": "100.0%",
+      "total_overlapping_pairs": 0,
+      "avg_overlap_area_sqft": 0.0
+    }
+  },
+  "failure_cases": [
+    {
+      "id": "archflow_syn_0851",
+      "plot": "36'x32' (1152 sqft)",
+      "requested_bhk": 4,
+      "allocated_solver_bhk": 2,
+      "predicted_neural_bhk": 3,
+      "gt_feasible": false,
+      "pred_feasible": false,
+      "raw_overlaps": 8,
+      "repaired_overlaps": 0,
+      "repaired_valid": true,
+      "issues": []
+    },
+    {
+      "id": "archflow_syn_0852",
+      "plot": "33'x60' (1980 sqft)",
+      "requested_bhk": 2,
+      "allocated_solver_bhk": 2,
+      "predicted_neural_bhk": 2,
+      "gt_feasible": true,
+      "pred_feasible": true,
+      "raw_overlaps": 6,
+      "repaired_overlaps": 0,
+      "repaired_valid": true,
+      "issues": []
+    },
+    {
+      "id": "archflow_syn_0854",
+      "plot": "45'x38' (1710 sqft)",
+      "requested_bhk": 4,
+      "allocated_solver_bhk": 4,
+      "predicted_neural_bhk": 4,
+      "gt_feasible": true,
+      "pred_feasible": true,
+      "raw_overlaps": 8,
+      "repaired_overlaps": 0,
+      "repaired_valid": true,
+      "issues": []
+    },
+    {
+      "id": "archflow_syn_0855",
+      "plot": "24'x30' (720 sqft)",
+      "requested_bhk": 1,
+      "allocated_solver_bhk": 1,
+      "predicted_neural_bhk": 1,
+      "gt_feasible": true,
+      "pred_feasible": true,
+      "raw_overlaps": 3,
+      "repaired_overlaps": 0,
+      "repaired_valid": true,
+      "issues": []
+    },
+    {
+      "id": "archflow_syn_0856",
+      "plot": "24'x45' (1080 sqft)",
+      "requested_bhk": 2,
+      "allocated_solver_bhk": 2,
+      "predicted_neural_bhk": 1,
+      "gt_feasible": true,
+      "pred_feasible": true,
+      "raw_overlaps": 3,
+      "repaired_overlaps": 0,
+      "repaired_valid": true,
+      "issues": []
+    }
+  ],
+  "system_resources": {
+    "disk_free_gb_before": 7.218,
+    "disk_free_gb_after": 7.218,
+    "ram_avail_mb_before": 714.3,
+    "ram_avail_mb_after": 711.4
+  }
+}

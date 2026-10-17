@@ -4,3 +4,4 @@ pydantic
 huggingface_hub
 pillow
 requests
+numpy

@@ -1,21 +1,119 @@
 /**
- * ArchitecturalIntentParser.js - Deterministic Natural Language Command Parser
+ * ArchitecturalIntentParser.js - Multilingual & Deterministic Natural Language Parser
  * 
- * Extracts structured architectural actions and exact dimensions from user commands.
- * Handles English, technical CAD syntax, and transliterated commands.
- * All parsed dimensions are normalized into canonical INCHES.
+ * Supports English, Tamil, Tanglish, and mixed-language architectural requirements.
+ * Extracts plot dimensions, measurement units, room types/counts, exact dimensions,
+ * orientations, setbacks, and modification commands.
  */
 
 import { RoomType } from '../model/schema.js';
 import { parseArchitecturalDimension } from '../../engine/cad/UnitEngine.js';
 
 export class ArchitecturalIntentParser {
+    /**
+     * Parses a full prompt string into structured plan requirements
+     */
+    static parsePlanPrompt(prompt) {
+        if (!prompt || typeof prompt !== 'string') return null;
+        const text = prompt.toLowerCase().trim();
+
+        // 1. Extract Plot Dimensions & Units (e.g., "20x30", "30x40 ft", "12x18m", "30x50 plot la")
+        let plotWidth = null;
+        let plotLength = null;
+        let unitSystem = 'feet';
+
+        const metricMatch = text.match(/(\d+(?:\.\d+)?)\s*(?:x|by|×)\s*(\d+(?:\.\d+)?)\s*(?:m|metres|meters|mm)/i);
+        if (metricMatch) {
+            plotWidth = parseFloat(metricMatch[1]);
+            plotLength = parseFloat(metricMatch[2]);
+            unitSystem = text.includes('mm') ? 'mm' : 'm';
+        } else {
+            const plotMatch = text.match(/(\d+)\s*(?:x|by|×)\s*(\d+)/i);
+            if (plotMatch) {
+                plotWidth = parseInt(plotMatch[1], 10);
+                plotLength = parseInt(plotMatch[2], 10);
+            }
+        }
+
+        // 2. Extract Facing / Orientation (English & Tanglish)
+        let facing = 'East';
+        if (/north-east|northeast|ishanya/i.test(text)) facing = 'North-East';
+        else if (/north-west|northwest|vayavya/i.test(text)) facing = 'North-West';
+        else if (/south-east|southeast|agneya/i.test(text)) facing = 'South-East';
+        else if (/south-west|southwest|nairutya/i.test(text)) facing = 'South-West';
+        else if (/vadakku|north/i.test(text)) facing = 'North';
+        else if (/therku|south/i.test(text)) facing = 'South';
+        else if (/kizhaktu|east/i.test(text)) facing = 'East';
+        else if (/merkku|west/i.test(text)) facing = 'West';
+
+        // 3. Extract Bedroom Count (2BHK, 3BHK, rendu bedroom, 5 bedrooms)
+        let bedrooms = 2;
+        const bhkMatch = text.match(/(\d+)\s*bhk/i);
+        if (bhkMatch) {
+            bedrooms = parseInt(bhkMatch[1], 10);
+        } else {
+            if (/\b(rendu|rendo|two|2)\b.*bed/i.test(text) || /\b2bhk\b/i.test(text)) bedrooms = 2;
+            else if (/\b(moonu|three|3)\b.*bed/i.test(text) || /\b3bhk\b/i.test(text)) bedrooms = 3;
+            else if (/\b(naangu|four|4)\b.*bed/i.test(text) || /\b4bhk\b/i.test(text)) bedrooms = 4;
+            else if (/\b(aindhu|five|5)\b.*bed/i.test(text) || /\b5bhk\b/i.test(text)) bedrooms = 5;
+            else if (/\b(oru|one|1)\b.*bed/i.test(text) || /\b1bhk\b/i.test(text)) bedrooms = 1;
+        }
+
+        // 4. Extract Bathroom / Toilet Requirements
+        let bathroomCount = 1;
+        if (/\b(rendu|two|2)\b.*bath/i.test(text) || /two bathrooms|rendu bathroom/i.test(text)) {
+            bathroomCount = 2;
+        }
+
+        // 5. Extract Room Catalog & Specific Room Dimensions
+        const requirements = {
+            bedrooms: bedrooms,
+            bathroomCount: bathroomCount,
+            pooja: /pooja|poojai|swamy room/i.test(text),
+            parking: /parking|car parking|portico|vandi/i.test(text),
+            office: /office|home office|study room|padipau/i.test(text),
+            attachedToilet: /attached|attached toilet|att bath/i.test(text) || bathroomCount >= 1
+        };
+
+        // Master Bedroom exact dimensions (e.g., "master bedroom exactly 12x14", "master bed 12x14 irukkanum")
+        const mbMatch = text.match(/master\s*(?:bedroom|bed)?\s*(?:exactly|size|of|is|with)?\s*(\d+)\s*(?:x|by|×)\s*(\d+)/i);
+        if (mbMatch) {
+            requirements.masterBedroom = {
+                width: parseInt(mbMatch[1], 10),
+                length: parseInt(mbMatch[2], 10)
+            };
+        }
+
+        // Kitchen exact dimensions (e.g., "kitchen 10x8", "kitchen size 9x10")
+        const kitMatch = text.match(/kitchen\s*(?:exactly|size|of|is|with)?\s*(\d+)\s*(?:x|by|×)\s*(\d+)/i);
+        if (kitMatch) {
+            requirements.kitchen = {
+                width: parseInt(kitMatch[1], 10),
+                length: parseInt(kitMatch[2], 10)
+            };
+        }
+
+        return {
+            plot: {
+                width: plotWidth || 30,
+                length: plotLength || 40,
+                unitSystem: unitSystem,
+                facing: facing
+            },
+            requirements: requirements,
+            rawPrompt: prompt
+        };
+    }
+
+    /**
+     * Parses interactive single modification command (e.g., "Make kitchen 10x12", "Kitchen size mattum 10x12 aakku")
+     */
     static parse(instruction) {
         if (!instruction || typeof instruction !== 'string') return null;
         const text = instruction.toLowerCase().trim();
 
-        // 1. Exact 2-Dimension Room Resize: e.g. "Master bedroom 12x14", "Resize kitchen to 10x12", "Make living 16 by 18"
-        const twoDimMatch = text.match(/(?:make|resize|set|change)?\s*(?:the\s+)?([a-z0-9\s]+?)\s+(?:to\s+)?(\d+(?:'-\d+"|\s*ft|\s*feet|\s*inches|\s*")?)\s*(?:x|by|×)\s*(\d+(?:'-\d+"|\s*ft|\s*feet|\s*inches|\s*")?)/i);
+        // 1. Room Resize (English & Tanglish): "kitchen 10x12", "kitchen size mattum 10x12 aakku", "master bedroom 14x16"
+        const twoDimMatch = text.match(/([a-z0-9\s]+?)\s+(?:size\s+mattum\s+)?(?:to\s+)?(\d+(?:'-\d+"|\s*ft|\s*feet|\s*inches|\s*")?)\s*(?:x|by|×)\s*(\d+(?:'-\d+"|\s*ft|\s*feet|\s*inches|\s*")?)/i);
         if (twoDimMatch && !text.startsWith('add')) {
             const roomQuery = twoDimMatch[1].replace(/^(?:make|resize|set|change|the)\s+/i, '').trim();
             const dim1 = parseArchitecturalDimension(twoDimMatch[2].trim());
@@ -30,88 +128,36 @@ export class ArchitecturalIntentParser {
             };
         }
 
-        // 2. Single Dimension Room Resize: e.g. "make kitchen 12 wide", "set bedroom length 14ft"
-        const singleDimMatch = text.match(/(?:make|resize|set)\s+(?:the\s+)?([a-z0-9\s]+?)\s+(\d+(?:'-\d+"|\s*ft|\s*feet|\s*inches|\s*"))(?:\s+(?:wide|width|long|length))?/i);
-        if (singleDimMatch) {
-            const roomQuery = singleDimMatch[1].trim();
-            const inches = parseArchitecturalDimension(singleDimMatch[2].trim());
-            const isLength = /long|length/i.test(text);
+        // 2. Add Room
+        if (/add|sertthu|venum/i.test(text) && /toilet|bedroom|pooja|office/i.test(text)) {
+            let roomType = RoomType.BEDROOM;
+            let name = 'NEW ROOM';
+            let w = 132;
+            let l = 120;
 
-            return {
-                action: 'resize_single_dim',
-                query: roomQuery,
-                dimensionInches: inches,
-                target: isLength ? 'length' : 'width',
-                raw: instruction
-            };
-        }
-
-        // 3. Add Room / Toilet with Optional Dimensions
-        if (/add\s+/i.test(text)) {
             if (/toilet|bath/i.test(text)) {
-                return {
-                    action: 'add_room',
-                    roomType: RoomType.ATTACHED_TOILET,
-                    name: 'ATTACHED TOILET',
-                    widthInches: 72, // 6'-0"
-                    lengthInches: 60, // 5'-0"
-                    raw: instruction
-                };
+                roomType = RoomType.ATTACHED_TOILET;
+                name = 'ATT. TOILET';
+                w = 72;
+                l = 60;
+            } else if (/pooja/i.test(text)) {
+                roomType = RoomType.POOJA;
+                name = 'POOJA ROOM';
+                w = 60;
+                l = 60;
+            } else if (/office/i.test(text)) {
+                roomType = RoomType.HOME_OFFICE;
+                name = 'HOME OFFICE';
+                w = 120;
+                l = 120;
             }
-            if (/bedroom|bed/i.test(text)) {
-                // Check if dimensions specified in add command
-                const addDimMatch = text.match(/(\d+)\s*(?:x|by|×)\s*(\d+)/i);
-                const w = addDimMatch ? parseArchitecturalDimension(addDimMatch[1]) : 132;
-                const l = addDimMatch ? parseArchitecturalDimension(addDimMatch[2]) : 120;
-                return {
-                    action: 'add_room',
-                    roomType: RoomType.BEDROOM,
-                    name: 'BEDROOM 3',
-                    widthInches: w,
-                    lengthInches: l,
-                    raw: instruction
-                };
-            }
-            if (/pooja/i.test(text)) {
-                return {
-                    action: 'add_room',
-                    roomType: RoomType.POOJA,
-                    name: 'POOJA ROOM',
-                    widthInches: 60,
-                    lengthInches: 60,
-                    raw: instruction
-                };
-            }
-        }
-
-        // 4. Relocate / Vastu Orientation
-        if (/move|relocate|optimize|place|align/i.test(text) || /kitchen.*(?:se|south-east|southeast|agneya)/i.test(text)) {
-            let zone = null;
-            if (/south-east|southeast|agneya|\bse\b/i.test(text)) zone = 'SE';
-            else if (/north-east|northeast|ishanya|\bne\b/i.test(text)) zone = 'NE';
-            else if (/south-west|southwest|nairutya|\bsw\b/i.test(text)) zone = 'SW';
-            else if (/north-west|northwest|vayavya|\bnw\b/i.test(text)) zone = 'NW';
-            else if (/east|\be\b/i.test(text)) zone = 'E';
-            else if (/west|\bw\b/i.test(text)) zone = 'W';
-            else if (/north|\bn\b/i.test(text)) zone = 'N';
-            else if (/south|\bs\b/i.test(text)) zone = 'S';
-
-            const roomQuery = text.includes('kitchen') ? 'kitchen' : (text.includes('pooja') ? 'pooja' : (text.includes('master') ? 'master' : 'room'));
 
             return {
-                action: 'relocate_room',
-                query: roomQuery,
-                targetZone: zone,
-                raw: instruction
-            };
-        }
-
-        // 5. Change Style / Material
-        if (/modern|traditional|minimalist|luxury|contemporary|budget/i.test(text)) {
-            const styleMatch = text.match(/modern|traditional|minimalist|luxury|contemporary|budget/i);
-            return {
-                action: 'change_style',
-                style: styleMatch[0].charAt(0).toUpperCase() + styleMatch[0].slice(1),
+                action: 'add_room',
+                roomType: roomType,
+                name: name,
+                widthInches: w,
+                lengthInches: l,
                 raw: instruction
             };
         }

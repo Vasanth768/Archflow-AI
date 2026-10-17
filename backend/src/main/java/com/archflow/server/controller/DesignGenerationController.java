@@ -76,6 +76,15 @@ public class DesignGenerationController {
             System.out.println("[DESIGN_GENERATION] Context: " + projectRequirements.get("context"));
             System.out.println("[DESIGN_GENERATION] Building Type: " + projectRequirements.get("buildingType"));
             
+            if (!imageGenerationProvider.isConfigured()) {
+                return ResponseEntity.status(503).body(Map.of(
+                    "success", false,
+                    "error", "AI generation provider is not configured",
+                    "code", "AI_PROVIDER_NOT_CONFIGURED",
+                    "details", "Image generation provider is not configured properly or local service is not running."
+                ));
+            }
+
             int count = requestBody.containsKey("count") ? (Integer) requestBody.get("count") : 6;
             System.out.println("[GENERATION] requested=" + count);
 
@@ -84,30 +93,35 @@ public class DesignGenerationController {
             System.out.println("[GENERATION] completed=" + variations.size());
             return ResponseEntity.ok(variations);
         } catch (Exception e) {
-            System.err.println("[DESIGN_GENERATION] Generation failed: " + e.getMessage());
+            Throwable cause = e.getCause() != null ? e.getCause() : e;
+            String errorMsg = cause.getMessage() != null ? cause.getMessage() : (e.getMessage() != null ? e.getMessage() : "Unknown error");
+            System.err.println("[DESIGN_GENERATION] Generation failed: " + errorMsg);
             
-            if (e.getMessage() != null && e.getMessage().contains("QWEN_IMAGE_API_KEY is not set")) {
+            if (!imageGenerationProvider.isConfigured()
+                    || errorMsg.contains("QWEN_IMAGE_API_KEY") 
+                    || errorMsg.contains("Image generation provider is not configured")
+                    || ((e instanceof IllegalStateException || cause instanceof IllegalStateException) && errorMsg.contains("not configured"))) {
                 return ResponseEntity.status(503).body(Map.of(
                     "success", false,
                     "error", "AI generation provider is not configured",
                     "code", "AI_PROVIDER_NOT_CONFIGURED",
-                    "details", e.getMessage()
+                    "details", errorMsg
                 ));
             }
-            if (e.getMessage() != null && (e.getMessage().contains("HTTP Error 401") || e.getMessage().contains("InvalidApiKey"))) {
+            if (errorMsg.contains("HTTP Error 401") || errorMsg.contains("InvalidApiKey")) {
                 return ResponseEntity.status(503).body(Map.of(
                     "success", false,
                     "error", "AI generation provider authentication failed. Invalid API Key.",
                     "code", "PROVIDER_AUTH_ERROR",
-                    "details", e.getMessage()
+                    "details", errorMsg
                 ));
             }
-            if (e.getMessage() != null && e.getMessage().contains("HTTP Error 400")) {
+            if (errorMsg.contains("HTTP Error 400")) {
                 return ResponseEntity.status(400).body(Map.of(
                     "success", false,
                     "error", "Image generation request was rejected by provider",
                     "code", "PROVIDER_BAD_REQUEST",
-                    "details", e.getMessage()
+                    "details", errorMsg
                 ));
             }
             
@@ -115,7 +129,7 @@ public class DesignGenerationController {
                 "success", false,
                 "error", "Internal server error during generation",
                 "code", "INTERNAL_ERROR",
-                "details", e.getMessage()
+                "details", errorMsg
             ));
         }
     }
@@ -132,20 +146,34 @@ public class DesignGenerationController {
                 ));
             }
             
+            if (!imageGenerationProvider.isConfigured()) {
+                return ResponseEntity.status(503).body(Map.of(
+                    "success", false,
+                    "error", "AI generation provider is not configured",
+                    "code", "AI_PROVIDER_NOT_CONFIGURED",
+                    "details", "Image generation provider is not configured properly or local service is not running."
+                ));
+            }
+
             Map<String, Object> existingDesign = (Map<String, Object>) requestBody.get("design");
             String refinementPrompt = (String) requestBody.get("prompt");
 
             Map<String, Object> updatedDesign = designGenerationService.regenerateDesign(existingDesign, refinementPrompt);
             return ResponseEntity.ok(updatedDesign);
         } catch (Exception e) {
-            System.err.println("[DESIGN_GENERATION] Regeneration failed: " + e.getMessage());
+            Throwable cause = e.getCause() != null ? e.getCause() : e;
+            String errorMsg = cause.getMessage() != null ? cause.getMessage() : (e.getMessage() != null ? e.getMessage() : "Unknown error");
+            System.err.println("[DESIGN_GENERATION] Regeneration failed: " + errorMsg);
             
-            if (e.getMessage() != null && e.getMessage().contains("QWEN_IMAGE_API_KEY is not set")) {
+            if (!imageGenerationProvider.isConfigured()
+                    || errorMsg.contains("QWEN_IMAGE_API_KEY") 
+                    || errorMsg.contains("Image generation provider is not configured")
+                    || ((e instanceof IllegalStateException || cause instanceof IllegalStateException) && errorMsg.contains("not configured"))) {
                 return ResponseEntity.status(503).body(Map.of(
                     "success", false,
                     "error", "AI generation provider is not configured",
                     "code", "AI_PROVIDER_NOT_CONFIGURED",
-                    "details", e.getMessage()
+                    "details", errorMsg
                 ));
             }
             
@@ -153,7 +181,7 @@ public class DesignGenerationController {
                 "success", false,
                 "error", "Internal server error during regeneration",
                 "code", "INTERNAL_ERROR",
-                "details", e.getMessage()
+                "details", errorMsg
             ));
         }
     }

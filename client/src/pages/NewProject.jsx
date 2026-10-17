@@ -5,7 +5,7 @@ import {
     FileText, MapPin, Compass, Home, Layers, Bed, Bath, Car, 
     Palette, DollarSign, Sparkles, Shield, Check, RefreshCw, 
     Plus, Minus, CheckCircle2, User, Maximize2, Building2, 
-    ArrowRight, ArrowLeft, AlertCircle, HelpCircle 
+    ArrowRight, ArrowLeft, AlertCircle, HelpCircle, Trash2, Info
 } from 'lucide-react';
 import '../css/newProject.css';
 
@@ -49,7 +49,7 @@ export default function NewProject() {
     const [isGenerating, setIsGenerating] = useState(false);
 
     // Form fields & states initialized clean
-    const [name, setName] = useState('');
+    const [name, setName] = useState('30x40 East Facing Residence');
     const [client, setClient] = useState(user?.fullName || '');
     const [width, setWidth] = useState(30);
     const [length, setLength] = useState(40);
@@ -92,6 +92,227 @@ export default function NewProject() {
     const [livingType, setLivingType] = useState('Open Living');
     const [priorities, setPriorities] = useState(['More Ventilation', 'More Natural Light', 'Vastu Focus']);
 
+    // Canonical User-Controlled Room Requirements (Stage 8E Fix)
+    const initialRoomsPreset2BHK = [
+        { id: 'rm_1', type: 'master_bedroom', name: 'Master Bedroom', widthFt: 14, lengthFt: 16, floor: 1, isExact: true },
+        { id: 'rm_2', type: 'attached_toilet', name: 'Att. Bathroom', widthFt: 6, lengthFt: 7, floor: 1, attachedTo: 'rm_1', isAttached: true, isExact: true },
+        { id: 'rm_3', type: 'bedroom', name: 'Bedroom 2', widthFt: 11, lengthFt: 12, floor: 1, isExact: true },
+        { id: 'rm_4', type: 'common_bathroom', name: 'Common Bathroom', widthFt: 6, lengthFt: 5, floor: 1, isAttached: false, isExact: true },
+        { id: 'rm_5', type: 'kitchen', name: 'Kitchen', widthFt: 10, lengthFt: 10, floor: 1, isExact: true },
+        { id: 'rm_6', type: 'living', name: 'Living Hall', widthFt: 14, lengthFt: 16, floor: 1, isExact: true },
+        { id: 'rm_7', type: 'pooja', name: 'Pooja Room', widthFt: 5, lengthFt: 5, floor: 1, isExact: true }
+    ];
+    const [roomList, setRoomList] = useState(initialRoomsPreset2BHK);
+    const [activePreset, setActivePreset] = useState('2BHK');
+    const [newRoomType, setNewRoomType] = useState('bedroom');
+
+    const handleApplyPreset = (presetName) => {
+        setActivePreset(presetName);
+        if (presetName === '1BHK') {
+            const mbId = 'rm_' + Date.now() + '_1';
+            setRoomList([
+                { id: mbId, type: 'master_bedroom', name: 'Master Bedroom', widthFt: 12, lengthFt: 14, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_2', type: 'attached_toilet', name: 'Att. Bathroom', widthFt: 6, lengthFt: 6, floor: 1, attachedTo: mbId, isAttached: true, isExact: true },
+                { id: 'rm_' + Date.now() + '_3', type: 'kitchen', name: 'Kitchen', widthFt: 9, lengthFt: 10, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_4', type: 'living', name: 'Living Hall', widthFt: 13, lengthFt: 14, floor: 1, isExact: true }
+            ]);
+            setBedrooms(1);
+            setBathrooms(1);
+        } else if (presetName === '2BHK') {
+            const mbId = 'rm_' + Date.now() + '_1';
+            setRoomList([
+                { id: mbId, type: 'master_bedroom', name: 'Master Bedroom', widthFt: 14, lengthFt: 16, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_2', type: 'attached_toilet', name: 'Att. Bathroom', widthFt: 6, lengthFt: 7, floor: 1, attachedTo: mbId, isAttached: true, isExact: true },
+                { id: 'rm_' + Date.now() + '_3', type: 'bedroom', name: 'Bedroom 2', widthFt: 11, lengthFt: 12, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_4', type: 'common_bathroom', name: 'Common Bathroom', widthFt: 6, lengthFt: 5, floor: 1, isAttached: false, isExact: true },
+                { id: 'rm_' + Date.now() + '_5', type: 'kitchen', name: 'Kitchen', widthFt: 10, lengthFt: 10, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_6', type: 'living', name: 'Living Hall', widthFt: 14, lengthFt: 16, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_7', type: 'pooja', name: 'Pooja Room', widthFt: 5, lengthFt: 5, floor: 1, isExact: true }
+            ]);
+            setBedrooms(2);
+            setBathrooms(2);
+        } else if (presetName === '3BHK') {
+            const mbId = 'rm_' + Date.now() + '_1';
+            setRoomList([
+                { id: mbId, type: 'master_bedroom', name: 'Master Bedroom', widthFt: 15, lengthFt: 18, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_2', type: 'attached_toilet', name: 'Att. Bathroom', widthFt: 6, lengthFt: 8, floor: 1, attachedTo: mbId, isAttached: true, isExact: true },
+                { id: 'rm_' + Date.now() + '_3', type: 'bedroom', name: 'Bedroom 2', widthFt: 12, lengthFt: 14, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_4', type: 'bedroom', name: 'Bedroom 3', widthFt: 11, lengthFt: 13, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_5', type: 'common_bathroom', name: 'Common Bathroom', widthFt: 6, lengthFt: 6, floor: 1, isAttached: false, isExact: true },
+                { id: 'rm_' + Date.now() + '_6', type: 'kitchen', name: 'Kitchen', widthFt: 12, lengthFt: 12, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_7', type: 'dining', name: 'Dining Room', widthFt: 12, lengthFt: 12, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_8', type: 'living', name: 'Living Hall', widthFt: 16, lengthFt: 18, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_9', type: 'pooja', name: 'Pooja Room', widthFt: 6, lengthFt: 6, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_10', type: 'utility', name: 'Utility Area', widthFt: 7, lengthFt: 5, floor: 1, isExact: true }
+            ]);
+            setBedrooms(3);
+            setBathrooms(2);
+        } else if (presetName === '4BHK') {
+            const mbId = 'rm_' + Date.now() + '_1';
+            const b2Id = 'rm_' + Date.now() + '_3';
+            setRoomList([
+                { id: mbId, type: 'master_bedroom', name: 'Master Bedroom', widthFt: 16, lengthFt: 20, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_2', type: 'attached_toilet', name: 'Att. Bathroom 1', widthFt: 7, lengthFt: 9, floor: 1, attachedTo: mbId, isAttached: true, isExact: true },
+                { id: b2Id, type: 'bedroom', name: 'Bedroom 2', widthFt: 14, lengthFt: 15, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_4', type: 'attached_toilet', name: 'Att. Bathroom 2', widthFt: 6, lengthFt: 7, floor: 1, attachedTo: b2Id, isAttached: true, isExact: true },
+                { id: 'rm_' + Date.now() + '_5', type: 'bedroom', name: 'Bedroom 3', widthFt: 13, lengthFt: 14, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_6', type: 'bedroom', name: 'Bedroom 4', widthFt: 12, lengthFt: 13, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_7', type: 'common_bathroom', name: 'Common Bathroom', widthFt: 7, lengthFt: 6, floor: 1, isAttached: false, isExact: true },
+                { id: 'rm_' + Date.now() + '_8', type: 'kitchen', name: 'Kitchen', widthFt: 14, lengthFt: 12, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_9', type: 'dining', name: 'Dining Room', widthFt: 14, lengthFt: 14, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_10', type: 'living', name: 'Living Hall', widthFt: 18, lengthFt: 20, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_11', type: 'pooja', name: 'Pooja Room', widthFt: 6, lengthFt: 6, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_12', type: 'study', name: 'Study Room', widthFt: 10, lengthFt: 10, floor: 1, isExact: true }
+            ]);
+            setBedrooms(4);
+            setBathrooms(3);
+        } else if (presetName === 'Custom') {
+            setRoomList([
+                { id: 'rm_' + Date.now() + '_1', type: 'living', name: 'Living Hall', widthFt: 14, lengthFt: 14, floor: 1, isExact: true },
+                { id: 'rm_' + Date.now() + '_2', type: 'kitchen', name: 'Kitchen', widthFt: 10, lengthFt: 10, floor: 1, isExact: true }
+            ]);
+            setBedrooms(0);
+            setBathrooms(0);
+        }
+    };
+    const applyPreset = handleApplyPreset;
+
+    const handleAddRoom = (type = 'bedroom') => {
+        const id = 'rm_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+        const nameMap = {
+            master_bedroom: 'Master Bedroom',
+            bedroom: `Bedroom ${roomList.filter(r => r.type === 'bedroom').length + 2}`,
+            attached_toilet: 'Att. Bathroom',
+            common_bathroom: 'Common Bathroom',
+            kitchen: 'Kitchen',
+            living: 'Living Hall',
+            dining: 'Dining Room',
+            pooja: 'Pooja Room',
+            study: 'Study Room',
+            store: 'Store Room',
+            utility: 'Utility Area',
+            home_office: 'Home Office',
+            parking: 'Parking Space',
+            balcony: 'Balcony'
+        };
+        const dimMap = {
+            master_bedroom: { w: 14, l: 16 },
+            bedroom: { w: 11, l: 12 },
+            attached_toilet: { w: 6, l: 7 },
+            common_bathroom: { w: 6, l: 5 },
+            kitchen: { w: 10, l: 10 },
+            living: { w: 14, l: 16 },
+            dining: { w: 12, l: 12 },
+            pooja: { w: 5, l: 5 },
+            study: { w: 10, l: 10 },
+            store: { w: 7, l: 6 },
+            utility: { w: 7, l: 5 },
+            home_office: { w: 10, l: 10 },
+            parking: { w: 12, l: 16 },
+            balcony: { w: 10, l: 5 }
+        };
+        const defaultDim = dimMap[type] || { w: 10, l: 10 };
+        const hostBed = roomList.find(r => r.type === 'master_bedroom') || roomList.find(r => r.type === 'bedroom');
+        const newRoom = {
+            id,
+            type,
+            name: nameMap[type] || 'Room',
+            widthFt: defaultDim.w,
+            lengthFt: defaultDim.l,
+            floor: 1,
+            isExact: true,
+            attachedTo: type === 'attached_toilet' ? (hostBed ? hostBed.id : null) : null,
+            isAttached: type === 'attached_toilet'
+        };
+        setRoomList(prev => [...prev, newRoom]);
+        setActivePreset('Custom');
+    };
+
+    const handleRemoveRoom = (id) => {
+        setRoomList(prev => {
+            const remaining = prev.filter(r => r.id !== id);
+            const remainingBedrooms = remaining.filter(r => r.type === 'master_bedroom' || r.type === 'bedroom');
+            return remaining.map(r => {
+                if (r.attachedTo === id) {
+                    return {
+                        ...r,
+                        attachedTo: remainingBedrooms.length > 0 ? remainingBedrooms[0].id : null,
+                        isAttached: remainingBedrooms.length > 0
+                    };
+                }
+                return r;
+            });
+        });
+        setActivePreset('Custom');
+    };
+
+    const handleUpdateRoom = (id, field, value) => {
+        setRoomList(prev => {
+            const target = prev.find(r => r.id === id);
+            if (!target) return prev;
+
+            const nameMap = {
+                master_bedroom: 'Master Bedroom',
+                bedroom: 'Bedroom',
+                attached_toilet: 'Att. Bathroom',
+                common_bathroom: 'Common Bathroom',
+                kitchen: 'Kitchen',
+                living: 'Living Hall',
+                dining: 'Dining Room',
+                pooja: 'Pooja Room',
+                study: 'Study Room',
+                store: 'Store Room',
+                utility: 'Utility Area',
+                home_office: 'Home Office',
+                parking: 'Parking Space',
+                balcony: 'Balcony'
+            };
+
+            return prev.map(r => {
+                if (r.id !== id) {
+                    // If target bedroom changed away from bedroom, reassign any toilet attached to it
+                    if (field === 'type' && (target.type === 'master_bedroom' || target.type === 'bedroom') && value !== 'master_bedroom' && value !== 'bedroom') {
+                        if (r.attachedTo === id) {
+                            const otherBeds = prev.filter(rm => rm.id !== id && (rm.type === 'master_bedroom' || rm.type === 'bedroom'));
+                            return {
+                                ...r,
+                                attachedTo: otherBeds.length > 0 ? otherBeds[0].id : null,
+                                isAttached: otherBeds.length > 0
+                            };
+                        }
+                    }
+                    return r;
+                }
+
+                const updated = { ...r, [field]: value };
+
+                if (field === 'type') {
+                    // Update default label if not custom named
+                    if (!r.name || Object.values(nameMap).includes(r.name) || r.name.startsWith('Bedroom ')) {
+                        updated.name = nameMap[value] || 'Room';
+                    }
+                    if (value === 'attached_toilet') {
+                        updated.isAttached = true;
+                        if (!updated.attachedTo) {
+                            const bed = prev.find(rm => rm.id !== id && (rm.type === 'master_bedroom' || rm.type === 'bedroom'));
+                            updated.attachedTo = bed ? bed.id : null;
+                        }
+                    } else {
+                        updated.isAttached = false;
+                        updated.attachedTo = null;
+                    }
+                }
+
+                if (field === 'attachedTo') {
+                    updated.isAttached = Boolean(value);
+                }
+
+                return updated;
+            });
+        });
+        setActivePreset('Custom');
+    };
+
     const getImg = (key, fallback) => (IMAGES && IMAGES[key]) || fallback;
 
     const styleOptions = [
@@ -123,21 +344,22 @@ export default function NewProject() {
     const generateAutoPrompt = () => {
         const bLabel = budget === 'Low Cost' || budget === 'Low Budget' ? 'Up to 25 Lakhs' : budget === 'Mid Range' ? '25 - 50 Lakhs' : budget === 'Premium' ? '50 - 75 Lakhs' : 'Above 75 Lakhs';
         const unitStr = units === 'ft' ? 'ft' : units === 'm' ? 'm' : 'yds';
-        const extras = [];
-        if (poojaCount > 0) extras.push('pooja room');
-        if (study > 0) extras.push(`${study} study room`);
-        if (storeRoom > 0) extras.push(`${storeRoom} store room`);
-        if (utility > 0) extras.push('utility wash area');
-        if (office > 0) extras.push('home office');
-        if (balconyCount > 0) extras.push(`${balconyCount} balcony`);
-        const extrasStr = extras.length > 0 ? `, ${extras.join(', ')}` : '';
+        const roomSummary = roomList.map(r => `${r.name} (${r.widthFt}x${r.lengthFt} ${unitStr})`).join(', ');
         const descStr = description ? ` Additional Notes: ${description}.` : '';
-        return `Design a ${width}x${length} ${unitStr} (${width * length} sq.${unitStr}) ${facing.toLowerCase()}-facing ${floors}-floor residential house with ${bedrooms} bedrooms, ${bathrooms} bathrooms, living hall, kitchen, dining${extrasStr}, parking for ${parkingStr.toLowerCase()} and good ventilation. Staircase: ${staircasePref.toLowerCase()} (${staircaseType.toLowerCase()}). Style: ${style.toLowerCase()}. Budget: ${budget} (${bLabel}).${descStr}`;
+        return `Design a ${width}x${length} ${unitStr} (${width * length} sq.${unitStr}) ${facing.toLowerCase()}-facing ${floors}-floor residential house. Configured Rooms: ${roomSummary || 'Standard layout'}. Parking: ${parkingStr.toLowerCase()}. Staircase: ${staircasePref.toLowerCase()} (${staircaseType.toLowerCase()}). Style: ${style.toLowerCase()}. Budget: ${budget} (${bLabel}).${descStr}`;
     };
 
     useEffect(() => {
         setPrompt(generateAutoPrompt());
-    }, [width, length, facing, floors, bedrooms, bathrooms, parkingStr, style, budget, projectType, units, study, storeRoom, utility, office, description, poojaCount, balconyCount, staircasePref, staircaseType]);
+    }, [width, length, facing, floors, roomList, parkingStr, style, budget, projectType, units, description, staircasePref, staircaseType]);
+
+    // Keep summary counts in sync with canonical roomList
+    useEffect(() => {
+        const beds = roomList.filter(r => r.type === 'master_bedroom' || r.type === 'bedroom').length;
+        const baths = roomList.filter(r => r.type === 'attached_toilet' || r.type === 'common_bathroom').length;
+        setBedrooms(beds);
+        setBathrooms(baths);
+    }, [roomList]);
 
     // Restore Saved Draft from localStorage on mount
     useEffect(() => {
@@ -180,6 +402,8 @@ export default function NewProject() {
                 if (d.budget !== undefined) setBudget(d.budget);
                 if (d.priorities !== undefined) setPriorities(d.priorities);
                 if (d.prompt !== undefined) setPrompt(d.prompt);
+                if (d.roomList && Array.isArray(d.roomList)) setRoomList(d.roomList);
+                if (d.activePreset) setActivePreset(d.activePreset);
                 showToast("Restored your saved project draft!", "info");
             }
         } catch (e) {
@@ -199,7 +423,7 @@ export default function NewProject() {
                 width, length, facing, corner, road, roadWidth, roadPosition, units,
                 floors, bedrooms, bathrooms, hall, kitchen, dining, poojaCount, balconyCount, parkingStr,
                 study, storeRoom, utility, office, staircasePref, staircaseType, livingType,
-                style, budget, priorities, prompt
+                style, budget, priorities, prompt, roomList, activePreset
             };
             localStorage.setItem(`archflow_wizard_draft_${userKey}`, JSON.stringify(draft));
             showToast("Project draft & wizard progress saved successfully!", "success");
@@ -211,7 +435,9 @@ export default function NewProject() {
     const validateStep = (step) => {
         const newErrors = {};
         if (step === 1) {
-            if (!name || !name.trim()) newErrors.name = 'Project Name is required.';
+            if (!name || !name.trim()) {
+                setName(`${width}x${length} ${facing} Facing Residence`);
+            }
         } else if (step === 2) {
             if (!width || Number(width) < 10) newErrors.width = 'Width must be at least 10.';
             if (!length || Number(length) < 10) newErrors.length = 'Length must be at least 10.';
@@ -293,11 +519,22 @@ export default function NewProject() {
                 staircasePref,
                 staircaseType,
                 livingType,
-                priorities
+                priorities,
+                roomRequirements: roomList.map(r => ({
+                    ...r,
+                    widthFt: Number(r.widthFt) > 0 ? Number(r.widthFt) : (r.type === 'attached_toilet' ? 6 : 10),
+                    lengthFt: Number(r.lengthFt) > 0 ? Number(r.lengthFt) : (r.type === 'attached_toilet' ? 7 : 10),
+                    floor: Number(r.floor) || 1,
+                    isExact: true
+                }))
             });
 
             localStorage.removeItem(`archflow_wizard_draft_${userKey}`);
-            showToast("Project layout created successfully!", "success");
+            if (project?.plan?.conflict) {
+                showToast(project.plan.conflict.message || "Feasibility Conflict: Layout exceeds plot limits. Please review room sizes.", "warning");
+            } else {
+                showToast("Project layout created successfully!", "success");
+            }
             navigate("/editor");
         } catch (err) {
             console.error("Failed to generate project floor plan:", err);
@@ -310,6 +547,9 @@ export default function NewProject() {
     const defaultPlanThumb = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230f172a'/><line x1='10' y1='10' x2='90' y2='10' stroke='white' stroke-width='1'/><line x1='10' y1='10' x2='10' y2='90' stroke='white' stroke-width='1'/><line x1='90' y1='10' x2='90' y2='90' stroke='white' stroke-width='1'/><line x1='10' y1='90' x2='90' y2='90' stroke='white' stroke-width='1'/><line x1='50' y1='10' x2='50' y2='90' stroke='white' stroke-dasharray='3' stroke-width='1'/><rect x='15' y='15' width='30' height='30' fill='none' stroke='white' stroke-width='1'/><rect x='55' y='15' width='30' height='30' fill='none' stroke='white' stroke-width='1'/><rect x='15' y='55' width='70' height='30' fill='none' stroke='white' stroke-width='1'/></svg>";
     const planImg = getImg('plan_thumb', defaultPlanThumb);
 
+    const currentBedrooms = roomList.filter(r => r.type === 'master_bedroom' || r.type === 'bedroom').length;
+    const currentBathrooms = roomList.filter(r => r.type === 'attached_toilet' || r.type === 'common_bathroom').length;
+
     const summaryItems = [
         { icon: <FileText size={16} />, label: 'Project Name', val: name || 'Untitled Project' },
         { icon: <User size={16} />, label: 'Client Name', val: client || 'Self' },
@@ -317,8 +557,8 @@ export default function NewProject() {
         { icon: <Maximize2 size={16} />, label: 'Plot Size', val: `${width} x ${length} ${units} (${width * length} sq.${units})` },
         { icon: <Compass size={16} />, label: 'Facing', val: facing },
         { icon: <Layers size={16} />, label: 'Floors', val: `${floors} ${floors === 1 ? 'Floor' : 'Floors'}` },
-        { icon: <Bed size={16} />, label: 'Bedrooms', val: bedrooms },
-        { icon: <Bath size={16} />, label: 'Bathrooms', val: bathrooms },
+        { icon: <Bed size={16} />, label: 'Bedrooms', val: currentBedrooms },
+        { icon: <Bath size={16} />, label: 'Bathrooms', val: currentBathrooms },
         { icon: <Car size={16} />, label: 'Parking', val: parkingStr },
         { icon: <Palette size={16} />, label: 'Style', val: style },
         { icon: <DollarSign size={16} />, label: 'Budget', val: budget === 'Mid Range' ? 'Mid Range (25 - 50 Lakhs)' : budget === 'Low Cost' || budget === 'Low Budget' ? 'Low Budget (Up to 25 Lakhs)' : budget === 'Premium' ? 'Premium (50 - 75 Lakhs)' : 'Luxury (Above 75 Lakhs)' }
@@ -327,7 +567,7 @@ export default function NewProject() {
     const wizardSteps = [
         { num: 1, label: 'Project Details' },
         { num: 2, label: 'Plot Details' },
-        { num: 3, label: 'Requirements' },
+        { num: 3, label: 'Room Requirements' },
         { num: 4, label: 'Style & Budget' },
         { num: 5, label: 'AI Generate' }
     ];
@@ -525,110 +765,319 @@ export default function NewProject() {
         </div>
     );
 
-    // --- RENDER STEP 3: BUILDING REQUIREMENTS ---
-    const renderStep3 = () => (
-        <div className="np-card wizard-step-card slide-in-right">
-            <div className="np-card-header">
-                <div className="np-card-icon indigo">
-                    <Building2 size={18} />
-                </div>
-                <h2 className="np-card-title">Step 3: Building Requirements & Room Allocation</h2>
-            </div>
-            <span className="np-sub-label" style={{ marginBottom: 16 }}>Specify exact room counts, utility areas, and vertical circulation requirements for the AI engine:</span>
+    // --- RENDER STEP 3: USER-CONTROLLED ROOM REQUIREMENTS ---
+    const renderStep3 = () => {
+        const plotArea = width * length;
+        // Total setbacks: 4 ft width (2ft left + 2ft right), 5 ft length (3ft front + 2ft rear)
+        const usableWidth = Math.max(0, width - 4);
+        const usableLength = Math.max(0, length - 5);
+        const usableEnvelopePerFloor = usableWidth * usableLength;
+        const totalUsableEnvelope = usableEnvelopePerFloor * floors;
 
-            <div className="np-form-grid-3">
-                <div className="np-field">
-                    <label className="np-label">Number of Floors <span className="np-req">*</span></label>
-                    <select className="np-select" value={floors} onChange={(e) => setFloors(Number(e.target.value))}>
-                        <option value="1">1 Floor</option>
-                        <option value="2">2 Floors</option>
-                        <option value="3">3 Floors</option>
-                        <option value="4">4 Floors</option>
-                    </select>
+        // Sum allocated area strictly from current active room list
+        const allocatedArea = roomList.reduce((sum, r) => {
+            const w = Number(r.widthFt) || 0;
+            const l = Number(r.lengthFt) || 0;
+            return sum + (w * l);
+        }, 0);
+
+        const utilizationPct = totalUsableEnvelope > 0 ? Math.round((allocatedArea / totalUsableEnvelope) * 100) : 0;
+
+        let statusClass = 'pending';
+        let statusText = 'Not yet validated';
+        let statusSub = 'Area ratio only (Geometry verified on Generate)';
+
+        if (allocatedArea > totalUsableEnvelope) {
+            statusClass = 'danger';
+            statusText = 'Infeasible';
+            statusSub = `${allocatedArea} sq.${units} > ${totalUsableEnvelope} sq.${units} buildable limit`;
+        }
+
+        const bedroomRooms = roomList.filter(r => r.type === 'master_bedroom' || r.type === 'bedroom');
+
+        return (
+            <div className="np-card wizard-step-card slide-in-right">
+                <div className="np-card-header">
+                    <div className="np-card-icon indigo">
+                        <Building2 size={18} />
+                    </div>
+                    <h2 className="np-card-title">Step 3: User-Controlled Room Requirements</h2>
                 </div>
-                <div className="np-field">
-                    <label className="np-label">Bedrooms <span className="np-req">*</span></label>
-                    <CounterControl value={bedrooms} onChange={setBedrooms} min={1} max={10} />
+                <span className="np-sub-label" style={{ marginBottom: 12 }}>
+                    Define every room individually. ArchFlow AI strictly preserves your specified room counts, dimensions, floor distribution, and bathroom attachments without silent truncation or arbitrary additions.
+                </span>
+
+                {/* Vertical Floors and Circulation */}
+                <div className="np-form-grid-3" style={{ marginBottom: 16 }}>
+                    <div className="np-field">
+                        <label className="np-label">Number of Floors <span className="np-req">*</span></label>
+                        <select className="np-select" value={floors} onChange={(e) => setFloors(Number(e.target.value))}>
+                            <option value="1">1 Floor (Ground Only)</option>
+                            <option value="2">2 Floors (G + 1)</option>
+                            <option value="3">3 Floors (G + 2)</option>
+                            <option value="4">4 Floors (G + 3)</option>
+                        </select>
+                    </div>
+                    <div className="np-field">
+                        <label className="np-label">Staircase Location</label>
+                        <select className="np-select" value={staircasePref} onChange={(e) => setStaircasePref(e.target.value)}>
+                            <option value="Inside">Inside (Internal Duplex)</option>
+                            <option value="Outside">Outside (External Rental)</option>
+                            <option value="Elevator + Stairs">Elevator + Stairs</option>
+                        </select>
+                    </div>
+                    <div className="np-field">
+                        <label className="np-label">Staircase Type</label>
+                        <select className="np-select" value={staircaseType} onChange={(e) => setStaircaseType(e.target.value)}>
+                            <option value="Straight">Straight Flight</option>
+                            <option value="L-Shaped">L-Shaped</option>
+                            <option value="U-Shaped / Dog-legged">U-Shaped / Dog-legged</option>
+                            <option value="Spiral / Modern">Spiral / Modern</option>
+                        </select>
+                    </div>
                 </div>
-                <div className="np-field">
-                    <label className="np-label">Bathrooms <span className="np-req">*</span></label>
-                    <CounterControl value={bathrooms} onChange={setBathrooms} min={1} max={10} />
+
+                {/* Preset Starter Options */}
+                <div style={{ marginBottom: 16 }}>
+                    <label className="np-label" style={{ marginBottom: 6 }}>Starting Architectural Presets (Editable):</label>
+                    <div className="np-presets-row">
+                        {['1BHK', '2BHK', '3BHK', '4BHK', 'Custom'].map(preset => (
+                            <button
+                                key={preset}
+                                type="button"
+                                className={`np-preset-btn ${activePreset === preset ? 'active' : ''}`}
+                                onClick={() => handleApplyPreset(preset)}
+                            >
+                                {preset}
+                            </button>
+                        ))}
+                    </div>
                 </div>
-                <div className="np-field">
-                    <label className="np-label">Living Hall <span className="np-req">*</span></label>
-                    <CounterControl value={hall} onChange={setHall} min={1} max={5} />
+
+                {/* Live Geometric Diagnostics Bar */}
+                <div className="np-diagnostics-bar">
+                    <div className="np-diag-item">
+                        <span className="np-diag-label">Plot Dimensions</span>
+                        <span className="np-diag-val">{width} × {length} {units}</span>
+                        <span className="np-diag-sub">Plot Area: {plotArea} sq.{units}</span>
+                    </div>
+                    <div className="np-diag-item">
+                        <span className="np-diag-label">Usable Buildable Area ({floors} Flr)</span>
+                        <span className="np-diag-val">~{totalUsableEnvelope} sq.{units}</span>
+                        <span className="np-diag-sub">Setbacks: 4 {units} W, 5 {units} L</span>
+                    </div>
+                    <div className="np-diag-item">
+                        <span className="np-diag-label">Allocated Room Area</span>
+                        <span className="np-diag-val">{allocatedArea} sq.{units}</span>
+                        <span className="np-diag-sub">Area Ratio: {utilizationPct}% of envelope</span>
+                    </div>
+                    <div className="np-diag-item">
+                        <span className="np-diag-label">Geometric Feasibility</span>
+                        <span className={`np-diag-status ${statusClass}`}>{statusText}</span>
+                        <span className="np-diag-sub">{statusSub}</span>
+                    </div>
                 </div>
-                <div className="np-field">
-                    <label className="np-label">Kitchen <span className="np-req">*</span></label>
-                    <CounterControl value={kitchen} onChange={setKitchen} min={1} max={4} />
+
+                {/* Configured Rooms Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, marginTop: 16 }}>
+                    <label className="np-label" style={{ margin: 0 }}>
+                        Configured Rooms ({roomList.length} total)
+                    </label>
+                    <span style={{ fontSize: '12px', color: '#64748B' }}>
+                        All dimensions in {units === 'ft' ? 'feet' : units === 'm' ? 'meters' : 'yards'}
+                    </span>
                 </div>
-                <div className="np-field">
-                    <label className="np-label">Dining Room <span className="np-req">*</span></label>
-                    <CounterControl value={dining} onChange={setDining} min={0} max={3} />
+
+                {/* Responsive CSS Grid Room Editor */}
+                <div className="np-room-grid-wrap">
+                    <div className="np-room-grid-header">
+                        <div>Room Type</div>
+                        <div>Display Name</div>
+                        <div>Width ({units})</div>
+                        <div>Length ({units})</div>
+                        <div>Bathroom Attachment</div>
+                        <div>Floor</div>
+                        <div style={{ textAlign: 'center' }}>
+                            <span className="sr-only">Actions</span>
+                        </div>
+                    </div>
+
+                    <div className="np-room-grid-body">
+                        {roomList.length === 0 ? (
+                            <div className="np-room-empty">
+                                No rooms configured. Select a preset above or click &quot;Add Room&quot; below.
+                            </div>
+                        ) : (
+                            roomList.map((room) => {
+                                const isAttachedToilet = room.type === 'attached_toilet';
+                                const isCommonBathroom = room.type === 'common_bathroom';
+
+                                return (
+                                    <div key={room.id} className="np-room-grid-row">
+                                        {/* 1. Room Type */}
+                                        <div>
+                                            <select 
+                                                className="np-room-select"
+                                                value={room.type}
+                                                onChange={(e) => handleUpdateRoom(room.id, 'type', e.target.value)}
+                                            >
+                                                <option value="master_bedroom">Master Bedroom</option>
+                                                <option value="bedroom">Bedroom</option>
+                                                <option value="attached_toilet">Attached Bathroom</option>
+                                                <option value="common_bathroom">Common Bathroom</option>
+                                                <option value="living">Living Hall</option>
+                                                <option value="kitchen">Kitchen</option>
+                                                <option value="dining">Dining Room</option>
+                                                <option value="pooja">Pooja Room</option>
+                                                <option value="study">Study Room</option>
+                                                <option value="store">Store Room</option>
+                                                <option value="utility">Utility Area</option>
+                                                <option value="home_office">Home Office</option>
+                                                <option value="parking">Parking Space</option>
+                                                <option value="balcony">Balcony</option>
+                                            </select>
+                                        </div>
+
+                                        {/* 2. Display Name */}
+                                        <div>
+                                            <input 
+                                                type="text"
+                                                className="np-room-input"
+                                                value={room.name || ''}
+                                                onChange={(e) => handleUpdateRoom(room.id, 'name', e.target.value)}
+                                                placeholder="Room label"
+                                            />
+                                        </div>
+
+                                        {/* 3. Width */}
+                                        <div>
+                                            <div className="np-dim-input-wrap">
+                                                <input 
+                                                    type="number"
+                                                    className="np-room-input np-dim-input"
+                                                    min="3"
+                                                    max="100"
+                                                    step="0.5"
+                                                    value={room.widthFt ?? ''}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        handleUpdateRoom(room.id, 'widthFt', val === '' ? '' : parseFloat(val));
+                                                    }}
+                                                    placeholder="W"
+                                                />
+                                                <span className="np-dim-unit">{units}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* 4. Length */}
+                                        <div>
+                                            <div className="np-dim-input-wrap">
+                                                <input 
+                                                    type="number"
+                                                    className="np-room-input np-dim-input"
+                                                    min="3"
+                                                    max="100"
+                                                    step="0.5"
+                                                    value={room.lengthFt ?? ''}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        handleUpdateRoom(room.id, 'lengthFt', val === '' ? '' : parseFloat(val));
+                                                    }}
+                                                    placeholder="L"
+                                                />
+                                                <span className="np-dim-unit">{units}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* 5. Bathroom Attachment / Relationship */}
+                                        <div>
+                                            {isAttachedToilet ? (
+                                                <select 
+                                                    className="np-room-select"
+                                                    value={room.attachedTo || ''}
+                                                    onChange={(e) => handleUpdateRoom(room.id, 'attachedTo', e.target.value || null)}
+                                                >
+                                                    <option value="">-- Choose Host Bedroom --</option>
+                                                    {bedroomRooms.map(br => (
+                                                        <option key={br.id} value={br.id}>{br.name || 'Bedroom'}</option>
+                                                    ))}
+                                                </select>
+                                            ) : isCommonBathroom ? (
+                                                <span className="np-attachment-badge np-attachment-common">Common Access</span>
+                                            ) : (
+                                                <span className="np-attachment-badge np-attachment-na">Not Applicable</span>
+                                            )}
+                                        </div>
+
+                                        {/* 6. Floor */}
+                                        <div>
+                                            <select 
+                                                className="np-room-select"
+                                                value={room.floor || 1}
+                                                onChange={(e) => handleUpdateRoom(room.id, 'floor', Number(e.target.value))}
+                                            >
+                                                {Array.from({ length: floors }, (_, i) => i + 1).map(fl => (
+                                                    <option key={fl} value={fl}>Floor {fl}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* 7. Remove action */}
+                                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                            <button 
+                                                type="button" 
+                                                className="np-room-del-btn" 
+                                                aria-label={`Delete ${room.name || 'Room'}`}
+                                                title={`Delete ${room.name || 'Room'}`}
+                                                onClick={() => handleRemoveRoom(room.id)}
+                                            >
+                                                <Trash2 size={15} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        )}
+                    </div>
                 </div>
-                <div className="np-field">
-                    <label className="np-label">Pooja Room</label>
-                    <CounterControl value={poojaCount} onChange={(v) => { setPoojaCount(v); setPooja(v > 0); }} min={0} max={2} />
-                </div>
-                <div className="np-field">
-                    <label className="np-label">Balcony</label>
-                    <CounterControl value={balconyCount} onChange={(v) => { setBalconyCount(v); setBalcony(v > 0); }} min={0} max={6} />
-                </div>
-                <div className="np-field">
-                    <label className="np-label">Parking Capacity</label>
-                    <select className="np-select" value={parkingStr} onChange={(e) => { setParkingStr(e.target.value); setParking(e.target.value !== 'None'); }}>
-                        <option value="None">None</option>
-                        <option value="1 Car">1 Car</option>
-                        <option value="2 Cars">2 Cars</option>
-                        <option value="3 Cars">3 Cars</option>
-                        <option value="4+ Cars">4+ Cars</option>
-                    </select>
-                </div>
-                <div className="np-field">
-                    <label className="np-label">Study Room</label>
-                    <CounterControl value={study} onChange={setStudy} min={0} max={3} />
-                </div>
-                <div className="np-field">
-                    <label className="np-label">Store Room / Pantry</label>
-                    <CounterControl value={storeRoom} onChange={setStoreRoom} min={0} max={4} />
-                </div>
-                <div className="np-field">
-                    <label className="np-label">Utility / Wash Area</label>
-                    <CounterControl value={utility} onChange={setUtility} min={0} max={3} />
-                </div>
-                <div className="np-field">
-                    <label className="np-label">Home Office / Studio</label>
-                    <CounterControl value={office} onChange={setOffice} min={0} max={2} />
-                </div>
-                <div className="np-field">
-                    <label className="np-label">Staircase Preference</label>
-                    <select className="np-select" value={staircasePref} onChange={(e) => setStaircasePref(e.target.value)}>
-                        <option value="Inside">Inside (Internal Duplex)</option>
-                        <option value="Outside">Outside (External Rental)</option>
-                        <option value="Elevator + Stairs">Elevator + Stairs</option>
-                    </select>
-                </div>
-                <div className="np-field">
-                    <label className="np-label">Staircase Type</label>
-                    <select className="np-select" value={staircaseType} onChange={(e) => setStaircaseType(e.target.value)}>
-                        <option value="Straight">Straight</option>
-                        <option value="L-Shaped">L-Shaped</option>
-                        <option value="U-Shaped / Dog-legged">U-Shaped / Dog-legged</option>
-                        <option value="Spiral / Modern">Spiral / Modern</option>
-                    </select>
-                </div>
-                <div className="np-field">
-                    <label className="np-label">Living Hall Setup</label>
-                    <select className="np-select" value={livingType} onChange={(e) => setLivingType(e.target.value)}>
-                        <option value="Open Living">Open Living</option>
-                        <option value="Double Height Ceiling">Double Height Ceiling</option>
-                        <option value="Sunken Living">Sunken Living</option>
-                        <option value="Formal + Family Living">Formal + Family Living</option>
-                    </select>
+
+                {/* Add Room Bar */}
+                <div className="np-add-room-bar">
+                    <div className="np-add-room-controls">
+                        <label className="np-label" style={{ margin: 0, fontSize: '13px' }}>Add Room:</label>
+                        <select 
+                            className="np-room-select" 
+                            style={{ width: '200px' }}
+                            value={newRoomType}
+                            onChange={(e) => setNewRoomType(e.target.value)}
+                        >
+                            <option value="bedroom">Bedroom</option>
+                            <option value="master_bedroom">Master Bedroom</option>
+                            <option value="attached_toilet">Attached Bathroom</option>
+                            <option value="common_bathroom">Common Bathroom</option>
+                            <option value="kitchen">Kitchen</option>
+                            <option value="dining">Dining Room</option>
+                            <option value="living">Living Hall</option>
+                            <option value="pooja">Pooja Room</option>
+                            <option value="study">Study Room</option>
+                            <option value="store">Store Room</option>
+                            <option value="utility">Utility Area</option>
+                            <option value="home_office">Home Office</option>
+                            <option value="parking">Parking Space</option>
+                            <option value="balcony">Balcony</option>
+                        </select>
+                        <button 
+                            type="button" 
+                            className="np-btn-add-room"
+                            onClick={() => handleAddRoom(newRoomType)}
+                        >
+                            <Plus size={15} /> Add to Plan
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     // --- RENDER STEP 4: STYLE & BUDGET ---
     const renderStep4 = () => (
@@ -738,6 +1187,52 @@ export default function NewProject() {
                         <div className="wizard-review-val"><strong>Estimated Budget:</strong> {budget}</div>
                         <div className="wizard-review-val"><strong>Staircase:</strong> {staircasePref} ({staircaseType})</div>
                         <div className="wizard-review-val"><strong>Priorities:</strong> {priorities.join(', ') || 'Standard layout'}</div>
+                    </div>
+                </div>
+
+                {/* Canonical Room Specifications Review Table */}
+                <div style={{ marginTop: 22 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <span className="np-sub-label" style={{ fontWeight: 600, color: '#0F172A', margin: 0 }}>
+                            Canonical Room Specifications ({roomList.length} configured):
+                        </span>
+                        <span style={{ fontSize: '12px', color: '#64748B' }}>
+                            Total Area: {roomList.reduce((sum, r) => sum + (Number(r.widthFt) || 0) * (Number(r.lengthFt) || 0), 0)} sq.{units}
+                        </span>
+                    </div>
+                    <div className="np-review-table-wrap">
+                        <table className="np-review-table">
+                            <thead>
+                                <tr>
+                                    <th>Room Name</th>
+                                    <th>Type</th>
+                                    <th>Dimensions</th>
+                                    <th>Floor</th>
+                                    <th>Attachment</th>
+                                    <th>Preservation</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {roomList.map(r => (
+                                    <tr key={r.id}>
+                                        <td><strong>{r.name}</strong></td>
+                                        <td style={{ textTransform: 'capitalize' }}>{r.type.replace(/_/g, ' ')}</td>
+                                        <td>{r.widthFt} × {r.lengthFt} {units} ({r.widthFt * r.lengthFt} sq.{units})</td>
+                                        <td>Floor {r.floor || 1}</td>
+                                        <td>
+                                            {r.type === 'attached_toilet' ? (
+                                                <span style={{ color: '#2563EB', fontWeight: 500 }}>
+                                                    Attached to {roomList.find(b => b.id === r.attachedTo)?.name || 'Bedroom'}
+                                                </span>
+                                            ) : r.type === 'common_bathroom' ? (
+                                                <span style={{ color: '#059669', fontWeight: 500 }}>Common Access</span>
+                                            ) : '—'}
+                                        </td>
+                                        <td><span style={{ color: '#059669', fontWeight: 600 }}>Strict Exact</span></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

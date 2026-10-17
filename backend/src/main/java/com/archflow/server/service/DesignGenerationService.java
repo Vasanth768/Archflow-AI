@@ -32,6 +32,21 @@ public class DesignGenerationService {
     private final java.util.concurrent.Semaphore generationSemaphore = new java.util.concurrent.Semaphore(1);
     private final java.util.concurrent.ConcurrentHashMap<String, String> generationCache = new java.util.concurrent.ConcurrentHashMap<>();
 
+    private static final int MAX_PROVIDER_RETRIES = 2;
+    private static final int MAX_CANDIDATE_ATTEMPTS = 2;
+
+    private String classifyFailure(String errorMsg) {
+        if (errorMsg == null) return "PROVIDER_ERROR";
+        String msg = errorMsg.toLowerCase();
+        if (msg.contains("rate limit") || msg.contains("429") || msg.contains("too many requests")) return "RATE_LIMITED";
+        if (msg.contains("auth") || msg.contains("unauthorized") || msg.contains("401") || msg.contains("403") || msg.contains("invalid api key") || msg.contains("token is invalid")) return "AUTH_ERROR";
+        if (msg.contains("timeout") || msg.contains("timed out")) return "TIMEOUT";
+        if (msg.contains("validation failed") || msg.contains("validation")) return "VALIDATION_FAILED";
+        if (msg.contains("fallback") || msg.contains("local ai") || msg.contains("all configured image providers failed")) return "FALLBACK_FAILED";
+        if (msg.contains("bad request") || msg.contains("not supported by provider") || msg.contains("400")) return "PROVIDER_ERROR";
+        return "PROVIDER_ERROR";
+    }
+
     private static final String[] CITY_PALETTES = {
         "White + Charcoal + Wood", "Off White + Grey + Black", "Beige + Brown + Stone", "Cream + Terracotta + Grey"
     };
@@ -89,7 +104,7 @@ public class DesignGenerationService {
 
     private String generateWithRateLimitRetry(String prompt, Map<String, Object> genOptions, int index, int attemptId) throws Exception {
         int rateLimitRetries = 0;
-        int maxRateLimitRetries = 2;
+        int maxRateLimitRetries = MAX_PROVIDER_RETRIES;
         
         System.out.println("[CANDIDATE] design=" + (index + 1) + " attempt=" + attemptId + " started");
         while (true) {
@@ -129,8 +144,9 @@ public class DesignGenerationService {
     }
 
     private Map<String, Object> generateSingleVariationWithRetry(int index, String context, String buildingType, String requestedStyle, String budget, String roofStyleReq, String projectId, int maxRetries, List<String> previouslyFailedPrompts) {
+        final int safeMaxRetries = Math.max(1, Math.min(maxRetries, MAX_PROVIDER_RETRIES));
         int attempt = 0;
-        while (attempt < maxRetries) {
+        while (attempt < safeMaxRetries) {
             try {
                 boolean isVillage = "Village".equalsIgnoreCase(context);
                 String variationStyle = requestedStyle.equals("AI Explore") || requestedStyle.equals("Custom")
@@ -348,7 +364,7 @@ public class DesignGenerationService {
                             List<Map<String, Object>> candidates = new ArrayList<>();
                             Map<String, Object> bestCandidate = null;
                             
-                            for (int candAttempt = 1; candAttempt <= 4; candAttempt++) {
+                            for (int candAttempt = 1; candAttempt <= MAX_CANDIDATE_ATTEMPTS; candAttempt++) {
                                 Map<String, Object> genOptions = new HashMap<>();
                                 int seed = Math.abs((prompt + index + attempt + candAttempt + System.currentTimeMillis()).hashCode());
                                 genOptions.put("seed", seed);
@@ -530,36 +546,47 @@ public class DesignGenerationService {
                     
                     if (errorMsg != null && errorMsg.contains("PROVIDER_RATE_LIMIT_EXHAUSTED")) {
                         System.out.println("[DESIGN] index=" + (index + 1) + " provider_failed");
-                        err.put("code", "PROVIDER_RATE_LIMITED");
-                        err.put("message", "Design " + (index + 1) + ": AI provider rate limited");
-                        err.put("error", "Design " + (index + 1) + ": AI provider rate limited");
-                        err.put("geometryValidationStatus", "UNVERIFIED"); // NEVER classify as INVALID
+                        err.put("code", "RATE_LIMITED");
+                        err.put("message", "Design " + (index + 1) + ": provider rate limited; fallback was attempted and failed.");
+                        err.put("error", "Design " + (index + 1) + ": provider rate limited; fallback was attempted and failed.");
+                        err.put("geometryValidationStatus", "UNVERIFIED");
                     } else if (errorMsg != null && errorMsg.contains("PROVIDER_CREDITS_EXHAUSTED")) {
                         System.out.println("[DESIGN] index=" + (index + 1) + " provider_credits_exhausted");
                         err.put("code", "PROVIDER_CREDITS_EXHAUSTED");
-                        err.put("message", "Design " + (index + 1) + ": AI provider credits exhausted");
-                        err.put("error", "Design " + (index + 1) + ": AI provider credits exhausted");
+                        err.put("message", "Design " + (index + 1) + ": provider credits exhausted");
+                        err.put("error", "Design " + (index + 1) + ": provider credits exhausted");
                         err.put("geometryValidationStatus", "UNVERIFIED");
                     } else if (errorMsg != null && errorMsg.contains("Architectural validation failed")) {
                         System.err.println("[SERVICE] Generation attempt " + attempt + " failed for design " + index + ": " + errorMsg);
-                        err.put("code", "VALIDATION_ERROR");
+                        err.put("code", "VALIDATION_FAILED");
                         err.put("message", "Geometry validation failed for all attempts.");
                         err.put("error", errorMsg);
                         err.put("geometryValidationStatus", "INVALID");
-                    } else if (errorMsg != null && (errorMsg.contains("401") || errorMsg.contains("Unauthorized") || errorMsg.contains("InvalidApiKey"))) {
+                    } else if (errorMsg != null && (errorMsg.contains("FALLBACK_AUTH_ERROR") || errorMsg.contains("PROVIDER_AUTH_ERROR") || errorMsg.contains("401") || errorMsg.contains("Unauthorized") || errorMsg.contains("InvalidApiKey"))) {
                         System.err.println("[SERVICE] Generation attempt " + attempt + " failed for design " + index + ": " + errorMsg);
-                        err.put("code", "PROVIDER_AUTH_ERROR");
-                        err.put("message", "Image provider authentication failed");
-                        err.put("error", "Image provider authentication failed");
-                    } else if (errorMsg != null && (errorMsg.contains("400") || errorMsg.contains("Bad Request"))) {
+                        err.put("code", "AUTH_ERROR");
+                        err.put("message", "Image provider authentication failed.");
+                        err.put("error", "Image provider authentication failed.");
+                    } else if (errorMsg != null && (errorMsg.contains("PROVIDER_TIMEOUT") || errorMsg.contains("FALLBACK_TIMEOUT") || errorMsg.contains("timed out"))) {
+                        System.err.println("[SERVICE] Generation attempt " + attempt + " timed out for design " + index + ": " + errorMsg);
+                        err.put("code", "TIMEOUT");
+                        err.put("message", "Image generation timed out. Please retry with a smaller batch.");
+                        err.put("error", "Image generation timed out.");
+                    } else if (errorMsg != null && (errorMsg.contains("PROVIDER_BAD_REQUEST") || errorMsg.contains("FALLBACK_PROVIDER_ERROR") || errorMsg.contains("400") || errorMsg.contains("Bad Request") || errorMsg.contains("not supported by provider"))) {
                         System.err.println("[SERVICE] Generation attempt " + attempt + " failed for design " + index + ": " + errorMsg);
-                        err.put("code", "PROVIDER_BAD_REQUEST");
-                        err.put("message", "Image generation request was rejected by provider");
-                        err.put("error", "Image generation request was rejected by provider");
+                        err.put("code", "PROVIDER_ERROR");
+                        err.put("message", "Image generation request was rejected by the provider.");
+                        err.put("error", "Image generation request was rejected by the provider.");
+                    } else if (errorMsg != null && (errorMsg.contains("FALLBACK") || errorMsg.contains("all configured image providers failed"))) {
+                        System.err.println("[SERVICE] Generation attempt " + attempt + " failed for design " + index + ": " + errorMsg);
+                        err.put("code", "FALLBACK_FAILED");
+                        err.put("message", "Primary provider failed and fallback also failed.");
+                        err.put("error", "Primary provider failed and fallback also failed.");
                     } else {
+                        String mappedCode = classifyFailure(errorMsg);
                         System.err.println("[SERVICE] Generation attempt " + attempt + " failed for design " + index + ": " + errorMsg);
-                        err.put("code", "PROVIDER_INTERNAL_ERROR");
-                        err.put("message", "Image generation failed internally");
+                        err.put("code", mappedCode);
+                        err.put("message", "Image generation failed.");
                         err.put("error", errorMsg);
                     }
                     

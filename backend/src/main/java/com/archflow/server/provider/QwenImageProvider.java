@@ -6,6 +6,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import jakarta.annotation.PostConstruct;
@@ -24,10 +25,17 @@ public class QwenImageProvider implements ImageGenerationProvider {
     @Value("${QWEN_IMAGE_MODEL:${HF_IMAGE_MODEL:Qwen/Qwen-Image}}")
     private String modelName;
 
-    @Value("${QWEN_IMAGE_API_KEY:${DASHSCOPE_API_KEY:${HF_API_TOKEN:}}}")
+    @Value("${QWEN_IMAGE_API_KEY:${DASHSCOPE_API_KEY:${HF_API_TOKEN:${IMAGE_API_KEY:}}}}")
     private String apiKey;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = createRestTemplate();
+
+    private static RestTemplate createRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(30000);
+        factory.setReadTimeout(120000);
+        return new RestTemplate(factory);
+    }
 
     @PostConstruct
     public void init() {
@@ -174,19 +182,24 @@ public class QwenImageProvider implements ImageGenerationProvider {
                 System.err.println("[HF] HTTP Error: " + e.getStatusCode() + " Body: " + errorBody);
                 
                 if (e.getStatusCode().value() == 503) {
-                    throw new RuntimeException("Model is currently loading on Hugging Face. Please retry in a few seconds.", e);
+                    throw new RuntimeException("PROVIDER_TEMPORARILY_UNAVAILABLE: Model is currently loading on Hugging Face. Please retry in a few seconds.", e);
                 } else if (e.getStatusCode().value() == 401 || e.getStatusCode().value() == 403) {
-                    throw new RuntimeException("Provider HTTP Error " + e.getStatusCode() + " UNAUTHORIZED: " + errorBody, e);
+                    throw new RuntimeException("PROVIDER_AUTH_ERROR: Provider authentication failed (HTTP " + e.getStatusCode() + ") " + errorBody, e);
                 } else if (e.getStatusCode().value() == 429) {
-                    throw new RuntimeException("Hugging Face API rate limit exceeded.", e);
+                    throw new RuntimeException("PROVIDER_RATE_LIMITED: Hugging Face API rate limit exceeded.", e);
                 } else if (e.getStatusCode().value() == 404) {
-                    throw new RuntimeException("Hugging Face Model/Endpoint not found (404). Verify HF_IMAGE_MODEL is correct.", e);
+                    throw new RuntimeException("PROVIDER_BAD_REQUEST: Hugging Face Model/Endpoint not found (404). Verify HF_IMAGE_MODEL is correct.", e);
                 }
                 
-                throw new RuntimeException("Hugging Face API Error " + e.getStatusCode() + ": " + errorBody, e);
+                throw new RuntimeException("PROVIDER_BAD_REQUEST: Hugging Face API Error " + e.getStatusCode() + ": " + errorBody, e);
+            } catch (org.springframework.web.client.ResourceAccessException e) {
+                if (e.getCause() instanceof java.net.SocketTimeoutException || e.getMessage() != null && e.getMessage().contains("timed out")) {
+                    throw new RuntimeException("PROVIDER_TIMEOUT: Image provider request timed out after 120s.", e);
+                }
+                throw new RuntimeException("PROVIDER_ERROR: Image provider connection failed: " + e.getMessage(), e);
             } catch (Exception e) {
                 System.err.println("[HF] Internal I/O Error calling API: " + e.getMessage());
-                throw new RuntimeException("Image generation failed internally: " + e.getMessage(), e);
+                throw new RuntimeException("PROVIDER_ERROR: Image generation failed internally: " + e.getMessage(), e);
             }
         });
     }
